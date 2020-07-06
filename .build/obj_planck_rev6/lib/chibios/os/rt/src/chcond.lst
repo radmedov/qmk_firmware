@@ -1,0 +1,2346 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"chcond.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.queue_prio_insert,"ax",%progbits
+  16              		.align	1
+  17              		.syntax unified
+  18              		.thumb
+  19              		.thumb_func
+  20              		.fpu softvfp
+  22              	queue_prio_insert:
+  23              	.LFB155:
+  24              		.file 1 "./lib/chibios/os/rt/include/chschd.h"
+   1:./lib/chibios/os/rt/include/chschd.h **** /*
+   2:./lib/chibios/os/rt/include/chschd.h ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:./lib/chibios/os/rt/include/chschd.h **** 
+   4:./lib/chibios/os/rt/include/chschd.h ****     This file is part of ChibiOS.
+   5:./lib/chibios/os/rt/include/chschd.h **** 
+   6:./lib/chibios/os/rt/include/chschd.h ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:./lib/chibios/os/rt/include/chschd.h ****     it under the terms of the GNU General Public License as published by
+   8:./lib/chibios/os/rt/include/chschd.h ****     the Free Software Foundation; either version 3 of the License, or
+   9:./lib/chibios/os/rt/include/chschd.h ****     (at your option) any later version.
+  10:./lib/chibios/os/rt/include/chschd.h **** 
+  11:./lib/chibios/os/rt/include/chschd.h ****     ChibiOS is distributed in the hope that it will be useful,
+  12:./lib/chibios/os/rt/include/chschd.h ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:./lib/chibios/os/rt/include/chschd.h ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:./lib/chibios/os/rt/include/chschd.h ****     GNU General Public License for more details.
+  15:./lib/chibios/os/rt/include/chschd.h **** 
+  16:./lib/chibios/os/rt/include/chschd.h ****     You should have received a copy of the GNU General Public License
+  17:./lib/chibios/os/rt/include/chschd.h ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:./lib/chibios/os/rt/include/chschd.h **** */
+  19:./lib/chibios/os/rt/include/chschd.h **** 
+  20:./lib/chibios/os/rt/include/chschd.h **** /**
+  21:./lib/chibios/os/rt/include/chschd.h ****  * @file    chschd.h
+  22:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Scheduler macros and structures.
+  23:./lib/chibios/os/rt/include/chschd.h ****  *
+  24:./lib/chibios/os/rt/include/chschd.h ****  * @addtogroup scheduler
+  25:./lib/chibios/os/rt/include/chschd.h ****  * @{
+  26:./lib/chibios/os/rt/include/chschd.h ****  */
+  27:./lib/chibios/os/rt/include/chschd.h **** 
+  28:./lib/chibios/os/rt/include/chschd.h **** #ifndef CHSCHD_H
+  29:./lib/chibios/os/rt/include/chschd.h **** #define CHSCHD_H
+  30:./lib/chibios/os/rt/include/chschd.h **** 
+  31:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+  32:./lib/chibios/os/rt/include/chschd.h **** /* Module constants.                                                         */
+  33:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+  34:./lib/chibios/os/rt/include/chschd.h **** 
+  35:./lib/chibios/os/rt/include/chschd.h **** /**
+  36:./lib/chibios/os/rt/include/chschd.h ****  * @name    Wakeup status codes
+  37:./lib/chibios/os/rt/include/chschd.h ****  * @{
+  38:./lib/chibios/os/rt/include/chschd.h ****  */
+  39:./lib/chibios/os/rt/include/chschd.h **** #define MSG_OK              (msg_t)0    /**< @brief Normal wakeup message.  */
+  40:./lib/chibios/os/rt/include/chschd.h **** #define MSG_TIMEOUT         (msg_t)-1   /**< @brief Wakeup caused by a timeout
+  41:./lib/chibios/os/rt/include/chschd.h ****                                              condition.                     */
+  42:./lib/chibios/os/rt/include/chschd.h **** #define MSG_RESET           (msg_t)-2   /**< @brief Wakeup caused by a reset
+  43:./lib/chibios/os/rt/include/chschd.h ****                                              condition.                     */
+  44:./lib/chibios/os/rt/include/chschd.h **** /** @} */
+  45:./lib/chibios/os/rt/include/chschd.h **** 
+  46:./lib/chibios/os/rt/include/chschd.h **** /**
+  47:./lib/chibios/os/rt/include/chschd.h ****  * @name    Priority constants
+  48:./lib/chibios/os/rt/include/chschd.h ****  * @{
+  49:./lib/chibios/os/rt/include/chschd.h ****  */
+  50:./lib/chibios/os/rt/include/chschd.h **** #define NOPRIO              (tprio_t)0      /**< @brief Ready list header
+  51:./lib/chibios/os/rt/include/chschd.h ****                                                  priority.                  */
+  52:./lib/chibios/os/rt/include/chschd.h **** #define IDLEPRIO            (tprio_t)1      /**< @brief Idle priority.      */
+  53:./lib/chibios/os/rt/include/chschd.h **** #define LOWPRIO             (tprio_t)2      /**< @brief Lowest priority.    */
+  54:./lib/chibios/os/rt/include/chschd.h **** #define NORMALPRIO          (tprio_t)128    /**< @brief Normal priority.    */
+  55:./lib/chibios/os/rt/include/chschd.h **** #define HIGHPRIO            (tprio_t)255    /**< @brief Highest priority.   */
+  56:./lib/chibios/os/rt/include/chschd.h **** /** @} */
+  57:./lib/chibios/os/rt/include/chschd.h **** 
+  58:./lib/chibios/os/rt/include/chschd.h **** /**
+  59:./lib/chibios/os/rt/include/chschd.h ****  * @name    Thread states
+  60:./lib/chibios/os/rt/include/chschd.h ****  * @{
+  61:./lib/chibios/os/rt/include/chschd.h ****  */
+  62:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_READY      (tstate_t)0      /**< @brief Waiting on the
+  63:./lib/chibios/os/rt/include/chschd.h ****                                                   ready list.               */
+  64:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_CURRENT    (tstate_t)1      /**< @brief Currently running. */
+  65:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTSTART    (tstate_t)2      /**< @brief Just created.      */
+  66:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_SUSPENDED  (tstate_t)3      /**< @brief Suspended state.   */
+  67:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_QUEUED     (tstate_t)4      /**< @brief On an I/O queue.   */
+  68:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTSEM      (tstate_t)5      /**< @brief On a semaphore.    */
+  69:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTMTX      (tstate_t)6      /**< @brief On a mutex.        */
+  70:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTCOND     (tstate_t)7      /**< @brief On a cond.variable.*/
+  71:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_SLEEPING   (tstate_t)8      /**< @brief Sleeping.          */
+  72:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTEXIT     (tstate_t)9      /**< @brief Waiting a thread.  */
+  73:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTOREVT    (tstate_t)10     /**< @brief One event.         */
+  74:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTANDEVT   (tstate_t)11     /**< @brief Several events.    */
+  75:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_SNDMSGQ    (tstate_t)12     /**< @brief Sending a message,
+  76:./lib/chibios/os/rt/include/chschd.h ****                                                   in queue.                 */
+  77:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_SNDMSG     (tstate_t)13     /**< @brief Sent a message,
+  78:./lib/chibios/os/rt/include/chschd.h ****                                                   waiting answer.           */
+  79:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_WTMSG      (tstate_t)14     /**< @brief Waiting for a
+  80:./lib/chibios/os/rt/include/chschd.h ****                                                   message.                  */
+  81:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_FINAL      (tstate_t)15     /**< @brief Thread terminated. */
+  82:./lib/chibios/os/rt/include/chschd.h **** 
+  83:./lib/chibios/os/rt/include/chschd.h **** /**
+  84:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Thread states as array of strings.
+  85:./lib/chibios/os/rt/include/chschd.h ****  * @details Each element in an array initialized with this macro can be
+  86:./lib/chibios/os/rt/include/chschd.h ****  *          indexed using the numeric thread state values.
+  87:./lib/chibios/os/rt/include/chschd.h ****  */
+  88:./lib/chibios/os/rt/include/chschd.h **** #define CH_STATE_NAMES                                                     \
+  89:./lib/chibios/os/rt/include/chschd.h ****   "READY", "CURRENT", "WTSTART", "SUSPENDED", "QUEUED", "WTSEM", "WTMTX",  \
+  90:./lib/chibios/os/rt/include/chschd.h ****   "WTCOND", "SLEEPING", "WTEXIT", "WTOREVT", "WTANDEVT", "SNDMSGQ",        \
+  91:./lib/chibios/os/rt/include/chschd.h ****   "SNDMSG", "WTMSG", "FINAL"
+  92:./lib/chibios/os/rt/include/chschd.h **** /** @} */
+  93:./lib/chibios/os/rt/include/chschd.h **** 
+  94:./lib/chibios/os/rt/include/chschd.h **** /**
+  95:./lib/chibios/os/rt/include/chschd.h ****  * @name    Thread flags and attributes
+  96:./lib/chibios/os/rt/include/chschd.h ****  * @{
+  97:./lib/chibios/os/rt/include/chschd.h ****  */
+  98:./lib/chibios/os/rt/include/chschd.h **** #define CH_FLAG_MODE_MASK   (tmode_t)3U     /**< @brief Thread memory mode
+  99:./lib/chibios/os/rt/include/chschd.h ****                                                  mask.                      */
+ 100:./lib/chibios/os/rt/include/chschd.h **** #define CH_FLAG_MODE_STATIC (tmode_t)0U     /**< @brief Static thread.      */
+ 101:./lib/chibios/os/rt/include/chschd.h **** #define CH_FLAG_MODE_HEAP   (tmode_t)1U     /**< @brief Thread allocated
+ 102:./lib/chibios/os/rt/include/chschd.h ****                                                  from a Memory Heap.        */
+ 103:./lib/chibios/os/rt/include/chschd.h **** #define CH_FLAG_MODE_MPOOL  (tmode_t)2U     /**< @brief Thread allocated
+ 104:./lib/chibios/os/rt/include/chschd.h ****                                                  from a Memory Pool.        */
+ 105:./lib/chibios/os/rt/include/chschd.h **** #define CH_FLAG_TERMINATE   (tmode_t)4U     /**< @brief Termination requested
+ 106:./lib/chibios/os/rt/include/chschd.h ****                                                  flag.                      */
+ 107:./lib/chibios/os/rt/include/chschd.h **** /** @} */
+ 108:./lib/chibios/os/rt/include/chschd.h **** 
+ 109:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 110:./lib/chibios/os/rt/include/chschd.h **** /* Module pre-compile time settings.                                         */
+ 111:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 112:./lib/chibios/os/rt/include/chschd.h **** 
+ 113:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 114:./lib/chibios/os/rt/include/chschd.h **** /* Derived constants and error checks.                                       */
+ 115:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 116:./lib/chibios/os/rt/include/chschd.h **** 
+ 117:./lib/chibios/os/rt/include/chschd.h **** #if !defined(CH_CFG_IDLE_ENTER_HOOK)
+ 118:./lib/chibios/os/rt/include/chschd.h **** #error "CH_CFG_IDLE_ENTER_HOOK not defined in chconf.h"
+ 119:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 120:./lib/chibios/os/rt/include/chschd.h **** 
+ 121:./lib/chibios/os/rt/include/chschd.h **** #if !defined(CH_CFG_IDLE_LEAVE_HOOK)
+ 122:./lib/chibios/os/rt/include/chschd.h **** #error "CH_CFG_IDLE_LEAVE_HOOK not defined in chconf.h"
+ 123:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 124:./lib/chibios/os/rt/include/chschd.h **** 
+ 125:./lib/chibios/os/rt/include/chschd.h **** #if !defined(CH_CFG_IDLE_LOOP_HOOK)
+ 126:./lib/chibios/os/rt/include/chschd.h **** #error "CH_CFG_IDLE_LOOP_HOOK not defined in chconf.h"
+ 127:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 128:./lib/chibios/os/rt/include/chschd.h **** 
+ 129:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 130:./lib/chibios/os/rt/include/chschd.h **** /* Module data structures and types.                                         */
+ 131:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 132:./lib/chibios/os/rt/include/chschd.h **** 
+ 133:./lib/chibios/os/rt/include/chschd.h **** /**
+ 134:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Generic threads single link list, it works like a stack.
+ 135:./lib/chibios/os/rt/include/chschd.h ****  */
+ 136:./lib/chibios/os/rt/include/chschd.h **** struct ch_threads_list {
+ 137:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *next;      /**< @brief Next in the list/queue.     */
+ 138:./lib/chibios/os/rt/include/chschd.h **** };
+ 139:./lib/chibios/os/rt/include/chschd.h **** 
+ 140:./lib/chibios/os/rt/include/chschd.h **** /**
+ 141:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Generic threads bidirectional linked list header and element.
+ 142:./lib/chibios/os/rt/include/chschd.h ****  */
+ 143:./lib/chibios/os/rt/include/chschd.h **** struct ch_threads_queue {
+ 144:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *next;      /**< @brief Next in the list/queue.     */
+ 145:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *prev;      /**< @brief Previous in the queue.      */
+ 146:./lib/chibios/os/rt/include/chschd.h **** };
+ 147:./lib/chibios/os/rt/include/chschd.h **** 
+ 148:./lib/chibios/os/rt/include/chschd.h **** /**
+ 149:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Structure representing a thread.
+ 150:./lib/chibios/os/rt/include/chschd.h ****  * @note    Not all the listed fields are always needed, by switching off some
+ 151:./lib/chibios/os/rt/include/chschd.h ****  *          not needed ChibiOS/RT subsystems it is possible to save RAM space
+ 152:./lib/chibios/os/rt/include/chschd.h ****  *          by shrinking this structure.
+ 153:./lib/chibios/os/rt/include/chschd.h ****  */
+ 154:./lib/chibios/os/rt/include/chschd.h **** struct ch_thread {
+ 155:./lib/chibios/os/rt/include/chschd.h ****   threads_queue_t       queue;      /**< @brief Threads queue header.       */
+ 156:./lib/chibios/os/rt/include/chschd.h ****   tprio_t               prio;       /**< @brief Thread priority.            */
+ 157:./lib/chibios/os/rt/include/chschd.h ****   struct port_context   ctx;        /**< @brief Processor context.          */
+ 158:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_REGISTRY == TRUE) || defined(__DOXYGEN__)
+ 159:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *newer;     /**< @brief Newer registry element.     */
+ 160:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *older;     /**< @brief Older registry element.     */
+ 161:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 162:./lib/chibios/os/rt/include/chschd.h ****   /* End of the fields shared with the ReadyList structure. */
+ 163:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_REGISTRY == TRUE) || defined(__DOXYGEN__)
+ 164:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 165:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Thread name or @p NULL.
+ 166:./lib/chibios/os/rt/include/chschd.h ****    */
+ 167:./lib/chibios/os/rt/include/chschd.h ****   const char            *name;
+ 168:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 169:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE) ||  \
+ 170:./lib/chibios/os/rt/include/chschd.h ****     defined(__DOXYGEN__)
+ 171:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 172:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Working area base address.
+ 173:./lib/chibios/os/rt/include/chschd.h ****    * @note    This pointer is used for stack overflow checks and for
+ 174:./lib/chibios/os/rt/include/chschd.h ****    *          dynamic threading.
+ 175:./lib/chibios/os/rt/include/chschd.h ****    */
+ 176:./lib/chibios/os/rt/include/chschd.h ****   stkalign_t            *wabase;
+ 177:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 178:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 179:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Current thread state.
+ 180:./lib/chibios/os/rt/include/chschd.h ****    */
+ 181:./lib/chibios/os/rt/include/chschd.h ****   tstate_t              state;
+ 182:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 183:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Various thread flags.
+ 184:./lib/chibios/os/rt/include/chschd.h ****    */
+ 185:./lib/chibios/os/rt/include/chschd.h ****   tmode_t               flags;
+ 186:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_REGISTRY == TRUE) || defined(__DOXYGEN__)
+ 187:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 188:./lib/chibios/os/rt/include/chschd.h ****    * @brief   References to this thread.
+ 189:./lib/chibios/os/rt/include/chschd.h ****    */
+ 190:./lib/chibios/os/rt/include/chschd.h ****   trefs_t               refs;
+ 191:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 192:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 193:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Number of ticks remaining to this thread.
+ 194:./lib/chibios/os/rt/include/chschd.h ****    */
+ 195:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_TIME_QUANTUM > 0) || defined(__DOXYGEN__)
+ 196:./lib/chibios/os/rt/include/chschd.h ****   tslices_t             preempt;
+ 197:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 198:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_THREADS_PROFILING == TRUE) || defined(__DOXYGEN__)
+ 199:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 200:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Thread consumed time in ticks.
+ 201:./lib/chibios/os/rt/include/chschd.h ****    * @note    This field can overflow.
+ 202:./lib/chibios/os/rt/include/chschd.h ****    */
+ 203:./lib/chibios/os/rt/include/chschd.h ****   volatile systime_t    time;
+ 204:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 205:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 206:./lib/chibios/os/rt/include/chschd.h ****    * @brief   State-specific fields.
+ 207:./lib/chibios/os/rt/include/chschd.h ****    * @note    All the fields declared in this union are only valid in the
+ 208:./lib/chibios/os/rt/include/chschd.h ****    *          specified state or condition and are thus volatile.
+ 209:./lib/chibios/os/rt/include/chschd.h ****    */
+ 210:./lib/chibios/os/rt/include/chschd.h ****   union {
+ 211:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 212:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Thread wakeup code.
+ 213:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field contains the low level message sent to the thread
+ 214:./lib/chibios/os/rt/include/chschd.h ****      *          by the waking thread or interrupt handler. The value is valid
+ 215:./lib/chibios/os/rt/include/chschd.h ****      *          after exiting the @p chSchWakeupS() function.
+ 216:./lib/chibios/os/rt/include/chschd.h ****      */
+ 217:./lib/chibios/os/rt/include/chschd.h ****     msg_t               rdymsg;
+ 218:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 219:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Thread exit code.
+ 220:./lib/chibios/os/rt/include/chschd.h ****      * @note    The thread termination code is stored in this field in order
+ 221:./lib/chibios/os/rt/include/chschd.h ****      *          to be retrieved by the thread performing a @p chThdWait() on
+ 222:./lib/chibios/os/rt/include/chschd.h ****      *          this thread.
+ 223:./lib/chibios/os/rt/include/chschd.h ****      */
+ 224:./lib/chibios/os/rt/include/chschd.h ****     msg_t               exitcode;
+ 225:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 226:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Pointer to a generic "wait" object.
+ 227:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field is used to get a generic pointer to a synchronization
+ 228:./lib/chibios/os/rt/include/chschd.h ****      *          object and is valid when the thread is in one of the wait
+ 229:./lib/chibios/os/rt/include/chschd.h ****      *          states.
+ 230:./lib/chibios/os/rt/include/chschd.h ****      */
+ 231:./lib/chibios/os/rt/include/chschd.h ****     void                *wtobjp;
+ 232:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 233:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Pointer to a generic thread reference object.
+ 234:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field is used to get a pointer to a synchronization
+ 235:./lib/chibios/os/rt/include/chschd.h ****      *          object and is valid when the thread is in @p CH_STATE_SUSPENDED
+ 236:./lib/chibios/os/rt/include/chschd.h ****      *          state.
+ 237:./lib/chibios/os/rt/include/chschd.h ****      */
+ 238:./lib/chibios/os/rt/include/chschd.h ****     thread_reference_t  *wttrp;
+ 239:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_MESSAGES == TRUE) || defined(__DOXYGEN__)
+ 240:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 241:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Thread sent message.
+ 242:./lib/chibios/os/rt/include/chschd.h ****      */
+ 243:./lib/chibios/os/rt/include/chschd.h ****     msg_t               sentmsg;
+ 244:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 245:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_SEMAPHORES == TRUE) || defined(__DOXYGEN__)
+ 246:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 247:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Pointer to a generic semaphore object.
+ 248:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field is used to get a pointer to a synchronization
+ 249:./lib/chibios/os/rt/include/chschd.h ****      *          object and is valid when the thread is in @p CH_STATE_WTSEM
+ 250:./lib/chibios/os/rt/include/chschd.h ****      *          state.
+ 251:./lib/chibios/os/rt/include/chschd.h ****      */
+ 252:./lib/chibios/os/rt/include/chschd.h ****     struct ch_semaphore *wtsemp;
+ 253:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 254:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+ 255:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 256:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Pointer to a generic mutex object.
+ 257:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field is used to get a pointer to a synchronization
+ 258:./lib/chibios/os/rt/include/chschd.h ****      *          object and is valid when the thread is in @p CH_STATE_WTMTX
+ 259:./lib/chibios/os/rt/include/chschd.h ****      *          state.
+ 260:./lib/chibios/os/rt/include/chschd.h ****      */
+ 261:./lib/chibios/os/rt/include/chschd.h ****     struct ch_mutex     *wtmtxp;
+ 262:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 263:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_EVENTS == TRUE) || defined(__DOXYGEN__)
+ 264:./lib/chibios/os/rt/include/chschd.h ****     /**
+ 265:./lib/chibios/os/rt/include/chschd.h ****      * @brief   Enabled events mask.
+ 266:./lib/chibios/os/rt/include/chschd.h ****      * @note    This field is only valid while the thread is in the
+ 267:./lib/chibios/os/rt/include/chschd.h ****      *          @p CH_STATE_WTOREVT or @p CH_STATE_WTANDEVT states.
+ 268:./lib/chibios/os/rt/include/chschd.h ****      */
+ 269:./lib/chibios/os/rt/include/chschd.h ****     eventmask_t         ewmask;
+ 270:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 271:./lib/chibios/os/rt/include/chschd.h ****   }                     u;
+ 272:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_WAITEXIT == TRUE) || defined(__DOXYGEN__)
+ 273:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 274:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Termination waiting list.
+ 275:./lib/chibios/os/rt/include/chschd.h ****    */
+ 276:./lib/chibios/os/rt/include/chschd.h ****   threads_list_t        waiting;
+ 277:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 278:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_MESSAGES == TRUE) || defined(__DOXYGEN__)
+ 279:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 280:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Messages queue.
+ 281:./lib/chibios/os/rt/include/chschd.h ****    */
+ 282:./lib/chibios/os/rt/include/chschd.h ****   threads_queue_t       msgqueue;
+ 283:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 284:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_EVENTS == TRUE) || defined(__DOXYGEN__)
+ 285:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 286:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Pending events mask.
+ 287:./lib/chibios/os/rt/include/chschd.h ****    */
+ 288:./lib/chibios/os/rt/include/chschd.h ****   eventmask_t           epending;
+ 289:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 290:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+ 291:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 292:./lib/chibios/os/rt/include/chschd.h ****    * @brief   List of the mutexes owned by this thread.
+ 293:./lib/chibios/os/rt/include/chschd.h ****    * @note    The list is terminated by a @p NULL in this field.
+ 294:./lib/chibios/os/rt/include/chschd.h ****    */
+ 295:./lib/chibios/os/rt/include/chschd.h ****   struct ch_mutex       *mtxlist;
+ 296:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 297:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Thread's own, non-inherited, priority.
+ 298:./lib/chibios/os/rt/include/chschd.h ****    */
+ 299:./lib/chibios/os/rt/include/chschd.h ****   tprio_t               realprio;
+ 300:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 301:./lib/chibios/os/rt/include/chschd.h **** #if ((CH_CFG_USE_DYNAMIC == TRUE) && (CH_CFG_USE_MEMPOOLS == TRUE)) ||      \
+ 302:./lib/chibios/os/rt/include/chschd.h ****     defined(__DOXYGEN__)
+ 303:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 304:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Memory Pool where the thread workspace is returned.
+ 305:./lib/chibios/os/rt/include/chschd.h ****    */
+ 306:./lib/chibios/os/rt/include/chschd.h ****   void                  *mpool;
+ 307:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 308:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_STATISTICS == TRUE) || defined(__DOXYGEN__)
+ 309:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 310:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Thread statistics.
+ 311:./lib/chibios/os/rt/include/chschd.h ****    */
+ 312:./lib/chibios/os/rt/include/chschd.h ****   time_measurement_t    stats;
+ 313:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 314:./lib/chibios/os/rt/include/chschd.h **** #if defined(CH_CFG_THREAD_EXTRA_FIELDS)
+ 315:./lib/chibios/os/rt/include/chschd.h ****   /* Extra fields defined in chconf.h.*/
+ 316:./lib/chibios/os/rt/include/chschd.h ****   CH_CFG_THREAD_EXTRA_FIELDS
+ 317:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 318:./lib/chibios/os/rt/include/chschd.h **** };
+ 319:./lib/chibios/os/rt/include/chschd.h **** 
+ 320:./lib/chibios/os/rt/include/chschd.h **** /**
+ 321:./lib/chibios/os/rt/include/chschd.h ****  * @extends virtual_timers_list_t
+ 322:./lib/chibios/os/rt/include/chschd.h ****  *
+ 323:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Virtual Timer descriptor structure.
+ 324:./lib/chibios/os/rt/include/chschd.h ****  */
+ 325:./lib/chibios/os/rt/include/chschd.h **** struct ch_virtual_timer {
+ 326:./lib/chibios/os/rt/include/chschd.h ****   virtual_timer_t       *next;      /**< @brief Next timer in the list.     */
+ 327:./lib/chibios/os/rt/include/chschd.h ****   virtual_timer_t       *prev;      /**< @brief Previous timer in the list. */
+ 328:./lib/chibios/os/rt/include/chschd.h ****   systime_t             delta;      /**< @brief Time delta before timeout.  */
+ 329:./lib/chibios/os/rt/include/chschd.h ****   vtfunc_t              func;       /**< @brief Timer callback function
+ 330:./lib/chibios/os/rt/include/chschd.h ****                                                 pointer.                    */
+ 331:./lib/chibios/os/rt/include/chschd.h ****   void                  *par;       /**< @brief Timer callback function
+ 332:./lib/chibios/os/rt/include/chschd.h ****                                                 parameter.                  */
+ 333:./lib/chibios/os/rt/include/chschd.h **** };
+ 334:./lib/chibios/os/rt/include/chschd.h **** 
+ 335:./lib/chibios/os/rt/include/chschd.h **** /**
+ 336:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Virtual timers list header.
+ 337:./lib/chibios/os/rt/include/chschd.h ****  * @note    The timers list is implemented as a double link bidirectional list
+ 338:./lib/chibios/os/rt/include/chschd.h ****  *          in order to make the unlink time constant, the reset of a virtual
+ 339:./lib/chibios/os/rt/include/chschd.h ****  *          timer is often used in the code.
+ 340:./lib/chibios/os/rt/include/chschd.h ****  */
+ 341:./lib/chibios/os/rt/include/chschd.h **** struct ch_virtual_timers_list {
+ 342:./lib/chibios/os/rt/include/chschd.h ****   virtual_timer_t       *next;      /**< @brief Next timer in the delta
+ 343:./lib/chibios/os/rt/include/chschd.h ****                                                 list.                       */
+ 344:./lib/chibios/os/rt/include/chschd.h ****   virtual_timer_t       *prev;      /**< @brief Last timer in the delta
+ 345:./lib/chibios/os/rt/include/chschd.h ****                                                 list.                       */
+ 346:./lib/chibios/os/rt/include/chschd.h ****   systime_t             delta;      /**< @brief Must be initialized to -1.  */
+ 347:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_ST_TIMEDELTA == 0) || defined(__DOXYGEN__)
+ 348:./lib/chibios/os/rt/include/chschd.h ****   volatile systime_t    systime;    /**< @brief System Time counter.        */
+ 349:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 350:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_ST_TIMEDELTA > 0) || defined(__DOXYGEN__)
+ 351:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 352:./lib/chibios/os/rt/include/chschd.h ****    * @brief   System time of the last tick event.
+ 353:./lib/chibios/os/rt/include/chschd.h ****    */
+ 354:./lib/chibios/os/rt/include/chschd.h ****   systime_t             lasttime;   /**< @brief System time of the last
+ 355:./lib/chibios/os/rt/include/chschd.h ****                                                 tick event.                 */
+ 356:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 357:./lib/chibios/os/rt/include/chschd.h **** };
+ 358:./lib/chibios/os/rt/include/chschd.h **** 
+ 359:./lib/chibios/os/rt/include/chschd.h **** /**
+ 360:./lib/chibios/os/rt/include/chschd.h ****  * @extends threads_queue_t
+ 361:./lib/chibios/os/rt/include/chschd.h ****  */
+ 362:./lib/chibios/os/rt/include/chschd.h **** struct ch_ready_list {
+ 363:./lib/chibios/os/rt/include/chschd.h ****   threads_queue_t       queue;      /**< @brief Threads queue.              */
+ 364:./lib/chibios/os/rt/include/chschd.h ****   tprio_t               prio;       /**< @brief This field must be
+ 365:./lib/chibios/os/rt/include/chschd.h ****                                                 initialized to zero.        */
+ 366:./lib/chibios/os/rt/include/chschd.h ****   struct port_context   ctx;        /**< @brief Not used, present because
+ 367:./lib/chibios/os/rt/include/chschd.h ****                                                 offsets.                    */
+ 368:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_REGISTRY == TRUE) || defined(__DOXYGEN__)
+ 369:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *newer;     /**< @brief Newer registry element.     */
+ 370:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *older;     /**< @brief Older registry element.     */
+ 371:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 372:./lib/chibios/os/rt/include/chschd.h ****   /* End of the fields shared with the thread_t structure.*/
+ 373:./lib/chibios/os/rt/include/chschd.h ****   thread_t              *current;   /**< @brief The currently running
+ 374:./lib/chibios/os/rt/include/chschd.h ****                                                 thread.                     */
+ 375:./lib/chibios/os/rt/include/chschd.h **** };
+ 376:./lib/chibios/os/rt/include/chschd.h **** 
+ 377:./lib/chibios/os/rt/include/chschd.h **** /**
+ 378:./lib/chibios/os/rt/include/chschd.h ****  * @brief   System debug data structure.
+ 379:./lib/chibios/os/rt/include/chschd.h ****  */
+ 380:./lib/chibios/os/rt/include/chschd.h **** struct ch_system_debug {
+ 381:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 382:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Pointer to the panic message.
+ 383:./lib/chibios/os/rt/include/chschd.h ****    * @details This pointer is meant to be accessed through the debugger, it is
+ 384:./lib/chibios/os/rt/include/chschd.h ****    *          written once and then the system is halted.
+ 385:./lib/chibios/os/rt/include/chschd.h ****    * @note    Accesses to this pointer must never be optimized out so the
+ 386:./lib/chibios/os/rt/include/chschd.h ****    *          field itself is declared volatile.
+ 387:./lib/chibios/os/rt/include/chschd.h ****    */
+ 388:./lib/chibios/os/rt/include/chschd.h ****   const char            * volatile panic_msg;
+ 389:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_SYSTEM_STATE_CHECK == TRUE) || defined(__DOXYGEN__)
+ 390:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 391:./lib/chibios/os/rt/include/chschd.h ****    * @brief   ISR nesting level.
+ 392:./lib/chibios/os/rt/include/chschd.h ****    */
+ 393:./lib/chibios/os/rt/include/chschd.h ****   cnt_t                 isr_cnt;
+ 394:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 395:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Lock nesting level.
+ 396:./lib/chibios/os/rt/include/chschd.h ****    */
+ 397:./lib/chibios/os/rt/include/chschd.h ****   cnt_t                 lock_cnt;
+ 398:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 399:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_TRACE_MASK != CH_DBG_TRACE_MASK_DISABLED) || defined(__DOXYGEN__)
+ 400:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 401:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Public trace buffer.
+ 402:./lib/chibios/os/rt/include/chschd.h ****    */
+ 403:./lib/chibios/os/rt/include/chschd.h ****   ch_trace_buffer_t     trace_buffer;
+ 404:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 405:./lib/chibios/os/rt/include/chschd.h **** };
+ 406:./lib/chibios/os/rt/include/chschd.h **** 
+ 407:./lib/chibios/os/rt/include/chschd.h **** /**
+ 408:./lib/chibios/os/rt/include/chschd.h ****  * @brief   System data structure.
+ 409:./lib/chibios/os/rt/include/chschd.h ****  * @note    This structure contain all the data areas used by the OS except
+ 410:./lib/chibios/os/rt/include/chschd.h ****  *          stacks.
+ 411:./lib/chibios/os/rt/include/chschd.h ****  */
+ 412:./lib/chibios/os/rt/include/chschd.h **** struct ch_system {
+ 413:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 414:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Ready list header.
+ 415:./lib/chibios/os/rt/include/chschd.h ****    */
+ 416:./lib/chibios/os/rt/include/chschd.h ****   ready_list_t          rlist;
+ 417:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 418:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Virtual timers delta list header.
+ 419:./lib/chibios/os/rt/include/chschd.h ****    */
+ 420:./lib/chibios/os/rt/include/chschd.h ****   virtual_timers_list_t vtlist;
+ 421:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 422:./lib/chibios/os/rt/include/chschd.h ****    * @brief   System debug.
+ 423:./lib/chibios/os/rt/include/chschd.h ****    */
+ 424:./lib/chibios/os/rt/include/chschd.h ****   system_debug_t        dbg;
+ 425:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 426:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Main thread descriptor.
+ 427:./lib/chibios/os/rt/include/chschd.h ****    */
+ 428:./lib/chibios/os/rt/include/chschd.h ****   thread_t              mainthread;
+ 429:./lib/chibios/os/rt/include/chschd.h **** #if (CH_CFG_USE_TM == TRUE) || defined(__DOXYGEN__)
+ 430:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 431:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Time measurement calibration data.
+ 432:./lib/chibios/os/rt/include/chschd.h ****    */
+ 433:./lib/chibios/os/rt/include/chschd.h ****   tm_calibration_t      tm;
+ 434:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 435:./lib/chibios/os/rt/include/chschd.h **** #if (CH_DBG_STATISTICS == TRUE) || defined(__DOXYGEN__)
+ 436:./lib/chibios/os/rt/include/chschd.h ****   /**
+ 437:./lib/chibios/os/rt/include/chschd.h ****    * @brief   Global kernel statistics.
+ 438:./lib/chibios/os/rt/include/chschd.h ****    */
+ 439:./lib/chibios/os/rt/include/chschd.h ****   kernel_stats_t        kernel_stats;
+ 440:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 441:./lib/chibios/os/rt/include/chschd.h **** };
+ 442:./lib/chibios/os/rt/include/chschd.h **** 
+ 443:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 444:./lib/chibios/os/rt/include/chschd.h **** /* Module macros.                                                            */
+ 445:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 446:./lib/chibios/os/rt/include/chschd.h **** 
+ 447:./lib/chibios/os/rt/include/chschd.h **** /**
+ 448:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Returns the priority of the first thread on the given ready list.
+ 449:./lib/chibios/os/rt/include/chschd.h ****  *
+ 450:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 451:./lib/chibios/os/rt/include/chschd.h ****  */
+ 452:./lib/chibios/os/rt/include/chschd.h **** #define firstprio(rlp)  ((rlp)->next->prio)
+ 453:./lib/chibios/os/rt/include/chschd.h **** 
+ 454:./lib/chibios/os/rt/include/chschd.h **** /**
+ 455:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Current thread pointer access macro.
+ 456:./lib/chibios/os/rt/include/chschd.h ****  * @note    This macro is not meant to be used in the application code but
+ 457:./lib/chibios/os/rt/include/chschd.h ****  *          only from within the kernel, use @p chThdGetSelfX() instead.
+ 458:./lib/chibios/os/rt/include/chschd.h ****  */
+ 459:./lib/chibios/os/rt/include/chschd.h **** #define currp ch.rlist.current
+ 460:./lib/chibios/os/rt/include/chschd.h **** 
+ 461:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 462:./lib/chibios/os/rt/include/chschd.h **** /* External declarations.                                                    */
+ 463:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 464:./lib/chibios/os/rt/include/chschd.h **** 
+ 465:./lib/chibios/os/rt/include/chschd.h **** #if !defined(__DOXYGEN__)
+ 466:./lib/chibios/os/rt/include/chschd.h **** extern ch_system_t ch;
+ 467:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 468:./lib/chibios/os/rt/include/chschd.h **** 
+ 469:./lib/chibios/os/rt/include/chschd.h **** /*
+ 470:./lib/chibios/os/rt/include/chschd.h ****  * Scheduler APIs.
+ 471:./lib/chibios/os/rt/include/chschd.h ****  */
+ 472:./lib/chibios/os/rt/include/chschd.h **** #ifdef __cplusplus
+ 473:./lib/chibios/os/rt/include/chschd.h **** extern "C" {
+ 474:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 475:./lib/chibios/os/rt/include/chschd.h ****   void _scheduler_init(void);
+ 476:./lib/chibios/os/rt/include/chschd.h ****   thread_t *chSchReadyI(thread_t *tp);
+ 477:./lib/chibios/os/rt/include/chschd.h ****   thread_t *chSchReadyAheadI(thread_t *tp);
+ 478:./lib/chibios/os/rt/include/chschd.h ****   void chSchGoSleepS(tstate_t newstate);
+ 479:./lib/chibios/os/rt/include/chschd.h ****   msg_t chSchGoSleepTimeoutS(tstate_t newstate, systime_t time);
+ 480:./lib/chibios/os/rt/include/chschd.h ****   void chSchWakeupS(thread_t *ntp, msg_t msg);
+ 481:./lib/chibios/os/rt/include/chschd.h ****   void chSchRescheduleS(void);
+ 482:./lib/chibios/os/rt/include/chschd.h ****   bool chSchIsPreemptionRequired(void);
+ 483:./lib/chibios/os/rt/include/chschd.h ****   void chSchDoRescheduleBehind(void);
+ 484:./lib/chibios/os/rt/include/chschd.h ****   void chSchDoRescheduleAhead(void);
+ 485:./lib/chibios/os/rt/include/chschd.h ****   void chSchDoReschedule(void);
+ 486:./lib/chibios/os/rt/include/chschd.h **** #if CH_CFG_OPTIMIZE_SPEED == FALSE
+ 487:./lib/chibios/os/rt/include/chschd.h ****   void queue_prio_insert(thread_t *tp, threads_queue_t *tqp);
+ 488:./lib/chibios/os/rt/include/chschd.h ****   void queue_insert(thread_t *tp, threads_queue_t *tqp);
+ 489:./lib/chibios/os/rt/include/chschd.h ****   thread_t *queue_fifo_remove(threads_queue_t *tqp);
+ 490:./lib/chibios/os/rt/include/chschd.h ****   thread_t *queue_lifo_remove(threads_queue_t *tqp);
+ 491:./lib/chibios/os/rt/include/chschd.h ****   thread_t *queue_dequeue(thread_t *tp);
+ 492:./lib/chibios/os/rt/include/chschd.h ****   void list_insert(thread_t *tp, threads_list_t *tlp);
+ 493:./lib/chibios/os/rt/include/chschd.h ****   thread_t *list_remove(threads_list_t *tlp);
+ 494:./lib/chibios/os/rt/include/chschd.h **** #endif /* CH_CFG_OPTIMIZE_SPEED == FALSE */
+ 495:./lib/chibios/os/rt/include/chschd.h **** #ifdef __cplusplus
+ 496:./lib/chibios/os/rt/include/chschd.h **** }
+ 497:./lib/chibios/os/rt/include/chschd.h **** #endif
+ 498:./lib/chibios/os/rt/include/chschd.h **** 
+ 499:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 500:./lib/chibios/os/rt/include/chschd.h **** /* Module inline functions.                                                  */
+ 501:./lib/chibios/os/rt/include/chschd.h **** /*===========================================================================*/
+ 502:./lib/chibios/os/rt/include/chschd.h **** 
+ 503:./lib/chibios/os/rt/include/chschd.h **** /**
+ 504:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Threads list initialization.
+ 505:./lib/chibios/os/rt/include/chschd.h ****  *
+ 506:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tlp       pointer to the threads list object
+ 507:./lib/chibios/os/rt/include/chschd.h ****  *
+ 508:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 509:./lib/chibios/os/rt/include/chschd.h ****  */
+ 510:./lib/chibios/os/rt/include/chschd.h **** static inline void list_init(threads_list_t *tlp) {
+ 511:./lib/chibios/os/rt/include/chschd.h **** 
+ 512:./lib/chibios/os/rt/include/chschd.h ****   tlp->next = (thread_t *)tlp;
+ 513:./lib/chibios/os/rt/include/chschd.h **** }
+ 514:./lib/chibios/os/rt/include/chschd.h **** 
+ 515:./lib/chibios/os/rt/include/chschd.h **** /**
+ 516:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Evaluates to @p true if the specified threads list is empty.
+ 517:./lib/chibios/os/rt/include/chschd.h ****  *
+ 518:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tlp       pointer to the threads list object
+ 519:./lib/chibios/os/rt/include/chschd.h ****  * @return              The status of the list.
+ 520:./lib/chibios/os/rt/include/chschd.h ****  *
+ 521:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 522:./lib/chibios/os/rt/include/chschd.h ****  */
+ 523:./lib/chibios/os/rt/include/chschd.h **** static inline bool list_isempty(threads_list_t *tlp) {
+ 524:./lib/chibios/os/rt/include/chschd.h **** 
+ 525:./lib/chibios/os/rt/include/chschd.h ****   return (bool)(tlp->next == (thread_t *)tlp);
+ 526:./lib/chibios/os/rt/include/chschd.h **** }
+ 527:./lib/chibios/os/rt/include/chschd.h **** 
+ 528:./lib/chibios/os/rt/include/chschd.h **** /**
+ 529:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Evaluates to @p true if the specified threads list is not empty.
+ 530:./lib/chibios/os/rt/include/chschd.h ****  *
+ 531:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tlp       pointer to the threads list object
+ 532:./lib/chibios/os/rt/include/chschd.h ****  * @return              The status of the list.
+ 533:./lib/chibios/os/rt/include/chschd.h ****  *
+ 534:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 535:./lib/chibios/os/rt/include/chschd.h ****  */
+ 536:./lib/chibios/os/rt/include/chschd.h **** static inline bool list_notempty(threads_list_t *tlp) {
+ 537:./lib/chibios/os/rt/include/chschd.h **** 
+ 538:./lib/chibios/os/rt/include/chschd.h ****   return (bool)(tlp->next != (thread_t *)tlp);
+ 539:./lib/chibios/os/rt/include/chschd.h **** }
+ 540:./lib/chibios/os/rt/include/chschd.h **** 
+ 541:./lib/chibios/os/rt/include/chschd.h **** /**
+ 542:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Threads queue initialization.
+ 543:./lib/chibios/os/rt/include/chschd.h ****  *
+ 544:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tqp       pointer to the threads queue object
+ 545:./lib/chibios/os/rt/include/chschd.h ****  *
+ 546:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 547:./lib/chibios/os/rt/include/chschd.h ****  */
+ 548:./lib/chibios/os/rt/include/chschd.h **** static inline void queue_init(threads_queue_t *tqp) {
+ 549:./lib/chibios/os/rt/include/chschd.h **** 
+ 550:./lib/chibios/os/rt/include/chschd.h ****   tqp->next = (thread_t *)tqp;
+ 551:./lib/chibios/os/rt/include/chschd.h ****   tqp->prev = (thread_t *)tqp;
+ 552:./lib/chibios/os/rt/include/chschd.h **** }
+ 553:./lib/chibios/os/rt/include/chschd.h **** 
+ 554:./lib/chibios/os/rt/include/chschd.h **** /**
+ 555:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Evaluates to @p true if the specified threads queue is empty.
+ 556:./lib/chibios/os/rt/include/chschd.h ****  *
+ 557:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tqp       pointer to the threads queue object
+ 558:./lib/chibios/os/rt/include/chschd.h ****  * @return              The status of the queue.
+ 559:./lib/chibios/os/rt/include/chschd.h ****  *
+ 560:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 561:./lib/chibios/os/rt/include/chschd.h ****  */
+ 562:./lib/chibios/os/rt/include/chschd.h **** static inline bool queue_isempty(const threads_queue_t *tqp) {
+ 563:./lib/chibios/os/rt/include/chschd.h **** 
+ 564:./lib/chibios/os/rt/include/chschd.h ****   return (bool)(tqp->next == (const thread_t *)tqp);
+ 565:./lib/chibios/os/rt/include/chschd.h **** }
+ 566:./lib/chibios/os/rt/include/chschd.h **** 
+ 567:./lib/chibios/os/rt/include/chschd.h **** /**
+ 568:./lib/chibios/os/rt/include/chschd.h ****  * @brief   Evaluates to @p true if the specified threads queue is not empty.
+ 569:./lib/chibios/os/rt/include/chschd.h ****  *
+ 570:./lib/chibios/os/rt/include/chschd.h ****  * @param[in] tqp       pointer to the threads queue object
+ 571:./lib/chibios/os/rt/include/chschd.h ****  * @return              The status of the queue.
+ 572:./lib/chibios/os/rt/include/chschd.h ****  *
+ 573:./lib/chibios/os/rt/include/chschd.h ****  * @notapi
+ 574:./lib/chibios/os/rt/include/chschd.h ****  */
+ 575:./lib/chibios/os/rt/include/chschd.h **** static inline bool queue_notempty(const threads_queue_t *tqp) {
+ 576:./lib/chibios/os/rt/include/chschd.h **** 
+ 577:./lib/chibios/os/rt/include/chschd.h ****   return (bool)(tqp->next != (const thread_t *)tqp);
+ 578:./lib/chibios/os/rt/include/chschd.h **** }
+ 579:./lib/chibios/os/rt/include/chschd.h **** 
+ 580:./lib/chibios/os/rt/include/chschd.h **** /* If the performance code path has been chosen then all the following
+ 581:./lib/chibios/os/rt/include/chschd.h ****    functions are inlined into the various kernel modules.*/
+ 582:./lib/chibios/os/rt/include/chschd.h **** #if CH_CFG_OPTIMIZE_SPEED == TRUE
+ 583:./lib/chibios/os/rt/include/chschd.h **** static inline void list_insert(thread_t *tp, threads_list_t *tlp) {
+ 584:./lib/chibios/os/rt/include/chschd.h **** 
+ 585:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.next = tlp->next;
+ 586:./lib/chibios/os/rt/include/chschd.h ****   tlp->next = tp;
+ 587:./lib/chibios/os/rt/include/chschd.h **** }
+ 588:./lib/chibios/os/rt/include/chschd.h **** 
+ 589:./lib/chibios/os/rt/include/chschd.h **** static inline thread_t *list_remove(threads_list_t *tlp) {
+ 590:./lib/chibios/os/rt/include/chschd.h **** 
+ 591:./lib/chibios/os/rt/include/chschd.h ****   thread_t *tp = tlp->next;
+ 592:./lib/chibios/os/rt/include/chschd.h ****   tlp->next = tp->queue.next;
+ 593:./lib/chibios/os/rt/include/chschd.h **** 
+ 594:./lib/chibios/os/rt/include/chschd.h ****   return tp;
+ 595:./lib/chibios/os/rt/include/chschd.h **** }
+ 596:./lib/chibios/os/rt/include/chschd.h **** 
+ 597:./lib/chibios/os/rt/include/chschd.h **** static inline void queue_prio_insert(thread_t *tp, threads_queue_t *tqp) {
+  25              		.loc 1 597 0
+  26              		.cfi_startproc
+  27              		@ args = 0, pretend = 0, frame = 0
+  28              		@ frame_needed = 0, uses_anonymous_args = 0
+  29              	.LVL0:
+  30 0000 10B5     		push	{r4, lr}
+  31              		.cfi_def_cfa_offset 8
+  32              		.cfi_offset 4, -8
+  33              		.cfi_offset 14, -4
+  34              		.loc 1 597 0
+  35 0002 0B46     		mov	r3, r1
+  36              	.LVL1:
+  37              	.L3:
+ 598:./lib/chibios/os/rt/include/chschd.h **** 
+ 599:./lib/chibios/os/rt/include/chschd.h ****   thread_t *cp = (thread_t *)tqp;
+ 600:./lib/chibios/os/rt/include/chschd.h ****   do {
+ 601:./lib/chibios/os/rt/include/chschd.h ****     cp = cp->queue.next;
+  38              		.loc 1 601 0 discriminator 2
+  39 0004 1B68     		ldr	r3, [r3]
+  40              	.LVL2:
+ 602:./lib/chibios/os/rt/include/chschd.h ****   } while ((cp != (thread_t *)tqp) && (cp->prio >= tp->prio));
+  41              		.loc 1 602 0 discriminator 2
+  42 0006 9942     		cmp	r1, r3
+  43 0008 03D0     		beq	.L2
+  44              		.loc 1 602 0 is_stmt 0 discriminator 1
+  45 000a 9C68     		ldr	r4, [r3, #8]
+  46 000c 8268     		ldr	r2, [r0, #8]
+  47 000e 9442     		cmp	r4, r2
+  48 0010 F8D2     		bcs	.L3
+  49              	.L2:
+ 603:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.next             = cp;
+ 604:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.prev             = cp->queue.prev;
+  50              		.loc 1 604 0 is_stmt 1
+  51 0012 5A68     		ldr	r2, [r3, #4]
+ 603:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.next             = cp;
+  52              		.loc 1 603 0
+  53 0014 0360     		str	r3, [r0]
+  54              		.loc 1 604 0
+  55 0016 4260     		str	r2, [r0, #4]
+ 605:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.prev->queue.next = tp;
+  56              		.loc 1 605 0
+  57 0018 1060     		str	r0, [r2]
+ 606:./lib/chibios/os/rt/include/chschd.h ****   cp->queue.prev             = tp;
+  58              		.loc 1 606 0
+  59 001a 5860     		str	r0, [r3, #4]
+ 607:./lib/chibios/os/rt/include/chschd.h **** }
+  60              		.loc 1 607 0
+  61 001c 10BD     		pop	{r4, pc}
+  62              		.cfi_endproc
+  63              	.LFE155:
+  65              		.section	.text.chCondObjectInit,"ax",%progbits
+  66              		.align	1
+  67              		.global	chCondObjectInit
+  68              		.syntax unified
+  69              		.thumb
+  70              		.thumb_func
+  71              		.fpu softvfp
+  73              	chCondObjectInit:
+  74              	.LFB248:
+  75              		.file 2 "lib/chibios/os/rt/src/chcond.c"
+   1:lib/chibios/os/rt/src/chcond.c **** /*
+   2:lib/chibios/os/rt/src/chcond.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:lib/chibios/os/rt/src/chcond.c **** 
+   4:lib/chibios/os/rt/src/chcond.c ****     This file is part of ChibiOS.
+   5:lib/chibios/os/rt/src/chcond.c **** 
+   6:lib/chibios/os/rt/src/chcond.c ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:lib/chibios/os/rt/src/chcond.c ****     it under the terms of the GNU General Public License as published by
+   8:lib/chibios/os/rt/src/chcond.c ****     the Free Software Foundation; either version 3 of the License, or
+   9:lib/chibios/os/rt/src/chcond.c ****     (at your option) any later version.
+  10:lib/chibios/os/rt/src/chcond.c **** 
+  11:lib/chibios/os/rt/src/chcond.c ****     ChibiOS is distributed in the hope that it will be useful,
+  12:lib/chibios/os/rt/src/chcond.c ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:lib/chibios/os/rt/src/chcond.c ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:lib/chibios/os/rt/src/chcond.c ****     GNU General Public License for more details.
+  15:lib/chibios/os/rt/src/chcond.c **** 
+  16:lib/chibios/os/rt/src/chcond.c ****     You should have received a copy of the GNU General Public License
+  17:lib/chibios/os/rt/src/chcond.c ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:lib/chibios/os/rt/src/chcond.c **** */
+  19:lib/chibios/os/rt/src/chcond.c **** /*
+  20:lib/chibios/os/rt/src/chcond.c ****    Concepts and parts of this file have been contributed by Leon Woestenberg.
+  21:lib/chibios/os/rt/src/chcond.c ****  */
+  22:lib/chibios/os/rt/src/chcond.c **** 
+  23:lib/chibios/os/rt/src/chcond.c **** /**
+  24:lib/chibios/os/rt/src/chcond.c ****  * @file    chcond.c
+  25:lib/chibios/os/rt/src/chcond.c ****  * @brief   Condition Variables code.
+  26:lib/chibios/os/rt/src/chcond.c ****  *
+  27:lib/chibios/os/rt/src/chcond.c ****  * @addtogroup condvars
+  28:lib/chibios/os/rt/src/chcond.c ****  * @details This module implements the Condition Variables mechanism. Condition
+  29:lib/chibios/os/rt/src/chcond.c ****  *          variables are an extensions to the mutex subsystem and cannot
+  30:lib/chibios/os/rt/src/chcond.c ****  *          work alone.
+  31:lib/chibios/os/rt/src/chcond.c ****  *          <h2>Operation mode</h2>
+  32:lib/chibios/os/rt/src/chcond.c ****  *          The condition variable is a synchronization object meant to be
+  33:lib/chibios/os/rt/src/chcond.c ****  *          used inside a zone protected by a mutex. Mutexes and condition
+  34:lib/chibios/os/rt/src/chcond.c ****  *          variables together can implement a Monitor construct.
+  35:lib/chibios/os/rt/src/chcond.c ****  * @pre     In order to use the condition variable APIs the @p CH_CFG_USE_CONDVARS
+  36:lib/chibios/os/rt/src/chcond.c ****  *          option must be enabled in @p chconf.h.
+  37:lib/chibios/os/rt/src/chcond.c ****  * @{
+  38:lib/chibios/os/rt/src/chcond.c ****  */
+  39:lib/chibios/os/rt/src/chcond.c **** 
+  40:lib/chibios/os/rt/src/chcond.c **** #include "ch.h"
+  41:lib/chibios/os/rt/src/chcond.c **** 
+  42:lib/chibios/os/rt/src/chcond.c **** #if (CH_CFG_USE_CONDVARS == TRUE) || defined(__DOXYGEN__)
+  43:lib/chibios/os/rt/src/chcond.c **** 
+  44:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  45:lib/chibios/os/rt/src/chcond.c **** /* Module local definitions.                                                 */
+  46:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  47:lib/chibios/os/rt/src/chcond.c **** 
+  48:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  49:lib/chibios/os/rt/src/chcond.c **** /* Module exported variables.                                                */
+  50:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  51:lib/chibios/os/rt/src/chcond.c **** 
+  52:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  53:lib/chibios/os/rt/src/chcond.c **** /* Module local types.                                                       */
+  54:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  55:lib/chibios/os/rt/src/chcond.c **** 
+  56:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  57:lib/chibios/os/rt/src/chcond.c **** /* Module local variables.                                                   */
+  58:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  59:lib/chibios/os/rt/src/chcond.c **** 
+  60:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  61:lib/chibios/os/rt/src/chcond.c **** /* Module local functions.                                                   */
+  62:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  63:lib/chibios/os/rt/src/chcond.c **** 
+  64:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  65:lib/chibios/os/rt/src/chcond.c **** /* Module exported functions.                                                */
+  66:lib/chibios/os/rt/src/chcond.c **** /*===========================================================================*/
+  67:lib/chibios/os/rt/src/chcond.c **** 
+  68:lib/chibios/os/rt/src/chcond.c **** /**
+  69:lib/chibios/os/rt/src/chcond.c ****  * @brief   Initializes s @p condition_variable_t structure.
+  70:lib/chibios/os/rt/src/chcond.c ****  *
+  71:lib/chibios/os/rt/src/chcond.c ****  * @param[out] cp       pointer to a @p condition_variable_t structure
+  72:lib/chibios/os/rt/src/chcond.c ****  *
+  73:lib/chibios/os/rt/src/chcond.c ****  * @init
+  74:lib/chibios/os/rt/src/chcond.c ****  */
+  75:lib/chibios/os/rt/src/chcond.c **** void chCondObjectInit(condition_variable_t *cp) {
+  76              		.loc 2 75 0
+  77              		.cfi_startproc
+  78              		@ args = 0, pretend = 0, frame = 0
+  79              		@ frame_needed = 0, uses_anonymous_args = 0
+  80              		@ link register save eliminated.
+  81              	.LVL3:
+  82              	.LBB79:
+  83              	.LBB80:
+ 551:./lib/chibios/os/rt/include/chschd.h **** }
+  84              		.loc 1 551 0
+  85 0000 C0E90000 		strd	r0, r0, [r0]
+  86              	.LVL4:
+  87              	.LBE80:
+  88              	.LBE79:
+  76:lib/chibios/os/rt/src/chcond.c **** 
+  77:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck(cp != NULL);
+  78:lib/chibios/os/rt/src/chcond.c **** 
+  79:lib/chibios/os/rt/src/chcond.c ****   queue_init(&cp->queue);
+  80:lib/chibios/os/rt/src/chcond.c **** }
+  89              		.loc 2 80 0
+  90 0004 7047     		bx	lr
+  91              		.cfi_endproc
+  92              	.LFE248:
+  94              		.section	.text.chCondSignal,"ax",%progbits
+  95              		.align	1
+  96              		.global	chCondSignal
+  97              		.syntax unified
+  98              		.thumb
+  99              		.thumb_func
+ 100              		.fpu softvfp
+ 102              	chCondSignal:
+ 103              	.LFB249:
+  81:lib/chibios/os/rt/src/chcond.c **** 
+  82:lib/chibios/os/rt/src/chcond.c **** /**
+  83:lib/chibios/os/rt/src/chcond.c ****  * @brief   Signals one thread that is waiting on the condition variable.
+  84:lib/chibios/os/rt/src/chcond.c ****  *
+  85:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+  86:lib/chibios/os/rt/src/chcond.c ****  *
+  87:lib/chibios/os/rt/src/chcond.c ****  * @api
+  88:lib/chibios/os/rt/src/chcond.c ****  */
+  89:lib/chibios/os/rt/src/chcond.c **** void chCondSignal(condition_variable_t *cp) {
+ 104              		.loc 2 89 0
+ 105              		.cfi_startproc
+ 106              		@ args = 0, pretend = 0, frame = 0
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              	.LVL5:
+ 109 0000 08B5     		push	{r3, lr}
+ 110              		.cfi_def_cfa_offset 8
+ 111              		.cfi_offset 3, -8
+ 112              		.cfi_offset 14, -4
+ 113              	.LBB81:
+ 114              	.LBB82:
+ 115              	.LBB83:
+ 116              	.LBB84:
+ 117              		.file 3 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h"
+   1:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**************************************************************************//**
+   2:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @version  V4.30
+   5:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  ******************************************************************************/
+   7:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+   9:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    All rights reserved.
+  10:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      specific prior written permission.
+  20:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    *
+  21:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  34:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  35:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  38:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #endif
+  45:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  46:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  47:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   @{
+  51:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  52:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  53:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  54:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  58:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  60:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  62:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  63:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  64:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  65:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  69:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  71:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+  72:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  73:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  74:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  75:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  76:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Control Register
+  77:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the Control Register.
+  78:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Control Register value
+  79:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  80:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_CONTROL(void)
+  81:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  82:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+  83:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  84:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, control" : "=r" (result) );
+  85:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+  86:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  87:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  88:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  89:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  90:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Control Register
+  91:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Writes the given value to the Control Register.
+  92:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    control  Control Register value to set
+  93:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  94:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_CONTROL(uint32_t control)
+  95:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  96:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+  97:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  98:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  99:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 100:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 101:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get IPSR Register
+ 102:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the IPSR Register.
+ 103:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               IPSR Register value
+ 104:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 105:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_IPSR(void)
+ 106:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 107:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 108:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 109:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, ipsr" : "=r" (result) );
+ 110:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 111:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 112:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 113:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 114:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 115:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get APSR Register
+ 116:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the APSR Register.
+ 117:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               APSR Register value
+ 118:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 119:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_APSR(void)
+ 120:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 121:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 122:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 123:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, apsr" : "=r" (result) );
+ 124:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 125:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 126:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 127:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 128:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 129:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get xPSR Register
+ 130:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the xPSR Register.
+ 131:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 132:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \return               xPSR Register value
+ 133:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 134:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_xPSR(void)
+ 135:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 136:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 137:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 138:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, xpsr" : "=r" (result) );
+ 139:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 140:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 141:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 142:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 143:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 144:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Process Stack Pointer
+ 145:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Process Stack Pointer (PSP).
+ 146:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               PSP Register value
+ 147:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 148:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PSP(void)
+ 149:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 150:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 151:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 152:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, psp\n"  : "=r" (result) );
+ 153:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 154:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 155:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 156:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 157:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 158:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Process Stack Pointer
+ 159:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Process Stack Pointer (PSP).
+ 160:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    topOfProcStack  Process Stack Pointer value to set
+ 161:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 162:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PSP(uint32_t topOfProcStack)
+ 163:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 164:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
+ 165:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 166:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 167:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 168:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 169:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Main Stack Pointer
+ 170:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Main Stack Pointer (MSP).
+ 171:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               MSP Register value
+ 172:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 173:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
+ 174:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 175:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 176:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 177:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, msp\n" : "=r" (result) );
+ 178:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 179:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 180:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 181:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 182:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 183:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Main Stack Pointer
+ 184:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Main Stack Pointer (MSP).
+ 185:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 186:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \param [in]    topOfMainStack  Main Stack Pointer value to set
+ 187:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 188:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+ 189:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 190:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+ 191:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 192:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 193:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 194:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 195:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Priority Mask
+ 196:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current state of the priority mask bit from the Priority Mask Register.
+ 197:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Priority Mask value
+ 198:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 199:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PRIMASK(void)
+ 200:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 201:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 202:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 203:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, primask" : "=r" (result) );
+ 204:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 205:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 206:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 207:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 208:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 209:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Priority Mask
+ 210:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Priority Mask Register.
+ 211:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    priMask  Priority Mask
+ 212:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 213:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PRIMASK(uint32_t priMask)
+ 214:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 215:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+ 216:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 217:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 218:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 219:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if       (__CORTEX_M >= 0x03U)
+ 220:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 221:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 222:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable FIQ
+ 223:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+ 224:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 225:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 226:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_fault_irq(void)
+ 227:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 228:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie f" : : : "memory");
+ 229:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 230:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 231:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 232:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 233:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable FIQ
+ 234:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+ 235:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 236:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 237:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_fault_irq(void)
+ 238:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 239:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid f" : : : "memory");
+ 240:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 241:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 242:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 243:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 244:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Base Priority
+ 245:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Base Priority register.
+ 246:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Base Priority register value
+ 247:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 248:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_BASEPRI(void)
+ 249:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 250:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 251:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 252:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, basepri" : "=r" (result) );
+ 253:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 254:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 255:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 256:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 257:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 258:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Base Priority
+ 259:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register.
+ 260:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 261:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 262:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI(uint32_t value)
+ 263:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 264:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR basepri, %0" : : "r" (value) : "memory");
+ 118              		.loc 3 264 0
+ 119 0002 2022     		movs	r2, #32
+ 120              	.LBE84:
+ 121              	.LBE83:
+ 122              	.LBE82:
+ 123              	.LBE81:
+ 124              		.loc 2 89 0
+ 125 0004 0346     		mov	r3, r0
+ 126              	.LBB88:
+ 127              	.LBB87:
+ 128              	.LBB86:
+ 129              	.LBB85:
+ 130              		.loc 3 264 0
+ 131              		.syntax unified
+ 132              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 133 0006 82F31188 		MSR basepri, r2
+ 134              	@ 0 "" 2
+ 135              	.LVL6:
+ 136              		.thumb
+ 137              		.syntax unified
+ 138              	.LBE85:
+ 139              	.LBE86:
+ 140              	.LBE87:
+ 141              	.LBE88:
+ 142              	.LBB89:
+ 143              	.LBB90:
+ 577:./lib/chibios/os/rt/include/chschd.h **** }
+ 144              		.loc 1 577 0
+ 145 000a 0068     		ldr	r0, [r0]
+ 146              	.LVL7:
+ 147              	.LBE90:
+ 148              	.LBE89:
+  90:lib/chibios/os/rt/src/chcond.c **** 
+  91:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck(cp != NULL);
+  92:lib/chibios/os/rt/src/chcond.c **** 
+  93:lib/chibios/os/rt/src/chcond.c ****   chSysLock();
+  94:lib/chibios/os/rt/src/chcond.c ****   if (queue_notempty(&cp->queue)) {
+ 149              		.loc 2 94 0
+ 150 000c 8342     		cmp	r3, r0
+ 151 000e 05D0     		beq	.L8
+ 152              	.LVL8:
+ 153              	.LBB91:
+ 154              	.LBB92:
+ 608:./lib/chibios/os/rt/include/chschd.h **** 
+ 609:./lib/chibios/os/rt/include/chschd.h **** static inline void queue_insert(thread_t *tp, threads_queue_t *tqp) {
+ 610:./lib/chibios/os/rt/include/chschd.h **** 
+ 611:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.next             = (thread_t *)tqp;
+ 612:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.prev             = tqp->prev;
+ 613:./lib/chibios/os/rt/include/chschd.h ****   tp->queue.prev->queue.next = tp;
+ 614:./lib/chibios/os/rt/include/chschd.h ****   tqp->prev                  = tp;
+ 615:./lib/chibios/os/rt/include/chschd.h **** }
+ 616:./lib/chibios/os/rt/include/chschd.h **** 
+ 617:./lib/chibios/os/rt/include/chschd.h **** static inline thread_t *queue_fifo_remove(threads_queue_t *tqp) {
+ 618:./lib/chibios/os/rt/include/chschd.h ****   thread_t *tp = tqp->next;
+ 619:./lib/chibios/os/rt/include/chschd.h **** 
+ 620:./lib/chibios/os/rt/include/chschd.h ****   tqp->next             = tp->queue.next;
+ 155              		.loc 1 620 0
+ 156 0010 0268     		ldr	r2, [r0]
+ 157 0012 1A60     		str	r2, [r3]
+ 158              	.LBE92:
+ 159              	.LBE91:
+  95:lib/chibios/os/rt/src/chcond.c ****     chSchWakeupS(queue_fifo_remove(&cp->queue), MSG_OK);
+ 160              		.loc 2 95 0
+ 161 0014 0021     		movs	r1, #0
+ 162              	.LBB94:
+ 163              	.LBB93:
+ 621:./lib/chibios/os/rt/include/chschd.h ****   tqp->next->queue.prev = (thread_t *)tqp;
+ 164              		.loc 1 621 0
+ 165 0016 5360     		str	r3, [r2, #4]
+ 166              	.LVL9:
+ 167              	.LBE93:
+ 168              	.LBE94:
+ 169              		.loc 2 95 0
+ 170 0018 FFF7FEFF 		bl	chSchWakeupS
+ 171              	.LVL10:
+ 172              	.L8:
+ 173              	.LBB95:
+ 174              	.LBB96:
+ 175              	.LBB97:
+ 176              	.LBB98:
+ 177              	.LBB99:
+ 178              		.loc 3 264 0
+ 179 001c 0023     		movs	r3, #0
+ 180              		.syntax unified
+ 181              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 182 001e 83F31188 		MSR basepri, r3
+ 183              	@ 0 "" 2
+ 184              	.LVL11:
+ 185              		.thumb
+ 186              		.syntax unified
+ 187              	.LBE99:
+ 188              	.LBE98:
+ 189              	.LBE97:
+ 190              	.LBE96:
+ 191              	.LBE95:
+  96:lib/chibios/os/rt/src/chcond.c ****   }
+  97:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+  98:lib/chibios/os/rt/src/chcond.c **** }
+ 192              		.loc 2 98 0
+ 193 0022 08BD     		pop	{r3, pc}
+ 194              		.cfi_endproc
+ 195              	.LFE249:
+ 197              		.section	.text.chCondSignalI,"ax",%progbits
+ 198              		.align	1
+ 199              		.global	chCondSignalI
+ 200              		.syntax unified
+ 201              		.thumb
+ 202              		.thumb_func
+ 203              		.fpu softvfp
+ 205              	chCondSignalI:
+ 206              	.LFB250:
+  99:lib/chibios/os/rt/src/chcond.c **** 
+ 100:lib/chibios/os/rt/src/chcond.c **** /**
+ 101:lib/chibios/os/rt/src/chcond.c ****  * @brief   Signals one thread that is waiting on the condition variable.
+ 102:lib/chibios/os/rt/src/chcond.c ****  * @post    This function does not reschedule so a call to a rescheduling
+ 103:lib/chibios/os/rt/src/chcond.c ****  *          function must be performed before unlocking the kernel. Note that
+ 104:lib/chibios/os/rt/src/chcond.c ****  *          interrupt handlers always reschedule on exit so an explicit
+ 105:lib/chibios/os/rt/src/chcond.c ****  *          reschedule must not be performed in ISRs.
+ 106:lib/chibios/os/rt/src/chcond.c ****  *
+ 107:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 108:lib/chibios/os/rt/src/chcond.c ****  *
+ 109:lib/chibios/os/rt/src/chcond.c ****  * @iclass
+ 110:lib/chibios/os/rt/src/chcond.c ****  */
+ 111:lib/chibios/os/rt/src/chcond.c **** void chCondSignalI(condition_variable_t *cp) {
+ 207              		.loc 2 111 0
+ 208              		.cfi_startproc
+ 209              		@ args = 0, pretend = 0, frame = 0
+ 210              		@ frame_needed = 0, uses_anonymous_args = 0
+ 211              		@ link register save eliminated.
+ 212              	.LVL12:
+ 213              	.LBB100:
+ 214              	.LBB101:
+ 577:./lib/chibios/os/rt/include/chschd.h **** }
+ 215              		.loc 1 577 0
+ 216 0000 0368     		ldr	r3, [r0]
+ 217              	.LVL13:
+ 218              	.LBE101:
+ 219              	.LBE100:
+ 112:lib/chibios/os/rt/src/chcond.c **** 
+ 113:lib/chibios/os/rt/src/chcond.c ****   chDbgCheckClassI();
+ 114:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck(cp != NULL);
+ 115:lib/chibios/os/rt/src/chcond.c **** 
+ 116:lib/chibios/os/rt/src/chcond.c ****   if (queue_notempty(&cp->queue)) {
+ 220              		.loc 2 116 0
+ 221 0002 9842     		cmp	r0, r3
+ 222 0004 07D0     		beq	.L9
+ 223              	.LVL14:
+ 224              	.LBB102:
+ 225              	.LBB103:
+ 226              	.LBB104:
+ 620:./lib/chibios/os/rt/include/chschd.h ****   tqp->next->queue.prev = (thread_t *)tqp;
+ 227              		.loc 1 620 0
+ 228 0006 1A68     		ldr	r2, [r3]
+ 229 0008 0260     		str	r2, [r0]
+ 230              		.loc 1 621 0
+ 231 000a 5060     		str	r0, [r2, #4]
+ 232              	.LVL15:
+ 233              	.LBE104:
+ 234              	.LBE103:
+ 117:lib/chibios/os/rt/src/chcond.c ****     thread_t *tp = queue_fifo_remove(&cp->queue);
+ 118:lib/chibios/os/rt/src/chcond.c ****     tp->u.rdymsg = MSG_OK;
+ 235              		.loc 2 118 0
+ 236 000c 0022     		movs	r2, #0
+ 237 000e 5A62     		str	r2, [r3, #36]
+ 119:lib/chibios/os/rt/src/chcond.c ****     (void) chSchReadyI(tp);
+ 238              		.loc 2 119 0
+ 239 0010 1846     		mov	r0, r3
+ 240              	.LVL16:
+ 241 0012 FFF7FEBF 		b	chSchReadyI
+ 242              	.LVL17:
+ 243              	.L9:
+ 244              	.LBE102:
+ 120:lib/chibios/os/rt/src/chcond.c ****   }
+ 121:lib/chibios/os/rt/src/chcond.c **** }
+ 245              		.loc 2 121 0
+ 246 0016 7047     		bx	lr
+ 247              		.cfi_endproc
+ 248              	.LFE250:
+ 250              		.section	.text.chCondBroadcastI,"ax",%progbits
+ 251              		.align	1
+ 252              		.global	chCondBroadcastI
+ 253              		.syntax unified
+ 254              		.thumb
+ 255              		.thumb_func
+ 256              		.fpu softvfp
+ 258              	chCondBroadcastI:
+ 259              	.LFB252:
+ 122:lib/chibios/os/rt/src/chcond.c **** 
+ 123:lib/chibios/os/rt/src/chcond.c **** /**
+ 124:lib/chibios/os/rt/src/chcond.c ****  * @brief   Signals all threads that are waiting on the condition variable.
+ 125:lib/chibios/os/rt/src/chcond.c ****  *
+ 126:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 127:lib/chibios/os/rt/src/chcond.c ****  *
+ 128:lib/chibios/os/rt/src/chcond.c ****  * @api
+ 129:lib/chibios/os/rt/src/chcond.c ****  */
+ 130:lib/chibios/os/rt/src/chcond.c **** void chCondBroadcast(condition_variable_t *cp) {
+ 131:lib/chibios/os/rt/src/chcond.c **** 
+ 132:lib/chibios/os/rt/src/chcond.c ****   chSysLock();
+ 133:lib/chibios/os/rt/src/chcond.c ****   chCondBroadcastI(cp);
+ 134:lib/chibios/os/rt/src/chcond.c ****   chSchRescheduleS();
+ 135:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 136:lib/chibios/os/rt/src/chcond.c **** }
+ 137:lib/chibios/os/rt/src/chcond.c **** 
+ 138:lib/chibios/os/rt/src/chcond.c **** /**
+ 139:lib/chibios/os/rt/src/chcond.c ****  * @brief   Signals all threads that are waiting on the condition variable.
+ 140:lib/chibios/os/rt/src/chcond.c ****  * @post    This function does not reschedule so a call to a rescheduling
+ 141:lib/chibios/os/rt/src/chcond.c ****  *          function must be performed before unlocking the kernel. Note that
+ 142:lib/chibios/os/rt/src/chcond.c ****  *          interrupt handlers always reschedule on exit so an explicit
+ 143:lib/chibios/os/rt/src/chcond.c ****  *          reschedule must not be performed in ISRs.
+ 144:lib/chibios/os/rt/src/chcond.c ****  *
+ 145:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 146:lib/chibios/os/rt/src/chcond.c ****  *
+ 147:lib/chibios/os/rt/src/chcond.c ****  * @iclass
+ 148:lib/chibios/os/rt/src/chcond.c ****  */
+ 149:lib/chibios/os/rt/src/chcond.c **** void chCondBroadcastI(condition_variable_t *cp) {
+ 260              		.loc 2 149 0
+ 261              		.cfi_startproc
+ 262              		@ args = 0, pretend = 0, frame = 0
+ 263              		@ frame_needed = 0, uses_anonymous_args = 0
+ 264              	.LVL18:
+ 265 0000 38B5     		push	{r3, r4, r5, lr}
+ 266              		.cfi_def_cfa_offset 16
+ 267              		.cfi_offset 3, -16
+ 268              		.cfi_offset 4, -12
+ 269              		.cfi_offset 5, -8
+ 270              		.cfi_offset 14, -4
+ 271              		.loc 2 149 0
+ 272 0002 0446     		mov	r4, r0
+ 150:lib/chibios/os/rt/src/chcond.c **** 
+ 151:lib/chibios/os/rt/src/chcond.c ****   chDbgCheckClassI();
+ 152:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck(cp != NULL);
+ 153:lib/chibios/os/rt/src/chcond.c **** 
+ 154:lib/chibios/os/rt/src/chcond.c ****   /* Empties the condition variable queue and inserts all the threads into the
+ 155:lib/chibios/os/rt/src/chcond.c ****      ready list in FIFO order. The wakeup message is set to @p MSG_RESET in
+ 156:lib/chibios/os/rt/src/chcond.c ****      order to make a chCondBroadcast() detectable from a chCondSignal().*/
+ 157:lib/chibios/os/rt/src/chcond.c ****   while (queue_notempty(&cp->queue)) {
+ 158:lib/chibios/os/rt/src/chcond.c ****     chSchReadyI(queue_fifo_remove(&cp->queue))->u.rdymsg = MSG_RESET;
+ 273              		.loc 2 158 0
+ 274 0004 6FF00105 		mvn	r5, #1
+ 275              	.LVL19:
+ 276              	.L12:
+ 277              	.LBB105:
+ 278              	.LBB106:
+ 577:./lib/chibios/os/rt/include/chschd.h **** }
+ 279              		.loc 1 577 0
+ 280 0008 2068     		ldr	r0, [r4]
+ 281              	.LVL20:
+ 282              	.LBE106:
+ 283              	.LBE105:
+ 157:lib/chibios/os/rt/src/chcond.c ****     chSchReadyI(queue_fifo_remove(&cp->queue))->u.rdymsg = MSG_RESET;
+ 284              		.loc 2 157 0
+ 285 000a 8442     		cmp	r4, r0
+ 286 000c 00D1     		bne	.L13
+ 159:lib/chibios/os/rt/src/chcond.c ****   }
+ 160:lib/chibios/os/rt/src/chcond.c **** }
+ 287              		.loc 2 160 0
+ 288 000e 38BD     		pop	{r3, r4, r5, pc}
+ 289              	.LVL21:
+ 290              	.L13:
+ 291              	.LBB107:
+ 292              	.LBB108:
+ 620:./lib/chibios/os/rt/include/chschd.h ****   tqp->next->queue.prev = (thread_t *)tqp;
+ 293              		.loc 1 620 0
+ 294 0010 0368     		ldr	r3, [r0]
+ 295 0012 2360     		str	r3, [r4]
+ 296              		.loc 1 621 0
+ 297 0014 5C60     		str	r4, [r3, #4]
+ 298              	.LVL22:
+ 299              	.LBE108:
+ 300              	.LBE107:
+ 158:lib/chibios/os/rt/src/chcond.c ****   }
+ 301              		.loc 2 158 0
+ 302 0016 FFF7FEFF 		bl	chSchReadyI
+ 303              	.LVL23:
+ 304 001a 4562     		str	r5, [r0, #36]
+ 305 001c F4E7     		b	.L12
+ 306              		.cfi_endproc
+ 307              	.LFE252:
+ 309              		.section	.text.chCondBroadcast,"ax",%progbits
+ 310              		.align	1
+ 311              		.global	chCondBroadcast
+ 312              		.syntax unified
+ 313              		.thumb
+ 314              		.thumb_func
+ 315              		.fpu softvfp
+ 317              	chCondBroadcast:
+ 318              	.LFB251:
+ 130:lib/chibios/os/rt/src/chcond.c **** 
+ 319              		.loc 2 130 0
+ 320              		.cfi_startproc
+ 321              		@ args = 0, pretend = 0, frame = 0
+ 322              		@ frame_needed = 0, uses_anonymous_args = 0
+ 323              	.LVL24:
+ 324 0000 08B5     		push	{r3, lr}
+ 325              		.cfi_def_cfa_offset 8
+ 326              		.cfi_offset 3, -8
+ 327              		.cfi_offset 14, -4
+ 328              	.LBB109:
+ 329              	.LBB110:
+ 330              	.LBB111:
+ 331              	.LBB112:
+ 332              		.loc 3 264 0
+ 333 0002 2023     		movs	r3, #32
+ 334              		.syntax unified
+ 335              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 336 0004 83F31188 		MSR basepri, r3
+ 337              	@ 0 "" 2
+ 338              	.LVL25:
+ 339              		.thumb
+ 340              		.syntax unified
+ 341              	.LBE112:
+ 342              	.LBE111:
+ 343              	.LBE110:
+ 344              	.LBE109:
+ 133:lib/chibios/os/rt/src/chcond.c ****   chSchRescheduleS();
+ 345              		.loc 2 133 0
+ 346 0008 FFF7FEFF 		bl	chCondBroadcastI
+ 347              	.LVL26:
+ 134:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 348              		.loc 2 134 0
+ 349 000c FFF7FEFF 		bl	chSchRescheduleS
+ 350              	.LVL27:
+ 351              	.LBB113:
+ 352              	.LBB114:
+ 353              	.LBB115:
+ 354              	.LBB116:
+ 355              	.LBB117:
+ 356              		.loc 3 264 0
+ 357 0010 0023     		movs	r3, #0
+ 358              		.syntax unified
+ 359              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 360 0012 83F31188 		MSR basepri, r3
+ 361              	@ 0 "" 2
+ 362              	.LVL28:
+ 363              		.thumb
+ 364              		.syntax unified
+ 365              	.LBE117:
+ 366              	.LBE116:
+ 367              	.LBE115:
+ 368              	.LBE114:
+ 369              	.LBE113:
+ 136:lib/chibios/os/rt/src/chcond.c **** 
+ 370              		.loc 2 136 0
+ 371 0016 08BD     		pop	{r3, pc}
+ 372              		.cfi_endproc
+ 373              	.LFE251:
+ 375              		.section	.text.chCondWaitS,"ax",%progbits
+ 376              		.align	1
+ 377              		.global	chCondWaitS
+ 378              		.syntax unified
+ 379              		.thumb
+ 380              		.thumb_func
+ 381              		.fpu softvfp
+ 383              	chCondWaitS:
+ 384              	.LFB254:
+ 161:lib/chibios/os/rt/src/chcond.c **** 
+ 162:lib/chibios/os/rt/src/chcond.c **** /**
+ 163:lib/chibios/os/rt/src/chcond.c ****  * @brief   Waits on the condition variable releasing the mutex lock.
+ 164:lib/chibios/os/rt/src/chcond.c ****  * @details Releases the currently owned mutex, waits on the condition
+ 165:lib/chibios/os/rt/src/chcond.c ****  *          variable, and finally acquires the mutex again. All the sequence
+ 166:lib/chibios/os/rt/src/chcond.c ****  *          is performed atomically.
+ 167:lib/chibios/os/rt/src/chcond.c ****  * @pre     The invoking thread <b>must</b> have at least one owned mutex.
+ 168:lib/chibios/os/rt/src/chcond.c ****  *
+ 169:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 170:lib/chibios/os/rt/src/chcond.c ****  * @return              A message specifying how the invoking thread has been
+ 171:lib/chibios/os/rt/src/chcond.c ****  *                      released from the condition variable.
+ 172:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_OK       if the condition variable has been signaled using
+ 173:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondSignal().
+ 174:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_RESET    if the condition variable has been signaled using
+ 175:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondBroadcast().
+ 176:lib/chibios/os/rt/src/chcond.c ****  *
+ 177:lib/chibios/os/rt/src/chcond.c ****  * @api
+ 178:lib/chibios/os/rt/src/chcond.c ****  */
+ 179:lib/chibios/os/rt/src/chcond.c **** msg_t chCondWait(condition_variable_t *cp) {
+ 180:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 181:lib/chibios/os/rt/src/chcond.c **** 
+ 182:lib/chibios/os/rt/src/chcond.c ****   chSysLock();
+ 183:lib/chibios/os/rt/src/chcond.c ****   msg = chCondWaitS(cp);
+ 184:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 185:lib/chibios/os/rt/src/chcond.c ****   return msg;
+ 186:lib/chibios/os/rt/src/chcond.c **** }
+ 187:lib/chibios/os/rt/src/chcond.c **** 
+ 188:lib/chibios/os/rt/src/chcond.c **** /**
+ 189:lib/chibios/os/rt/src/chcond.c ****  * @brief   Waits on the condition variable releasing the mutex lock.
+ 190:lib/chibios/os/rt/src/chcond.c ****  * @details Releases the currently owned mutex, waits on the condition
+ 191:lib/chibios/os/rt/src/chcond.c ****  *          variable, and finally acquires the mutex again. All the sequence
+ 192:lib/chibios/os/rt/src/chcond.c ****  *          is performed atomically.
+ 193:lib/chibios/os/rt/src/chcond.c ****  * @pre     The invoking thread <b>must</b> have at least one owned mutex.
+ 194:lib/chibios/os/rt/src/chcond.c ****  *
+ 195:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 196:lib/chibios/os/rt/src/chcond.c ****  * @return              A message specifying how the invoking thread has been
+ 197:lib/chibios/os/rt/src/chcond.c ****  *                      released from the condition variable.
+ 198:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_OK       if the condition variable has been signaled using
+ 199:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondSignal().
+ 200:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_RESET    if the condition variable has been signaled using
+ 201:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondBroadcast().
+ 202:lib/chibios/os/rt/src/chcond.c ****  *
+ 203:lib/chibios/os/rt/src/chcond.c ****  * @sclass
+ 204:lib/chibios/os/rt/src/chcond.c ****  */
+ 205:lib/chibios/os/rt/src/chcond.c **** msg_t chCondWaitS(condition_variable_t *cp) {
+ 385              		.loc 2 205 0
+ 386              		.cfi_startproc
+ 387              		@ args = 0, pretend = 0, frame = 0
+ 388              		@ frame_needed = 0, uses_anonymous_args = 0
+ 389              	.LVL29:
+ 206:lib/chibios/os/rt/src/chcond.c ****   thread_t *ctp = currp;
+ 390              		.loc 2 206 0
+ 391 0000 0A4B     		ldr	r3, .L16
+ 205:lib/chibios/os/rt/src/chcond.c ****   thread_t *ctp = currp;
+ 392              		.loc 2 205 0
+ 393 0002 70B5     		push	{r4, r5, r6, lr}
+ 394              		.cfi_def_cfa_offset 16
+ 395              		.cfi_offset 4, -16
+ 396              		.cfi_offset 5, -12
+ 397              		.cfi_offset 6, -8
+ 398              		.cfi_offset 14, -4
+ 399              		.loc 2 206 0
+ 400 0004 9C69     		ldr	r4, [r3, #24]
+ 401              	.LVL30:
+ 402              	.LBB118:
+ 403              	.LBB119:
+ 404              		.file 4 "./lib/chibios/os/rt/include/chmtx.h"
+   1:./lib/chibios/os/rt/include/chmtx.h **** /*
+   2:./lib/chibios/os/rt/include/chmtx.h ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:./lib/chibios/os/rt/include/chmtx.h **** 
+   4:./lib/chibios/os/rt/include/chmtx.h ****     This file is part of ChibiOS.
+   5:./lib/chibios/os/rt/include/chmtx.h **** 
+   6:./lib/chibios/os/rt/include/chmtx.h ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:./lib/chibios/os/rt/include/chmtx.h ****     it under the terms of the GNU General Public License as published by
+   8:./lib/chibios/os/rt/include/chmtx.h ****     the Free Software Foundation; either version 3 of the License, or
+   9:./lib/chibios/os/rt/include/chmtx.h ****     (at your option) any later version.
+  10:./lib/chibios/os/rt/include/chmtx.h **** 
+  11:./lib/chibios/os/rt/include/chmtx.h ****     ChibiOS is distributed in the hope that it will be useful,
+  12:./lib/chibios/os/rt/include/chmtx.h ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:./lib/chibios/os/rt/include/chmtx.h ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:./lib/chibios/os/rt/include/chmtx.h ****     GNU General Public License for more details.
+  15:./lib/chibios/os/rt/include/chmtx.h **** 
+  16:./lib/chibios/os/rt/include/chmtx.h ****     You should have received a copy of the GNU General Public License
+  17:./lib/chibios/os/rt/include/chmtx.h ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:./lib/chibios/os/rt/include/chmtx.h **** */
+  19:./lib/chibios/os/rt/include/chmtx.h **** 
+  20:./lib/chibios/os/rt/include/chmtx.h **** /**
+  21:./lib/chibios/os/rt/include/chmtx.h ****  * @file    chmtx.h
+  22:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Mutexes macros and structures.
+  23:./lib/chibios/os/rt/include/chmtx.h ****  *
+  24:./lib/chibios/os/rt/include/chmtx.h ****  * @addtogroup mutexes
+  25:./lib/chibios/os/rt/include/chmtx.h ****  * @{
+  26:./lib/chibios/os/rt/include/chmtx.h ****  */
+  27:./lib/chibios/os/rt/include/chmtx.h **** 
+  28:./lib/chibios/os/rt/include/chmtx.h **** #ifndef CHMTX_H
+  29:./lib/chibios/os/rt/include/chmtx.h **** #define CHMTX_H
+  30:./lib/chibios/os/rt/include/chmtx.h **** 
+  31:./lib/chibios/os/rt/include/chmtx.h **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+  32:./lib/chibios/os/rt/include/chmtx.h **** 
+  33:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  34:./lib/chibios/os/rt/include/chmtx.h **** /* Module constants.                                                         */
+  35:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  36:./lib/chibios/os/rt/include/chmtx.h **** 
+  37:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  38:./lib/chibios/os/rt/include/chmtx.h **** /* Module pre-compile time settings.                                         */
+  39:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  40:./lib/chibios/os/rt/include/chmtx.h **** 
+  41:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  42:./lib/chibios/os/rt/include/chmtx.h **** /* Derived constants and error checks.                                       */
+  43:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  44:./lib/chibios/os/rt/include/chmtx.h **** 
+  45:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  46:./lib/chibios/os/rt/include/chmtx.h **** /* Module data structures and types.                                         */
+  47:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  48:./lib/chibios/os/rt/include/chmtx.h **** 
+  49:./lib/chibios/os/rt/include/chmtx.h **** /**
+  50:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Type of a mutex structure.
+  51:./lib/chibios/os/rt/include/chmtx.h ****  */
+  52:./lib/chibios/os/rt/include/chmtx.h **** typedef struct ch_mutex mutex_t;
+  53:./lib/chibios/os/rt/include/chmtx.h **** 
+  54:./lib/chibios/os/rt/include/chmtx.h **** /**
+  55:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Mutex structure.
+  56:./lib/chibios/os/rt/include/chmtx.h ****  */
+  57:./lib/chibios/os/rt/include/chmtx.h **** struct ch_mutex {
+  58:./lib/chibios/os/rt/include/chmtx.h ****   threads_queue_t       queue;      /**< @brief Queue of the threads sleeping
+  59:./lib/chibios/os/rt/include/chmtx.h ****                                                 on this mutex.              */
+  60:./lib/chibios/os/rt/include/chmtx.h ****   thread_t              *owner;     /**< @brief Owner @p thread_t pointer or
+  61:./lib/chibios/os/rt/include/chmtx.h ****                                                 @p NULL.                    */
+  62:./lib/chibios/os/rt/include/chmtx.h ****   mutex_t               *next;      /**< @brief Next @p mutex_t into an
+  63:./lib/chibios/os/rt/include/chmtx.h ****                                                 owner-list or @p NULL.      */
+  64:./lib/chibios/os/rt/include/chmtx.h **** #if (CH_CFG_USE_MUTEXES_RECURSIVE == TRUE) || defined(__DOXYGEN__)
+  65:./lib/chibios/os/rt/include/chmtx.h ****   cnt_t                 cnt;        /**< @brief Mutex recursion counter.    */
+  66:./lib/chibios/os/rt/include/chmtx.h **** #endif
+  67:./lib/chibios/os/rt/include/chmtx.h **** };
+  68:./lib/chibios/os/rt/include/chmtx.h **** 
+  69:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  70:./lib/chibios/os/rt/include/chmtx.h **** /* Module macros.                                                            */
+  71:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  72:./lib/chibios/os/rt/include/chmtx.h **** 
+  73:./lib/chibios/os/rt/include/chmtx.h **** /**
+  74:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Data part of a static mutex initializer.
+  75:./lib/chibios/os/rt/include/chmtx.h ****  * @details This macro should be used when statically initializing a mutex
+  76:./lib/chibios/os/rt/include/chmtx.h ****  *          that is part of a bigger structure.
+  77:./lib/chibios/os/rt/include/chmtx.h ****  *
+  78:./lib/chibios/os/rt/include/chmtx.h ****  * @param[in] name      the name of the mutex variable
+  79:./lib/chibios/os/rt/include/chmtx.h ****  */
+  80:./lib/chibios/os/rt/include/chmtx.h **** #if (CH_CFG_USE_MUTEXES_RECURSIVE == TRUE) || defined(__DOXYGEN__)
+  81:./lib/chibios/os/rt/include/chmtx.h **** #define _MUTEX_DATA(name) {_THREADS_QUEUE_DATA(name.queue), NULL, NULL, 0}
+  82:./lib/chibios/os/rt/include/chmtx.h **** #else
+  83:./lib/chibios/os/rt/include/chmtx.h **** #define _MUTEX_DATA(name) {_THREADS_QUEUE_DATA(name.queue), NULL, NULL}
+  84:./lib/chibios/os/rt/include/chmtx.h **** #endif
+  85:./lib/chibios/os/rt/include/chmtx.h **** 
+  86:./lib/chibios/os/rt/include/chmtx.h **** /**
+  87:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Static mutex initializer.
+  88:./lib/chibios/os/rt/include/chmtx.h ****  * @details Statically initialized mutexes require no explicit initialization
+  89:./lib/chibios/os/rt/include/chmtx.h ****  *          using @p chMtxInit().
+  90:./lib/chibios/os/rt/include/chmtx.h ****  *
+  91:./lib/chibios/os/rt/include/chmtx.h ****  * @param[in] name      the name of the mutex variable
+  92:./lib/chibios/os/rt/include/chmtx.h ****  */
+  93:./lib/chibios/os/rt/include/chmtx.h **** #define MUTEX_DECL(name) mutex_t name = _MUTEX_DATA(name)
+  94:./lib/chibios/os/rt/include/chmtx.h **** 
+  95:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  96:./lib/chibios/os/rt/include/chmtx.h **** /* External declarations.                                                    */
+  97:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+  98:./lib/chibios/os/rt/include/chmtx.h **** 
+  99:./lib/chibios/os/rt/include/chmtx.h **** #ifdef __cplusplus
+ 100:./lib/chibios/os/rt/include/chmtx.h **** extern "C" {
+ 101:./lib/chibios/os/rt/include/chmtx.h **** #endif
+ 102:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxObjectInit(mutex_t *mp);
+ 103:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxLock(mutex_t *mp);
+ 104:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxLockS(mutex_t *mp);
+ 105:./lib/chibios/os/rt/include/chmtx.h ****   bool chMtxTryLock(mutex_t *mp);
+ 106:./lib/chibios/os/rt/include/chmtx.h ****   bool chMtxTryLockS(mutex_t *mp);
+ 107:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxUnlock(mutex_t *mp);
+ 108:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxUnlockS(mutex_t *mp);
+ 109:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxUnlockAll(void);
+ 110:./lib/chibios/os/rt/include/chmtx.h ****   void chMtxUnlockAllS(void);
+ 111:./lib/chibios/os/rt/include/chmtx.h **** #ifdef __cplusplus
+ 112:./lib/chibios/os/rt/include/chmtx.h **** }
+ 113:./lib/chibios/os/rt/include/chmtx.h **** #endif
+ 114:./lib/chibios/os/rt/include/chmtx.h **** 
+ 115:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+ 116:./lib/chibios/os/rt/include/chmtx.h **** /* Module inline functions.                                                  */
+ 117:./lib/chibios/os/rt/include/chmtx.h **** /*===========================================================================*/
+ 118:./lib/chibios/os/rt/include/chmtx.h **** 
+ 119:./lib/chibios/os/rt/include/chmtx.h **** /**
+ 120:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Returns @p true if the mutex queue contains at least a waiting
+ 121:./lib/chibios/os/rt/include/chmtx.h ****  *          thread.
+ 122:./lib/chibios/os/rt/include/chmtx.h ****  *
+ 123:./lib/chibios/os/rt/include/chmtx.h ****  * @param[out] mp       pointer to a @p mutex_t structure
+ 124:./lib/chibios/os/rt/include/chmtx.h ****  * @return              The mutex queue status.
+ 125:./lib/chibios/os/rt/include/chmtx.h ****  *
+ 126:./lib/chibios/os/rt/include/chmtx.h ****  * @deprecated
+ 127:./lib/chibios/os/rt/include/chmtx.h ****  * @sclass
+ 128:./lib/chibios/os/rt/include/chmtx.h ****  */
+ 129:./lib/chibios/os/rt/include/chmtx.h **** static inline bool chMtxQueueNotEmptyS(mutex_t *mp) {
+ 130:./lib/chibios/os/rt/include/chmtx.h **** 
+ 131:./lib/chibios/os/rt/include/chmtx.h ****   chDbgCheckClassS();
+ 132:./lib/chibios/os/rt/include/chmtx.h **** 
+ 133:./lib/chibios/os/rt/include/chmtx.h ****   return queue_notempty(&mp->queue);
+ 134:./lib/chibios/os/rt/include/chmtx.h **** }
+ 135:./lib/chibios/os/rt/include/chmtx.h **** 
+ 136:./lib/chibios/os/rt/include/chmtx.h **** /**
+ 137:./lib/chibios/os/rt/include/chmtx.h ****  * @brief   Returns the next mutex in the mutexes stack of the current thread.
+ 138:./lib/chibios/os/rt/include/chmtx.h ****  *
+ 139:./lib/chibios/os/rt/include/chmtx.h ****  * @return              A pointer to the next mutex in the stack.
+ 140:./lib/chibios/os/rt/include/chmtx.h ****  * @retval NULL         if the stack is empty.
+ 141:./lib/chibios/os/rt/include/chmtx.h ****  *
+ 142:./lib/chibios/os/rt/include/chmtx.h ****  * @sclass
+ 143:./lib/chibios/os/rt/include/chmtx.h ****  */
+ 144:./lib/chibios/os/rt/include/chmtx.h **** static inline mutex_t *chMtxGetNextMutexS(void) {
+ 145:./lib/chibios/os/rt/include/chmtx.h **** 
+ 146:./lib/chibios/os/rt/include/chmtx.h ****   return chThdGetSelfX()->mtxlist;
+ 405              		.loc 4 146 0
+ 406 0006 A56B     		ldr	r5, [r4, #56]
+ 407              	.LBE119:
+ 408              	.LBE118:
+ 205:lib/chibios/os/rt/src/chcond.c ****   thread_t *ctp = currp;
+ 409              		.loc 2 205 0
+ 410 0008 0646     		mov	r6, r0
+ 207:lib/chibios/os/rt/src/chcond.c ****   mutex_t *mp;
+ 208:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 209:lib/chibios/os/rt/src/chcond.c **** 
+ 210:lib/chibios/os/rt/src/chcond.c ****   chDbgCheckClassS();
+ 211:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck(cp != NULL);
+ 212:lib/chibios/os/rt/src/chcond.c ****   chDbgAssert(ctp->mtxlist != NULL, "not owning a mutex");
+ 213:lib/chibios/os/rt/src/chcond.c **** 
+ 214:lib/chibios/os/rt/src/chcond.c ****   /* Getting "current" mutex and releasing it.*/
+ 215:lib/chibios/os/rt/src/chcond.c ****   mp = chMtxGetNextMutexS();
+ 216:lib/chibios/os/rt/src/chcond.c ****   chMtxUnlockS(mp);
+ 411              		.loc 2 216 0
+ 412 000a 2846     		mov	r0, r5
+ 413              	.LVL31:
+ 414 000c FFF7FEFF 		bl	chMtxUnlockS
+ 415              	.LVL32:
+ 217:lib/chibios/os/rt/src/chcond.c **** 
+ 218:lib/chibios/os/rt/src/chcond.c ****   /* Start waiting on the condition variable, on exit the mutex is taken
+ 219:lib/chibios/os/rt/src/chcond.c ****      again.*/
+ 220:lib/chibios/os/rt/src/chcond.c ****   ctp->u.wtobjp = cp;
+ 221:lib/chibios/os/rt/src/chcond.c ****   queue_prio_insert(ctp, &cp->queue);
+ 416              		.loc 2 221 0
+ 417 0010 3146     		mov	r1, r6
+ 220:lib/chibios/os/rt/src/chcond.c ****   queue_prio_insert(ctp, &cp->queue);
+ 418              		.loc 2 220 0
+ 419 0012 6662     		str	r6, [r4, #36]
+ 420              		.loc 2 221 0
+ 421 0014 2046     		mov	r0, r4
+ 422 0016 FFF7FEFF 		bl	queue_prio_insert
+ 423              	.LVL33:
+ 222:lib/chibios/os/rt/src/chcond.c ****   chSchGoSleepS(CH_STATE_WTCOND);
+ 424              		.loc 2 222 0
+ 425 001a 0720     		movs	r0, #7
+ 426 001c FFF7FEFF 		bl	chSchGoSleepS
+ 427              	.LVL34:
+ 223:lib/chibios/os/rt/src/chcond.c ****   msg = ctp->u.rdymsg;
+ 428              		.loc 2 223 0
+ 429 0020 646A     		ldr	r4, [r4, #36]
+ 430              	.LVL35:
+ 224:lib/chibios/os/rt/src/chcond.c ****   chMtxLockS(mp);
+ 431              		.loc 2 224 0
+ 432 0022 2846     		mov	r0, r5
+ 433 0024 FFF7FEFF 		bl	chMtxLockS
+ 434              	.LVL36:
+ 225:lib/chibios/os/rt/src/chcond.c **** 
+ 226:lib/chibios/os/rt/src/chcond.c ****   return msg;
+ 227:lib/chibios/os/rt/src/chcond.c **** }
+ 435              		.loc 2 227 0
+ 436 0028 2046     		mov	r0, r4
+ 437 002a 70BD     		pop	{r4, r5, r6, pc}
+ 438              	.LVL37:
+ 439              	.L17:
+ 440              		.align	2
+ 441              	.L16:
+ 442 002c 00000000 		.word	ch
+ 443              		.cfi_endproc
+ 444              	.LFE254:
+ 446              		.section	.text.chCondWait,"ax",%progbits
+ 447              		.align	1
+ 448              		.global	chCondWait
+ 449              		.syntax unified
+ 450              		.thumb
+ 451              		.thumb_func
+ 452              		.fpu softvfp
+ 454              	chCondWait:
+ 455              	.LFB253:
+ 179:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 456              		.loc 2 179 0
+ 457              		.cfi_startproc
+ 458              		@ args = 0, pretend = 0, frame = 0
+ 459              		@ frame_needed = 0, uses_anonymous_args = 0
+ 460              	.LVL38:
+ 461 0000 08B5     		push	{r3, lr}
+ 462              		.cfi_def_cfa_offset 8
+ 463              		.cfi_offset 3, -8
+ 464              		.cfi_offset 14, -4
+ 465              	.LBB120:
+ 466              	.LBB121:
+ 467              	.LBB122:
+ 468              	.LBB123:
+ 469              		.loc 3 264 0
+ 470 0002 2023     		movs	r3, #32
+ 471              		.syntax unified
+ 472              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 473 0004 83F31188 		MSR basepri, r3
+ 474              	@ 0 "" 2
+ 475              	.LVL39:
+ 476              		.thumb
+ 477              		.syntax unified
+ 478              	.LBE123:
+ 479              	.LBE122:
+ 480              	.LBE121:
+ 481              	.LBE120:
+ 183:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 482              		.loc 2 183 0
+ 483 0008 FFF7FEFF 		bl	chCondWaitS
+ 484              	.LVL40:
+ 485              	.LBB124:
+ 486              	.LBB125:
+ 487              	.LBB126:
+ 488              	.LBB127:
+ 489              	.LBB128:
+ 490              		.loc 3 264 0
+ 491 000c 0023     		movs	r3, #0
+ 492              		.syntax unified
+ 493              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 494 000e 83F31188 		MSR basepri, r3
+ 495              	@ 0 "" 2
+ 496              	.LVL41:
+ 497              		.thumb
+ 498              		.syntax unified
+ 499              	.LBE128:
+ 500              	.LBE127:
+ 501              	.LBE126:
+ 502              	.LBE125:
+ 503              	.LBE124:
+ 186:lib/chibios/os/rt/src/chcond.c **** 
+ 504              		.loc 2 186 0
+ 505 0012 08BD     		pop	{r3, pc}
+ 506              		.cfi_endproc
+ 507              	.LFE253:
+ 509              		.section	.text.chCondWaitTimeoutS,"ax",%progbits
+ 510              		.align	1
+ 511              		.global	chCondWaitTimeoutS
+ 512              		.syntax unified
+ 513              		.thumb
+ 514              		.thumb_func
+ 515              		.fpu softvfp
+ 517              	chCondWaitTimeoutS:
+ 518              	.LFB256:
+ 228:lib/chibios/os/rt/src/chcond.c **** 
+ 229:lib/chibios/os/rt/src/chcond.c **** #if (CH_CFG_USE_CONDVARS_TIMEOUT == TRUE) || defined(__DOXYGEN__)
+ 230:lib/chibios/os/rt/src/chcond.c **** /**
+ 231:lib/chibios/os/rt/src/chcond.c ****  * @brief   Waits on the condition variable releasing the mutex lock.
+ 232:lib/chibios/os/rt/src/chcond.c ****  * @details Releases the currently owned mutex, waits on the condition
+ 233:lib/chibios/os/rt/src/chcond.c ****  *          variable, and finally acquires the mutex again. All the sequence
+ 234:lib/chibios/os/rt/src/chcond.c ****  *          is performed atomically.
+ 235:lib/chibios/os/rt/src/chcond.c ****  * @pre     The invoking thread <b>must</b> have at least one owned mutex.
+ 236:lib/chibios/os/rt/src/chcond.c ****  * @pre     The configuration option @p CH_CFG_USE_CONDVARS_TIMEOUT must be enabled
+ 237:lib/chibios/os/rt/src/chcond.c ****  *          in order to use this function.
+ 238:lib/chibios/os/rt/src/chcond.c ****  * @post    Exiting the function because a timeout does not re-acquire the
+ 239:lib/chibios/os/rt/src/chcond.c ****  *          mutex, the mutex ownership is lost.
+ 240:lib/chibios/os/rt/src/chcond.c ****  *
+ 241:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 242:lib/chibios/os/rt/src/chcond.c ****  * @param[in] time      the number of ticks before the operation timeouts, the
+ 243:lib/chibios/os/rt/src/chcond.c ****  *                      special values are handled as follow:
+ 244:lib/chibios/os/rt/src/chcond.c ****  *                      - @a TIME_INFINITE no timeout.
+ 245:lib/chibios/os/rt/src/chcond.c ****  *                      - @a TIME_IMMEDIATE this value is not allowed.
+ 246:lib/chibios/os/rt/src/chcond.c ****  *                      .
+ 247:lib/chibios/os/rt/src/chcond.c ****  * @return              A message specifying how the invoking thread has been
+ 248:lib/chibios/os/rt/src/chcond.c ****  *                      released from the condition variable.
+ 249:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_OK       if the condition variable has been signaled using
+ 250:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondSignal().
+ 251:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_RESET    if the condition variable has been signaled using
+ 252:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondBroadcast().
+ 253:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_TIMEOUT  if the condition variable has not been signaled within
+ 254:lib/chibios/os/rt/src/chcond.c ****  *                      the specified timeout.
+ 255:lib/chibios/os/rt/src/chcond.c ****  *
+ 256:lib/chibios/os/rt/src/chcond.c ****  * @api
+ 257:lib/chibios/os/rt/src/chcond.c ****  */
+ 258:lib/chibios/os/rt/src/chcond.c **** msg_t chCondWaitTimeout(condition_variable_t *cp, systime_t time) {
+ 259:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 260:lib/chibios/os/rt/src/chcond.c **** 
+ 261:lib/chibios/os/rt/src/chcond.c ****   chSysLock();
+ 262:lib/chibios/os/rt/src/chcond.c ****   msg = chCondWaitTimeoutS(cp, time);
+ 263:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 264:lib/chibios/os/rt/src/chcond.c **** 
+ 265:lib/chibios/os/rt/src/chcond.c ****   return msg;
+ 266:lib/chibios/os/rt/src/chcond.c **** }
+ 267:lib/chibios/os/rt/src/chcond.c **** 
+ 268:lib/chibios/os/rt/src/chcond.c **** /**
+ 269:lib/chibios/os/rt/src/chcond.c ****  * @brief   Waits on the condition variable releasing the mutex lock.
+ 270:lib/chibios/os/rt/src/chcond.c ****  * @details Releases the currently owned mutex, waits on the condition
+ 271:lib/chibios/os/rt/src/chcond.c ****  *          variable, and finally acquires the mutex again. All the sequence
+ 272:lib/chibios/os/rt/src/chcond.c ****  *          is performed atomically.
+ 273:lib/chibios/os/rt/src/chcond.c ****  * @pre     The invoking thread <b>must</b> have at least one owned mutex.
+ 274:lib/chibios/os/rt/src/chcond.c ****  * @pre     The configuration option @p CH_CFG_USE_CONDVARS_TIMEOUT must be enabled
+ 275:lib/chibios/os/rt/src/chcond.c ****  *          in order to use this function.
+ 276:lib/chibios/os/rt/src/chcond.c ****  * @post    Exiting the function because a timeout does not re-acquire the
+ 277:lib/chibios/os/rt/src/chcond.c ****  *          mutex, the mutex ownership is lost.
+ 278:lib/chibios/os/rt/src/chcond.c ****  *
+ 279:lib/chibios/os/rt/src/chcond.c ****  * @param[in] cp        pointer to the @p condition_variable_t structure
+ 280:lib/chibios/os/rt/src/chcond.c ****  * @param[in] time      the number of ticks before the operation timeouts, the
+ 281:lib/chibios/os/rt/src/chcond.c ****  *                      special values are handled as follow:
+ 282:lib/chibios/os/rt/src/chcond.c ****  *                      - @a TIME_INFINITE no timeout.
+ 283:lib/chibios/os/rt/src/chcond.c ****  *                      - @a TIME_IMMEDIATE this value is not allowed.
+ 284:lib/chibios/os/rt/src/chcond.c ****  *                      .
+ 285:lib/chibios/os/rt/src/chcond.c ****  * @return              A message specifying how the invoking thread has been
+ 286:lib/chibios/os/rt/src/chcond.c ****  *                      released from the condition variable.
+ 287:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_OK       if the condition variable has been signaled using
+ 288:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondSignal().
+ 289:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_RESET    if the condition variable has been signaled using
+ 290:lib/chibios/os/rt/src/chcond.c ****  *                      @p chCondBroadcast().
+ 291:lib/chibios/os/rt/src/chcond.c ****  * @retval MSG_TIMEOUT  if the condition variable has not been signaled within
+ 292:lib/chibios/os/rt/src/chcond.c ****  *                      the specified timeout.
+ 293:lib/chibios/os/rt/src/chcond.c ****  *
+ 294:lib/chibios/os/rt/src/chcond.c ****  * @sclass
+ 295:lib/chibios/os/rt/src/chcond.c ****  */
+ 296:lib/chibios/os/rt/src/chcond.c **** msg_t chCondWaitTimeoutS(condition_variable_t *cp, systime_t time) {
+ 519              		.loc 2 296 0
+ 520              		.cfi_startproc
+ 521              		@ args = 0, pretend = 0, frame = 0
+ 522              		@ frame_needed = 0, uses_anonymous_args = 0
+ 523              	.LVL42:
+ 524 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 525              		.cfi_def_cfa_offset 24
+ 526              		.cfi_offset 3, -24
+ 527              		.cfi_offset 4, -20
+ 528              		.cfi_offset 5, -16
+ 529              		.cfi_offset 6, -12
+ 530              		.cfi_offset 7, -8
+ 531              		.cfi_offset 14, -4
+ 532              	.LBB129:
+ 533              	.LBB130:
+ 534              	.LBB131:
+ 535              	.LBB132:
+ 536              		.file 5 "./lib/chibios/os/rt/include/chthreads.h"
+   1:./lib/chibios/os/rt/include/chthreads.h **** /*
+   2:./lib/chibios/os/rt/include/chthreads.h ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:./lib/chibios/os/rt/include/chthreads.h **** 
+   4:./lib/chibios/os/rt/include/chthreads.h ****     This file is part of ChibiOS.
+   5:./lib/chibios/os/rt/include/chthreads.h **** 
+   6:./lib/chibios/os/rt/include/chthreads.h ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:./lib/chibios/os/rt/include/chthreads.h ****     it under the terms of the GNU General Public License as published by
+   8:./lib/chibios/os/rt/include/chthreads.h ****     the Free Software Foundation; either version 3 of the License, or
+   9:./lib/chibios/os/rt/include/chthreads.h ****     (at your option) any later version.
+  10:./lib/chibios/os/rt/include/chthreads.h **** 
+  11:./lib/chibios/os/rt/include/chthreads.h ****     ChibiOS is distributed in the hope that it will be useful,
+  12:./lib/chibios/os/rt/include/chthreads.h ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:./lib/chibios/os/rt/include/chthreads.h ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:./lib/chibios/os/rt/include/chthreads.h ****     GNU General Public License for more details.
+  15:./lib/chibios/os/rt/include/chthreads.h **** 
+  16:./lib/chibios/os/rt/include/chthreads.h ****     You should have received a copy of the GNU General Public License
+  17:./lib/chibios/os/rt/include/chthreads.h ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:./lib/chibios/os/rt/include/chthreads.h **** */
+  19:./lib/chibios/os/rt/include/chthreads.h **** 
+  20:./lib/chibios/os/rt/include/chthreads.h **** /**
+  21:./lib/chibios/os/rt/include/chthreads.h ****  * @file    chthreads.h
+  22:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Threads module macros and structures.
+  23:./lib/chibios/os/rt/include/chthreads.h ****  *
+  24:./lib/chibios/os/rt/include/chthreads.h ****  * @addtogroup threads
+  25:./lib/chibios/os/rt/include/chthreads.h ****  * @{
+  26:./lib/chibios/os/rt/include/chthreads.h ****  */
+  27:./lib/chibios/os/rt/include/chthreads.h **** 
+  28:./lib/chibios/os/rt/include/chthreads.h **** #ifndef CHTHREADS_H
+  29:./lib/chibios/os/rt/include/chthreads.h **** #define CHTHREADS_H
+  30:./lib/chibios/os/rt/include/chthreads.h **** 
+  31:./lib/chibios/os/rt/include/chthreads.h **** /*lint -sem(chThdExit, r_no) -sem(chThdExitS, r_no)*/
+  32:./lib/chibios/os/rt/include/chthreads.h **** 
+  33:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  34:./lib/chibios/os/rt/include/chthreads.h **** /* Module constants.                                                         */
+  35:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  36:./lib/chibios/os/rt/include/chthreads.h **** 
+  37:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  38:./lib/chibios/os/rt/include/chthreads.h **** /* Module pre-compile time settings.                                         */
+  39:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  40:./lib/chibios/os/rt/include/chthreads.h **** 
+  41:./lib/chibios/os/rt/include/chthreads.h **** #if !defined(CH_CFG_THREAD_EXTRA_FIELDS)
+  42:./lib/chibios/os/rt/include/chthreads.h **** #error "CH_CFG_THREAD_EXTRA_FIELDS not defined in chconf.h"
+  43:./lib/chibios/os/rt/include/chthreads.h **** #endif
+  44:./lib/chibios/os/rt/include/chthreads.h **** 
+  45:./lib/chibios/os/rt/include/chthreads.h **** #if !defined(CH_CFG_THREAD_INIT_HOOK)
+  46:./lib/chibios/os/rt/include/chthreads.h **** #error "CH_CFG_THREAD_INIT_HOOK not defined in chconf.h"
+  47:./lib/chibios/os/rt/include/chthreads.h **** #endif
+  48:./lib/chibios/os/rt/include/chthreads.h **** 
+  49:./lib/chibios/os/rt/include/chthreads.h **** #if !defined(CH_CFG_THREAD_EXIT_HOOK)
+  50:./lib/chibios/os/rt/include/chthreads.h **** #error "CH_CFG_THREAD_EXIT_HOOK not defined in chconf.h"
+  51:./lib/chibios/os/rt/include/chthreads.h **** #endif
+  52:./lib/chibios/os/rt/include/chthreads.h **** 
+  53:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  54:./lib/chibios/os/rt/include/chthreads.h **** /* Derived constants and error checks.                                       */
+  55:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  56:./lib/chibios/os/rt/include/chthreads.h **** 
+  57:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  58:./lib/chibios/os/rt/include/chthreads.h **** /* Module data structures and types.                                         */
+  59:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  60:./lib/chibios/os/rt/include/chthreads.h **** 
+  61:./lib/chibios/os/rt/include/chthreads.h **** /**
+  62:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Thread function.
+  63:./lib/chibios/os/rt/include/chthreads.h ****  */
+  64:./lib/chibios/os/rt/include/chthreads.h **** typedef void (*tfunc_t)(void *p);
+  65:./lib/chibios/os/rt/include/chthreads.h **** 
+  66:./lib/chibios/os/rt/include/chthreads.h **** /**
+  67:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Type of a thread descriptor.
+  68:./lib/chibios/os/rt/include/chthreads.h ****  */
+  69:./lib/chibios/os/rt/include/chthreads.h **** typedef struct {
+  70:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  71:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   Thread name.
+  72:./lib/chibios/os/rt/include/chthreads.h ****    */
+  73:./lib/chibios/os/rt/include/chthreads.h ****   const char        *name;
+  74:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  75:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   Pointer to the working area base.
+  76:./lib/chibios/os/rt/include/chthreads.h ****    */
+  77:./lib/chibios/os/rt/include/chthreads.h ****   stkalign_t        *wbase;
+  78:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  79:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   End of the working area.
+  80:./lib/chibios/os/rt/include/chthreads.h ****    */
+  81:./lib/chibios/os/rt/include/chthreads.h ****   stkalign_t        *wend;
+  82:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  83:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   Thread priority.
+  84:./lib/chibios/os/rt/include/chthreads.h ****    */
+  85:./lib/chibios/os/rt/include/chthreads.h ****   tprio_t           prio;
+  86:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  87:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   Thread function pointer.
+  88:./lib/chibios/os/rt/include/chthreads.h ****    */
+  89:./lib/chibios/os/rt/include/chthreads.h ****   tfunc_t           funcp;
+  90:./lib/chibios/os/rt/include/chthreads.h ****   /**
+  91:./lib/chibios/os/rt/include/chthreads.h ****    * @brief   Thread argument.
+  92:./lib/chibios/os/rt/include/chthreads.h ****    */
+  93:./lib/chibios/os/rt/include/chthreads.h ****   void              *arg;
+  94:./lib/chibios/os/rt/include/chthreads.h **** } thread_descriptor_t;
+  95:./lib/chibios/os/rt/include/chthreads.h **** 
+  96:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  97:./lib/chibios/os/rt/include/chthreads.h **** /* Module macros.                                                            */
+  98:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+  99:./lib/chibios/os/rt/include/chthreads.h **** 
+ 100:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 101:./lib/chibios/os/rt/include/chthreads.h ****  * @name    Threads queues
+ 102:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 103:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 104:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Data part of a static threads queue object initializer.
+ 105:./lib/chibios/os/rt/include/chthreads.h ****  * @details This macro should be used when statically initializing a threads
+ 106:./lib/chibios/os/rt/include/chthreads.h ****  *          queue that is part of a bigger structure.
+ 107:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 108:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] name      the name of the threads queue variable
+ 109:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 110:./lib/chibios/os/rt/include/chthreads.h **** #define _THREADS_QUEUE_DATA(name) {(thread_t *)&name, (thread_t *)&name}
+ 111:./lib/chibios/os/rt/include/chthreads.h **** 
+ 112:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 113:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Static threads queue object initializer.
+ 114:./lib/chibios/os/rt/include/chthreads.h ****  * @details Statically initialized threads queues require no explicit
+ 115:./lib/chibios/os/rt/include/chthreads.h ****  *          initialization using @p queue_init().
+ 116:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 117:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] name      the name of the threads queue variable
+ 118:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 119:./lib/chibios/os/rt/include/chthreads.h **** #define _THREADS_QUEUE_DECL(name)                                           \
+ 120:./lib/chibios/os/rt/include/chthreads.h ****   threads_queue_t name = _THREADS_QUEUE_DATA(name)
+ 121:./lib/chibios/os/rt/include/chthreads.h **** /** @} */
+ 122:./lib/chibios/os/rt/include/chthreads.h **** 
+ 123:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 124:./lib/chibios/os/rt/include/chthreads.h ****  * @name    Working Areas
+ 125:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 126:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 127:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Calculates the total Working Area size.
+ 128:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 129:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] n         the stack size to be assigned to the thread
+ 130:./lib/chibios/os/rt/include/chthreads.h ****  * @return              The total used memory in bytes.
+ 131:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 132:./lib/chibios/os/rt/include/chthreads.h ****  * @api
+ 133:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 134:./lib/chibios/os/rt/include/chthreads.h **** #define THD_WORKING_AREA_SIZE(n)                                            \
+ 135:./lib/chibios/os/rt/include/chthreads.h ****   MEM_ALIGN_NEXT(sizeof(thread_t) + PORT_WA_SIZE(n), PORT_STACK_ALIGN)
+ 136:./lib/chibios/os/rt/include/chthreads.h **** 
+ 137:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 138:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Static working area allocation.
+ 139:./lib/chibios/os/rt/include/chthreads.h ****  * @details This macro is used to allocate a static thread working area
+ 140:./lib/chibios/os/rt/include/chthreads.h ****  *          aligned as both position and size.
+ 141:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 142:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] s         the name to be assigned to the stack array
+ 143:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] n         the stack size to be assigned to the thread
+ 144:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 145:./lib/chibios/os/rt/include/chthreads.h ****  * @api
+ 146:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 147:./lib/chibios/os/rt/include/chthreads.h **** #define THD_WORKING_AREA(s, n) PORT_WORKING_AREA(s, n)
+ 148:./lib/chibios/os/rt/include/chthreads.h **** 
+ 149:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 150:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Base of a working area casted to the correct type.
+ 151:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 152:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] s         name of the working area
+ 153:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 154:./lib/chibios/os/rt/include/chthreads.h **** #define THD_WORKING_AREA_BASE(s) ((stkalign_t *)(s))
+ 155:./lib/chibios/os/rt/include/chthreads.h **** 
+ 156:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 157:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   End of a working area casted to the correct type.
+ 158:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 159:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] s         name of the working area
+ 160:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 161:./lib/chibios/os/rt/include/chthreads.h **** #define THD_WORKING_AREA_END(s) (THD_WORKING_AREA_BASE(s) +                 \
+ 162:./lib/chibios/os/rt/include/chthreads.h ****                                  (sizeof (s) / sizeof (stkalign_t)))
+ 163:./lib/chibios/os/rt/include/chthreads.h **** /** @} */
+ 164:./lib/chibios/os/rt/include/chthreads.h **** 
+ 165:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 166:./lib/chibios/os/rt/include/chthreads.h ****  * @name    Threads abstraction macros
+ 167:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 168:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 169:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Thread declaration macro.
+ 170:./lib/chibios/os/rt/include/chthreads.h ****  * @note    Thread declarations should be performed using this macro because
+ 171:./lib/chibios/os/rt/include/chthreads.h ****  *          the port layer could define optimizations for thread functions.
+ 172:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 173:./lib/chibios/os/rt/include/chthreads.h **** #define THD_FUNCTION(tname, arg) PORT_THD_FUNCTION(tname, arg)
+ 174:./lib/chibios/os/rt/include/chthreads.h **** /** @} */
+ 175:./lib/chibios/os/rt/include/chthreads.h **** 
+ 176:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 177:./lib/chibios/os/rt/include/chthreads.h ****  * @name    Macro Functions
+ 178:./lib/chibios/os/rt/include/chthreads.h ****  * @{
+ 179:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 180:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 181:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Delays the invoking thread for the specified number of seconds.
+ 182:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The specified time is rounded up to a value allowed by the real
+ 183:./lib/chibios/os/rt/include/chthreads.h ****  *          system tick clock.
+ 184:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The maximum specifiable value is implementation dependent.
+ 185:./lib/chibios/os/rt/include/chthreads.h ****  * @note    Use of this macro for large values is not secure because
+ 186:./lib/chibios/os/rt/include/chthreads.h ****  *          integer overflows, make sure your value can be correctly
+ 187:./lib/chibios/os/rt/include/chthreads.h ****  *          converted.
+ 188:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 189:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] sec       time in seconds, must be different from zero
+ 190:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 191:./lib/chibios/os/rt/include/chthreads.h ****  * @api
+ 192:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 193:./lib/chibios/os/rt/include/chthreads.h **** #define chThdSleepSeconds(sec) chThdSleep(S2ST(sec))
+ 194:./lib/chibios/os/rt/include/chthreads.h **** 
+ 195:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 196:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Delays the invoking thread for the specified number of
+ 197:./lib/chibios/os/rt/include/chthreads.h ****  *          milliseconds.
+ 198:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The specified time is rounded up to a value allowed by the real
+ 199:./lib/chibios/os/rt/include/chthreads.h ****  *          system tick clock.
+ 200:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The maximum specifiable value is implementation dependent.
+ 201:./lib/chibios/os/rt/include/chthreads.h ****  * @note    Use of this macro for large values is not secure because
+ 202:./lib/chibios/os/rt/include/chthreads.h ****  *          integer overflows, make sure your value can be correctly
+ 203:./lib/chibios/os/rt/include/chthreads.h ****  *          converted.
+ 204:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 205:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] msec      time in milliseconds, must be different from zero
+ 206:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 207:./lib/chibios/os/rt/include/chthreads.h ****  * @api
+ 208:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 209:./lib/chibios/os/rt/include/chthreads.h **** #define chThdSleepMilliseconds(msec) chThdSleep(MS2ST(msec))
+ 210:./lib/chibios/os/rt/include/chthreads.h **** 
+ 211:./lib/chibios/os/rt/include/chthreads.h **** /**
+ 212:./lib/chibios/os/rt/include/chthreads.h ****  * @brief   Delays the invoking thread for the specified number of
+ 213:./lib/chibios/os/rt/include/chthreads.h ****  *          microseconds.
+ 214:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The specified time is rounded up to a value allowed by the real
+ 215:./lib/chibios/os/rt/include/chthreads.h ****  *          system tick clock.
+ 216:./lib/chibios/os/rt/include/chthreads.h ****  * @note    The maximum specifiable value is implementation dependent.
+ 217:./lib/chibios/os/rt/include/chthreads.h ****  * @note    Use of this macro for large values is not secure because
+ 218:./lib/chibios/os/rt/include/chthreads.h ****  *          integer overflows, make sure your value can be correctly
+ 219:./lib/chibios/os/rt/include/chthreads.h ****  *          converted.
+ 220:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 221:./lib/chibios/os/rt/include/chthreads.h ****  * @param[in] usec      time in microseconds, must be different from zero
+ 222:./lib/chibios/os/rt/include/chthreads.h ****  *
+ 223:./lib/chibios/os/rt/include/chthreads.h ****  * @api
+ 224:./lib/chibios/os/rt/include/chthreads.h ****  */
+ 225:./lib/chibios/os/rt/include/chthreads.h **** #define chThdSleepMicroseconds(usec) chThdSleep(US2ST(usec))
+ 226:./lib/chibios/os/rt/include/chthreads.h **** /** @} */
+ 227:./lib/chibios/os/rt/include/chthreads.h **** 
+ 228:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+ 229:./lib/chibios/os/rt/include/chthreads.h **** /* External declarations.                                                    */
+ 230:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+ 231:./lib/chibios/os/rt/include/chthreads.h **** 
+ 232:./lib/chibios/os/rt/include/chthreads.h **** #ifdef __cplusplus
+ 233:./lib/chibios/os/rt/include/chthreads.h **** extern "C" {
+ 234:./lib/chibios/os/rt/include/chthreads.h **** #endif
+ 235:./lib/chibios/os/rt/include/chthreads.h ****    thread_t *_thread_init(thread_t *tp, const char *name, tprio_t prio);
+ 236:./lib/chibios/os/rt/include/chthreads.h **** #if CH_DBG_FILL_THREADS == TRUE
+ 237:./lib/chibios/os/rt/include/chthreads.h ****   void _thread_memfill(uint8_t *startp, uint8_t *endp, uint8_t v);
+ 238:./lib/chibios/os/rt/include/chthreads.h **** #endif
+ 239:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdCreateSuspendedI(const thread_descriptor_t *tdp);
+ 240:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdCreateSuspended(const thread_descriptor_t *tdp);
+ 241:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdCreateI(const thread_descriptor_t *tdp);
+ 242:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdCreate(const thread_descriptor_t *tdp);
+ 243:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdCreateStatic(void *wsp, size_t size,
+ 244:./lib/chibios/os/rt/include/chthreads.h ****                               tprio_t prio, tfunc_t pf, void *arg);
+ 245:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdStart(thread_t *tp);
+ 246:./lib/chibios/os/rt/include/chthreads.h **** #if CH_CFG_USE_REGISTRY == TRUE
+ 247:./lib/chibios/os/rt/include/chthreads.h ****   thread_t *chThdAddRef(thread_t *tp);
+ 248:./lib/chibios/os/rt/include/chthreads.h ****   void chThdRelease(thread_t *tp);
+ 249:./lib/chibios/os/rt/include/chthreads.h **** #endif
+ 250:./lib/chibios/os/rt/include/chthreads.h ****   void chThdExit(msg_t msg);
+ 251:./lib/chibios/os/rt/include/chthreads.h ****   void chThdExitS(msg_t msg);
+ 252:./lib/chibios/os/rt/include/chthreads.h **** #if CH_CFG_USE_WAITEXIT == TRUE
+ 253:./lib/chibios/os/rt/include/chthreads.h ****   msg_t chThdWait(thread_t *tp);
+ 254:./lib/chibios/os/rt/include/chthreads.h **** #endif
+ 255:./lib/chibios/os/rt/include/chthreads.h ****   tprio_t chThdSetPriority(tprio_t newprio);
+ 256:./lib/chibios/os/rt/include/chthreads.h ****   void chThdTerminate(thread_t *tp);
+ 257:./lib/chibios/os/rt/include/chthreads.h ****   msg_t chThdSuspendS(thread_reference_t *trp);
+ 258:./lib/chibios/os/rt/include/chthreads.h ****   msg_t chThdSuspendTimeoutS(thread_reference_t *trp, systime_t timeout);
+ 259:./lib/chibios/os/rt/include/chthreads.h ****   void chThdResumeI(thread_reference_t *trp, msg_t msg);
+ 260:./lib/chibios/os/rt/include/chthreads.h ****   void chThdResumeS(thread_reference_t *trp, msg_t msg);
+ 261:./lib/chibios/os/rt/include/chthreads.h ****   void chThdResume(thread_reference_t *trp, msg_t msg);
+ 262:./lib/chibios/os/rt/include/chthreads.h ****   msg_t chThdEnqueueTimeoutS(threads_queue_t *tqp, systime_t timeout);
+ 263:./lib/chibios/os/rt/include/chthreads.h ****   void chThdDequeueNextI(threads_queue_t *tqp, msg_t msg);
+ 264:./lib/chibios/os/rt/include/chthreads.h ****   void chThdDequeueAllI(threads_queue_t *tqp, msg_t msg);
+ 265:./lib/chibios/os/rt/include/chthreads.h ****   void chThdSleep(systime_t time);
+ 266:./lib/chibios/os/rt/include/chthreads.h ****   void chThdSleepUntil(systime_t time);
+ 267:./lib/chibios/os/rt/include/chthreads.h ****   systime_t chThdSleepUntilWindowed(systime_t prev, systime_t next);
+ 268:./lib/chibios/os/rt/include/chthreads.h ****   void chThdYield(void);
+ 269:./lib/chibios/os/rt/include/chthreads.h **** #ifdef __cplusplus
+ 270:./lib/chibios/os/rt/include/chthreads.h **** }
+ 271:./lib/chibios/os/rt/include/chthreads.h **** #endif
+ 272:./lib/chibios/os/rt/include/chthreads.h **** 
+ 273:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+ 274:./lib/chibios/os/rt/include/chthreads.h **** /* Module inline functions.                                                  */
+ 275:./lib/chibios/os/rt/include/chthreads.h **** /*===========================================================================*/
+ 276:./lib/chibios/os/rt/include/chthreads.h **** 
+ 277:./lib/chibios/os/rt/include/chthreads.h ****  /**
+ 278:./lib/chibios/os/rt/include/chthreads.h ****   * @brief   Returns a pointer to the current @p thread_t.
+ 279:./lib/chibios/os/rt/include/chthreads.h ****   *
+ 280:./lib/chibios/os/rt/include/chthreads.h ****   * @return             A pointer to the current thread.
+ 281:./lib/chibios/os/rt/include/chthreads.h ****   *
+ 282:./lib/chibios/os/rt/include/chthreads.h ****   * @xclass
+ 283:./lib/chibios/os/rt/include/chthreads.h ****   */
+ 284:./lib/chibios/os/rt/include/chthreads.h **** static inline thread_t *chThdGetSelfX(void) {
+ 285:./lib/chibios/os/rt/include/chthreads.h **** 
+ 286:./lib/chibios/os/rt/include/chthreads.h ****   return ch.rlist.current;
+ 537              		.loc 5 286 0
+ 538 0002 0C4E     		ldr	r6, .L24
+ 539              	.LBE132:
+ 540              	.LBE131:
+ 541              		.loc 4 146 0
+ 542 0004 B369     		ldr	r3, [r6, #24]
+ 543 0006 9D6B     		ldr	r5, [r3, #56]
+ 544              	.LBE130:
+ 545              	.LBE129:
+ 546              		.loc 2 296 0
+ 547 0008 0446     		mov	r4, r0
+ 297:lib/chibios/os/rt/src/chcond.c ****   mutex_t *mp;
+ 298:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 299:lib/chibios/os/rt/src/chcond.c **** 
+ 300:lib/chibios/os/rt/src/chcond.c ****   chDbgCheckClassS();
+ 301:lib/chibios/os/rt/src/chcond.c ****   chDbgCheck((cp != NULL) && (time != TIME_IMMEDIATE));
+ 302:lib/chibios/os/rt/src/chcond.c ****   chDbgAssert(currp->mtxlist != NULL, "not owning a mutex");
+ 303:lib/chibios/os/rt/src/chcond.c **** 
+ 304:lib/chibios/os/rt/src/chcond.c ****   /* Getting "current" mutex and releasing it.*/
+ 305:lib/chibios/os/rt/src/chcond.c ****   mp = chMtxGetNextMutexS();
+ 306:lib/chibios/os/rt/src/chcond.c ****   chMtxUnlockS(mp);
+ 548              		.loc 2 306 0
+ 549 000a 2846     		mov	r0, r5
+ 550              	.LVL43:
+ 296:lib/chibios/os/rt/src/chcond.c ****   mutex_t *mp;
+ 551              		.loc 2 296 0
+ 552 000c 0F46     		mov	r7, r1
+ 553              		.loc 2 306 0
+ 554 000e FFF7FEFF 		bl	chMtxUnlockS
+ 555              	.LVL44:
+ 307:lib/chibios/os/rt/src/chcond.c **** 
+ 308:lib/chibios/os/rt/src/chcond.c ****   /* Start waiting on the condition variable, on exit the mutex is taken
+ 309:lib/chibios/os/rt/src/chcond.c ****      again.*/
+ 310:lib/chibios/os/rt/src/chcond.c ****   currp->u.wtobjp = cp;
+ 556              		.loc 2 310 0
+ 557 0012 B069     		ldr	r0, [r6, #24]
+ 311:lib/chibios/os/rt/src/chcond.c ****   queue_prio_insert(currp, &cp->queue);
+ 558              		.loc 2 311 0
+ 559 0014 2146     		mov	r1, r4
+ 310:lib/chibios/os/rt/src/chcond.c ****   queue_prio_insert(currp, &cp->queue);
+ 560              		.loc 2 310 0
+ 561 0016 4462     		str	r4, [r0, #36]
+ 562              		.loc 2 311 0
+ 563 0018 FFF7FEFF 		bl	queue_prio_insert
+ 564              	.LVL45:
+ 312:lib/chibios/os/rt/src/chcond.c ****   msg = chSchGoSleepTimeoutS(CH_STATE_WTCOND, time);
+ 565              		.loc 2 312 0
+ 566 001c 3946     		mov	r1, r7
+ 567 001e 0720     		movs	r0, #7
+ 568 0020 FFF7FEFF 		bl	chSchGoSleepTimeoutS
+ 569              	.LVL46:
+ 313:lib/chibios/os/rt/src/chcond.c ****   if (msg != MSG_TIMEOUT) {
+ 570              		.loc 2 313 0
+ 571 0024 431C     		adds	r3, r0, #1
+ 312:lib/chibios/os/rt/src/chcond.c ****   msg = chSchGoSleepTimeoutS(CH_STATE_WTCOND, time);
+ 572              		.loc 2 312 0
+ 573 0026 0446     		mov	r4, r0
+ 574              	.LVL47:
+ 575              		.loc 2 313 0
+ 576 0028 02D0     		beq	.L19
+ 314:lib/chibios/os/rt/src/chcond.c ****     chMtxLockS(mp);
+ 577              		.loc 2 314 0
+ 578 002a 2846     		mov	r0, r5
+ 579              	.LVL48:
+ 580 002c FFF7FEFF 		bl	chMtxLockS
+ 581              	.LVL49:
+ 582              	.L19:
+ 315:lib/chibios/os/rt/src/chcond.c ****   }
+ 316:lib/chibios/os/rt/src/chcond.c **** 
+ 317:lib/chibios/os/rt/src/chcond.c ****   return msg;
+ 318:lib/chibios/os/rt/src/chcond.c **** }
+ 583              		.loc 2 318 0
+ 584 0030 2046     		mov	r0, r4
+ 585 0032 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 586              	.LVL50:
+ 587              	.L25:
+ 588              		.align	2
+ 589              	.L24:
+ 590 0034 00000000 		.word	ch
+ 591              		.cfi_endproc
+ 592              	.LFE256:
+ 594              		.section	.text.chCondWaitTimeout,"ax",%progbits
+ 595              		.align	1
+ 596              		.global	chCondWaitTimeout
+ 597              		.syntax unified
+ 598              		.thumb
+ 599              		.thumb_func
+ 600              		.fpu softvfp
+ 602              	chCondWaitTimeout:
+ 603              	.LFB255:
+ 258:lib/chibios/os/rt/src/chcond.c ****   msg_t msg;
+ 604              		.loc 2 258 0
+ 605              		.cfi_startproc
+ 606              		@ args = 0, pretend = 0, frame = 0
+ 607              		@ frame_needed = 0, uses_anonymous_args = 0
+ 608              	.LVL51:
+ 609 0000 08B5     		push	{r3, lr}
+ 610              		.cfi_def_cfa_offset 8
+ 611              		.cfi_offset 3, -8
+ 612              		.cfi_offset 14, -4
+ 613              	.LBB133:
+ 614              	.LBB134:
+ 615              	.LBB135:
+ 616              	.LBB136:
+ 617              		.loc 3 264 0
+ 618 0002 2023     		movs	r3, #32
+ 619              		.syntax unified
+ 620              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 621 0004 83F31188 		MSR basepri, r3
+ 622              	@ 0 "" 2
+ 623              	.LVL52:
+ 624              		.thumb
+ 625              		.syntax unified
+ 626              	.LBE136:
+ 627              	.LBE135:
+ 628              	.LBE134:
+ 629              	.LBE133:
+ 262:lib/chibios/os/rt/src/chcond.c ****   chSysUnlock();
+ 630              		.loc 2 262 0
+ 631 0008 FFF7FEFF 		bl	chCondWaitTimeoutS
+ 632              	.LVL53:
+ 633              	.LBB137:
+ 634              	.LBB138:
+ 635              	.LBB139:
+ 636              	.LBB140:
+ 637              	.LBB141:
+ 638              		.loc 3 264 0
+ 639 000c 0023     		movs	r3, #0
+ 640              		.syntax unified
+ 641              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 642 000e 83F31188 		MSR basepri, r3
+ 643              	@ 0 "" 2
+ 644              	.LVL54:
+ 645              		.thumb
+ 646              		.syntax unified
+ 647              	.LBE141:
+ 648              	.LBE140:
+ 649              	.LBE139:
+ 650              	.LBE138:
+ 651              	.LBE137:
+ 266:lib/chibios/os/rt/src/chcond.c **** 
+ 652              		.loc 2 266 0
+ 653 0012 08BD     		pop	{r3, pc}
+ 654              		.cfi_endproc
+ 655              	.LFE255:
+ 657              		.text
+ 658              	.Letext0:
+ 659              		.file 6 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 660              		.file 7 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 661              		.file 8 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 662              		.file 9 "./lib/chibios/os/rt/include/chsystypes.h"
+ 663              		.file 10 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 664              		.file 11 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 665              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 666              		.file 13 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 667              		.file 14 "./lib/chibios/os/rt/include/chtm.h"
+ 668              		.file 15 "./lib/chibios/os/rt/include/chsem.h"
+ 669              		.file 16 "./lib/chibios/os/rt/include/chsys.h"
+ 670              		.file 17 "./lib/chibios/os/rt/include/chregistry.h"
+ 671              		.file 18 "./lib/chibios/os/rt/include/chcond.h"
+ 672              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 chcond.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:16     .text.queue_prio_insert:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:22     .text.queue_prio_insert:0000000000000000 queue_prio_insert
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:66     .text.chCondObjectInit:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:73     .text.chCondObjectInit:0000000000000000 chCondObjectInit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:95     .text.chCondSignal:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:102    .text.chCondSignal:0000000000000000 chCondSignal
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:198    .text.chCondSignalI:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:205    .text.chCondSignalI:0000000000000000 chCondSignalI
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:251    .text.chCondBroadcastI:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:258    .text.chCondBroadcastI:0000000000000000 chCondBroadcastI
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:310    .text.chCondBroadcast:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:317    .text.chCondBroadcast:0000000000000000 chCondBroadcast
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:376    .text.chCondWaitS:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:383    .text.chCondWaitS:0000000000000000 chCondWaitS
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:442    .text.chCondWaitS:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:447    .text.chCondWait:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:454    .text.chCondWait:0000000000000000 chCondWait
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:510    .text.chCondWaitTimeoutS:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:517    .text.chCondWaitTimeoutS:0000000000000000 chCondWaitTimeoutS
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:590    .text.chCondWaitTimeoutS:0000000000000034 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:595    .text.chCondWaitTimeout:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccUZyfE2.s:602    .text.chCondWaitTimeout:0000000000000000 chCondWaitTimeout
+
+UNDEFINED SYMBOLS
+chSchWakeupS
+chSchReadyI
+chSchRescheduleS
+chMtxUnlockS
+chSchGoSleepS
+chMtxLockS
+ch
+chSchGoSleepTimeoutS

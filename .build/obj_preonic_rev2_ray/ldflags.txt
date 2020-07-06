@@ -1,0 +1,1 @@
+-Wl,--gc-sections -Wl,-Map=.build/preonic_rev2_ray.map,--cref     -lm 

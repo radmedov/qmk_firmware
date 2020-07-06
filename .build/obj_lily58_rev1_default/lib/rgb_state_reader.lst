@@ -1,0 +1,175 @@
+   1               		.file	"rgb_state_reader.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               		.section	.rodata.read_rgb_info.str1.1,"aMS",@progbits,1
+  11               	.LC0:
+  12 0000 6F6E 00   		.string	"on"
+  13               	.LC1:
+  14 0003 2D20 00   		.string	"- "
+  15               	.LC2:
+  16 0006 2573 2025 		.string	"%s %2d h%3d s%3d v%3d"
+  16      3264 2068 
+  16      2533 6420 
+  16      7325 3364 
+  16      2076 2533 
+  17               		.section	.text.read_rgb_info,"ax",@progbits
+  18               	.global	read_rgb_info
+  20               	read_rgb_info:
+  21               	.LFB20:
+  22               		.file 1 "keyboards/lily58/lib/rgb_state_reader.c"
+   1:keyboards/lily58/lib/rgb_state_reader.c **** #ifdef RGBLIGHT_ENABLE
+   2:keyboards/lily58/lib/rgb_state_reader.c **** 
+   3:keyboards/lily58/lib/rgb_state_reader.c **** #include QMK_KEYBOARD_H
+   4:keyboards/lily58/lib/rgb_state_reader.c **** #include <stdio.h>
+   5:keyboards/lily58/lib/rgb_state_reader.c **** 
+   6:keyboards/lily58/lib/rgb_state_reader.c **** extern rgblight_config_t rgblight_config;
+   7:keyboards/lily58/lib/rgb_state_reader.c **** char rbf_info_str[24];
+   8:keyboards/lily58/lib/rgb_state_reader.c **** const char *read_rgb_info(void) {
+  23               		.loc 1 8 0
+  24               		.cfi_startproc
+  25               	/* prologue: function */
+  26               	/* frame size = 0 */
+  27               	/* stack size = 0 */
+  28               	.L__stack_usage = 0
+   9:keyboards/lily58/lib/rgb_state_reader.c **** 
+  10:keyboards/lily58/lib/rgb_state_reader.c ****   snprintf(rbf_info_str, sizeof(rbf_info_str), "%s %2d h%3d s%3d v%3d",
+  29               		.loc 1 10 0
+  30 0000 5091 0000 		lds r21,rgblight_config+3
+  31 0004 4091 0000 		lds r20,rgblight_config+2
+  32 0008 3091 0000 		lds r19,rgblight_config+1
+  11:keyboards/lily58/lib/rgb_state_reader.c ****     rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
+  33               		.loc 1 11 0
+  34 000c 8091 0000 		lds r24,rgblight_config
+  35 0010 282F      		mov r18,r24
+  36 0012 2695      		lsr r18
+  10:keyboards/lily58/lib/rgb_state_reader.c ****     rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
+  37               		.loc 1 10 0
+  38 0014 80FD      		sbrc r24,0
+  39 0016 00C0      		rjmp .L3
+  40 0018 80E0      		ldi r24,lo8(.LC1)
+  41 001a 90E0      		ldi r25,hi8(.LC1)
+  42               	.L2:
+  10:keyboards/lily58/lib/rgb_state_reader.c ****     rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
+  43               		.loc 1 10 0 is_stmt 0 discriminator 4
+  44 001c 1F92      		push __zero_reg__
+  45               	.LCFI0:
+  46               		.cfi_def_cfa_offset 3
+  47 001e 5F93      		push r21
+  48               	.LCFI1:
+  49               		.cfi_def_cfa_offset 4
+  50 0020 1F92      		push __zero_reg__
+  51               	.LCFI2:
+  52               		.cfi_def_cfa_offset 5
+  53 0022 4F93      		push r20
+  54               	.LCFI3:
+  55               		.cfi_def_cfa_offset 6
+  56 0024 1F92      		push __zero_reg__
+  57               	.LCFI4:
+  58               		.cfi_def_cfa_offset 7
+  59 0026 3F93      		push r19
+  60               	.LCFI5:
+  61               		.cfi_def_cfa_offset 8
+  62 0028 1F92      		push __zero_reg__
+  63               	.LCFI6:
+  64               		.cfi_def_cfa_offset 9
+  65 002a 2F93      		push r18
+  66               	.LCFI7:
+  67               		.cfi_def_cfa_offset 10
+  68 002c 9F93      		push r25
+  69               	.LCFI8:
+  70               		.cfi_def_cfa_offset 11
+  71 002e 8F93      		push r24
+  72               	.LCFI9:
+  73               		.cfi_def_cfa_offset 12
+  74 0030 80E0      		ldi r24,lo8(.LC2)
+  75 0032 90E0      		ldi r25,hi8(.LC2)
+  76 0034 9F93      		push r25
+  77               	.LCFI10:
+  78               		.cfi_def_cfa_offset 13
+  79 0036 8F93      		push r24
+  80               	.LCFI11:
+  81               		.cfi_def_cfa_offset 14
+  82 0038 1F92      		push __zero_reg__
+  83               	.LCFI12:
+  84               		.cfi_def_cfa_offset 15
+  85 003a 88E1      		ldi r24,lo8(24)
+  86 003c 8F93      		push r24
+  87               	.LCFI13:
+  88               		.cfi_def_cfa_offset 16
+  89 003e 80E0      		ldi r24,lo8(rbf_info_str)
+  90 0040 90E0      		ldi r25,hi8(rbf_info_str)
+  91 0042 9F93      		push r25
+  92               	.LCFI14:
+  93               		.cfi_def_cfa_offset 17
+  94 0044 8F93      		push r24
+  95               	.LCFI15:
+  96               		.cfi_def_cfa_offset 18
+  97 0046 0E94 0000 		call snprintf
+  98               	.LVL0:
+  12:keyboards/lily58/lib/rgb_state_reader.c ****     rgblight_config.hue, rgblight_config.sat, rgblight_config.val);
+  13:keyboards/lily58/lib/rgb_state_reader.c ****   return rbf_info_str;
+  99               		.loc 1 13 0 is_stmt 1 discriminator 4
+ 100 004a 8DB7      		in r24,__SP_L__
+ 101 004c 9EB7      		in r25,__SP_H__
+ 102 004e 4096      		adiw r24,16
+ 103 0050 0FB6      		in __tmp_reg__,__SREG__
+ 104 0052 F894      		cli
+ 105 0054 9EBF      		out __SP_H__,r25
+ 106 0056 0FBE      		out __SREG__,__tmp_reg__
+ 107 0058 8DBF      		out __SP_L__,r24
+ 108               	.LCFI16:
+ 109               		.cfi_def_cfa_offset 2
+  14:keyboards/lily58/lib/rgb_state_reader.c **** }
+ 110               		.loc 1 14 0 discriminator 4
+ 111 005a 80E0      		ldi r24,lo8(rbf_info_str)
+ 112 005c 90E0      		ldi r25,hi8(rbf_info_str)
+ 113               	/* epilogue start */
+ 114 005e 0895      		ret
+ 115               	.L3:
+  10:keyboards/lily58/lib/rgb_state_reader.c ****     rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
+ 116               		.loc 1 10 0
+ 117 0060 80E0      		ldi r24,lo8(.LC0)
+ 118 0062 90E0      		ldi r25,hi8(.LC0)
+ 119 0064 00C0      		rjmp .L2
+ 120               		.cfi_endproc
+ 121               	.LFE20:
+ 123               		.comm	rbf_info_str,24,1
+ 124               		.text
+ 125               	.Letext0:
+ 126               		.file 2 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdint.h"
+ 127               		.file 3 "/usr/local/Cellar/avr-gcc@7/7.4.0/lib/avr-gcc/7/gcc/avr/7.4.0/include/stddef.h"
+ 128               		.file 4 "tmk_core/common/report.h"
+ 129               		.file 5 "tmk_core/common/action.h"
+ 130               		.file 6 "tmk_core/common/host.h"
+ 131               		.file 7 "tmk_core/common/debug.h"
+ 132               		.file 8 "quantum/keycode_config.h"
+ 133               		.file 9 "quantum/keymap.h"
+ 134               		.file 10 "./quantum/color.h"
+ 135               		.file 11 "quantum/rgblight.h"
+ 136               		.file 12 "tmk_core/common/action_layer.h"
+ 137               		.file 13 "tmk_core/common/timer.h"
+ 138               		.file 14 "tmk_core/common/action_util.h"
+ 139               		.file 15 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdlib.h"
+ 140               		.file 16 "quantum/quantum.h"
+ 141               		.file 17 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rgb_state_reader.c
+/var/tmp//cc4dhXt1.s:2      *ABS*:000000000000003e __SP_H__
+/var/tmp//cc4dhXt1.s:3      *ABS*:000000000000003d __SP_L__
+/var/tmp//cc4dhXt1.s:4      *ABS*:000000000000003f __SREG__
+/var/tmp//cc4dhXt1.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/tmp//cc4dhXt1.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/tmp//cc4dhXt1.s:20     .text.read_rgb_info:0000000000000000 read_rgb_info
+                            *COM*:0000000000000018 rbf_info_str
+
+UNDEFINED SYMBOLS
+rgblight_config
+snprintf
+__do_copy_data
+__do_clear_bss

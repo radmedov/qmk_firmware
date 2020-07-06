@@ -1,0 +1,2353 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"chevents.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.chEvtRegisterMaskWithFlags,"ax",%progbits
+  16              		.align	1
+  17              		.global	chEvtRegisterMaskWithFlags
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	chEvtRegisterMaskWithFlags:
+  24              	.LFB248:
+  25              		.file 1 "lib/chibios/os/rt/src/chevents.c"
+   1:lib/chibios/os/rt/src/chevents.c **** /*
+   2:lib/chibios/os/rt/src/chevents.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:lib/chibios/os/rt/src/chevents.c **** 
+   4:lib/chibios/os/rt/src/chevents.c ****     This file is part of ChibiOS.
+   5:lib/chibios/os/rt/src/chevents.c **** 
+   6:lib/chibios/os/rt/src/chevents.c ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:lib/chibios/os/rt/src/chevents.c ****     it under the terms of the GNU General Public License as published by
+   8:lib/chibios/os/rt/src/chevents.c ****     the Free Software Foundation; either version 3 of the License, or
+   9:lib/chibios/os/rt/src/chevents.c ****     (at your option) any later version.
+  10:lib/chibios/os/rt/src/chevents.c **** 
+  11:lib/chibios/os/rt/src/chevents.c ****     ChibiOS is distributed in the hope that it will be useful,
+  12:lib/chibios/os/rt/src/chevents.c ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:lib/chibios/os/rt/src/chevents.c ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:lib/chibios/os/rt/src/chevents.c ****     GNU General Public License for more details.
+  15:lib/chibios/os/rt/src/chevents.c **** 
+  16:lib/chibios/os/rt/src/chevents.c ****     You should have received a copy of the GNU General Public License
+  17:lib/chibios/os/rt/src/chevents.c ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:lib/chibios/os/rt/src/chevents.c **** */
+  19:lib/chibios/os/rt/src/chevents.c **** /*
+  20:lib/chibios/os/rt/src/chevents.c ****    Concepts and parts of this file have been contributed by Scott (skute).
+  21:lib/chibios/os/rt/src/chevents.c ****  */
+  22:lib/chibios/os/rt/src/chevents.c **** 
+  23:lib/chibios/os/rt/src/chevents.c **** /**
+  24:lib/chibios/os/rt/src/chevents.c ****  * @file    chevents.c
+  25:lib/chibios/os/rt/src/chevents.c ****  * @brief   Events code.
+  26:lib/chibios/os/rt/src/chevents.c ****  *
+  27:lib/chibios/os/rt/src/chevents.c ****  * @addtogroup events
+  28:lib/chibios/os/rt/src/chevents.c ****  * @details Event Flags, Event Sources and Event Listeners.
+  29:lib/chibios/os/rt/src/chevents.c ****  *          <h2>Operation mode</h2>
+  30:lib/chibios/os/rt/src/chevents.c ****  *          Each thread has a mask of pending events inside its
+  31:lib/chibios/os/rt/src/chevents.c ****  *          @p thread_t structure.
+  32:lib/chibios/os/rt/src/chevents.c ****  *          Operations defined for events:
+  33:lib/chibios/os/rt/src/chevents.c ****  *          - <b>Wait</b>, the invoking thread goes to sleep until a certain
+  34:lib/chibios/os/rt/src/chevents.c ****  *            AND/OR combination of events become pending.
+  35:lib/chibios/os/rt/src/chevents.c ****  *          - <b>Clear</b>, a mask of events is cleared from the pending
+  36:lib/chibios/os/rt/src/chevents.c ****  *            events, the cleared events mask is returned (only the
+  37:lib/chibios/os/rt/src/chevents.c ****  *            events that were actually pending and then cleared).
+  38:lib/chibios/os/rt/src/chevents.c ****  *          - <b>Signal</b>, an events mask is directly ORed to the mask of the
+  39:lib/chibios/os/rt/src/chevents.c ****  *            signaled thread.
+  40:lib/chibios/os/rt/src/chevents.c ****  *          - <b>Broadcast</b>, each thread registered on an Event Source is
+  41:lib/chibios/os/rt/src/chevents.c ****  *            signaled with the events specified in its Event Listener.
+  42:lib/chibios/os/rt/src/chevents.c ****  *          - <b>Dispatch</b>, an events mask is scanned and for each bit set
+  43:lib/chibios/os/rt/src/chevents.c ****  *            to one an associated handler function is invoked. Bit masks are
+  44:lib/chibios/os/rt/src/chevents.c ****  *            scanned from bit zero upward.
+  45:lib/chibios/os/rt/src/chevents.c ****  *          .
+  46:lib/chibios/os/rt/src/chevents.c ****  *          An Event Source is a special object that can be "broadcasted" by
+  47:lib/chibios/os/rt/src/chevents.c ****  *          a thread or an interrupt service routine. Broadcasting an Event
+  48:lib/chibios/os/rt/src/chevents.c ****  *          Source has the effect that all the threads registered on the
+  49:lib/chibios/os/rt/src/chevents.c ****  *          Event Source will be signaled with an events mask.<br>
+  50:lib/chibios/os/rt/src/chevents.c ****  *          An unlimited number of Event Sources can exists in a system and
+  51:lib/chibios/os/rt/src/chevents.c ****  *          each thread can be listening on an unlimited number of
+  52:lib/chibios/os/rt/src/chevents.c ****  *          them.
+  53:lib/chibios/os/rt/src/chevents.c ****  * @pre     In order to use the Events APIs the @p CH_CFG_USE_EVENTS option must be
+  54:lib/chibios/os/rt/src/chevents.c ****  *          enabled in @p chconf.h.
+  55:lib/chibios/os/rt/src/chevents.c ****  * @post    Enabling events requires 1-4 (depending on the architecture)
+  56:lib/chibios/os/rt/src/chevents.c ****  *          extra bytes in the @p thread_t structure.
+  57:lib/chibios/os/rt/src/chevents.c ****  * @{
+  58:lib/chibios/os/rt/src/chevents.c ****  */
+  59:lib/chibios/os/rt/src/chevents.c **** 
+  60:lib/chibios/os/rt/src/chevents.c **** #include "ch.h"
+  61:lib/chibios/os/rt/src/chevents.c **** 
+  62:lib/chibios/os/rt/src/chevents.c **** #if (CH_CFG_USE_EVENTS == TRUE) || defined(__DOXYGEN__)
+  63:lib/chibios/os/rt/src/chevents.c **** 
+  64:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  65:lib/chibios/os/rt/src/chevents.c **** /* Module local definitions.                                                 */
+  66:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  67:lib/chibios/os/rt/src/chevents.c **** 
+  68:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  69:lib/chibios/os/rt/src/chevents.c **** /* Module exported variables.                                                */
+  70:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  71:lib/chibios/os/rt/src/chevents.c **** 
+  72:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  73:lib/chibios/os/rt/src/chevents.c **** /* Module local types.                                                       */
+  74:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  75:lib/chibios/os/rt/src/chevents.c **** 
+  76:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  77:lib/chibios/os/rt/src/chevents.c **** /* Module local variables.                                                   */
+  78:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  79:lib/chibios/os/rt/src/chevents.c **** 
+  80:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  81:lib/chibios/os/rt/src/chevents.c **** /* Module local functions.                                                   */
+  82:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  83:lib/chibios/os/rt/src/chevents.c **** 
+  84:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  85:lib/chibios/os/rt/src/chevents.c **** /* Module exported functions.                                                */
+  86:lib/chibios/os/rt/src/chevents.c **** /*===========================================================================*/
+  87:lib/chibios/os/rt/src/chevents.c **** 
+  88:lib/chibios/os/rt/src/chevents.c **** /**
+  89:lib/chibios/os/rt/src/chevents.c ****  * @brief   Registers an Event Listener on an Event Source.
+  90:lib/chibios/os/rt/src/chevents.c ****  * @details Once a thread has registered as listener on an event source it
+  91:lib/chibios/os/rt/src/chevents.c ****  *          will be notified of all events broadcasted there.
+  92:lib/chibios/os/rt/src/chevents.c ****  * @note    Multiple Event Listeners can specify the same bits to be ORed to
+  93:lib/chibios/os/rt/src/chevents.c ****  *          different threads.
+  94:lib/chibios/os/rt/src/chevents.c ****  *
+  95:lib/chibios/os/rt/src/chevents.c ****  * @param[in] esp       pointer to the  @p event_source_t structure
+  96:lib/chibios/os/rt/src/chevents.c ****  * @param[in] elp       pointer to the @p event_listener_t structure
+  97:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events to be ORed to the thread when
+  98:lib/chibios/os/rt/src/chevents.c ****  *                      the event source is broadcasted
+  99:lib/chibios/os/rt/src/chevents.c ****  * @param[in] wflags    mask of flags the listening thread is interested in
+ 100:lib/chibios/os/rt/src/chevents.c ****  *
+ 101:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 102:lib/chibios/os/rt/src/chevents.c ****  */
+ 103:lib/chibios/os/rt/src/chevents.c **** void chEvtRegisterMaskWithFlags(event_source_t *esp,
+ 104:lib/chibios/os/rt/src/chevents.c ****                                 event_listener_t *elp,
+ 105:lib/chibios/os/rt/src/chevents.c ****                                 eventmask_t events,
+ 106:lib/chibios/os/rt/src/chevents.c ****                                 eventflags_t wflags) {
+  26              		.loc 1 106 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 10B5     		push	{r4, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 4, -8
+  34              		.cfi_offset 14, -4
+  35              	.LBB174:
+  36              	.LBB175:
+  37              	.LBB176:
+  38              	.LBB177:
+  39              		.file 2 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h"
+   1:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**************************************************************************//**
+   2:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @version  V4.30
+   5:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  ******************************************************************************/
+   7:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+   9:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    All rights reserved.
+  10:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      specific prior written permission.
+  20:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    *
+  21:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  34:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  35:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  38:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #endif
+  45:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  46:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  47:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   @{
+  51:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  52:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  53:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  54:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  58:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  60:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  62:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  63:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  64:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  65:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  69:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  71:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+  72:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  73:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  74:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  75:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  76:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Control Register
+  77:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the Control Register.
+  78:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Control Register value
+  79:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  80:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_CONTROL(void)
+  81:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  82:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+  83:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  84:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, control" : "=r" (result) );
+  85:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+  86:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  87:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  88:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  89:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  90:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Control Register
+  91:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Writes the given value to the Control Register.
+  92:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    control  Control Register value to set
+  93:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  94:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_CONTROL(uint32_t control)
+  95:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  96:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+  97:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  98:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  99:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 100:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 101:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get IPSR Register
+ 102:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the IPSR Register.
+ 103:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               IPSR Register value
+ 104:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 105:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_IPSR(void)
+ 106:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 107:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 108:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 109:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, ipsr" : "=r" (result) );
+ 110:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 111:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 112:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 113:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 114:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 115:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get APSR Register
+ 116:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the APSR Register.
+ 117:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               APSR Register value
+ 118:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 119:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_APSR(void)
+ 120:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 121:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 122:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 123:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, apsr" : "=r" (result) );
+ 124:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 125:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 126:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 127:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 128:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 129:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get xPSR Register
+ 130:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the xPSR Register.
+ 131:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 132:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \return               xPSR Register value
+ 133:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 134:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_xPSR(void)
+ 135:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 136:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 137:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 138:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, xpsr" : "=r" (result) );
+ 139:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 140:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 141:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 142:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 143:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 144:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Process Stack Pointer
+ 145:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Process Stack Pointer (PSP).
+ 146:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               PSP Register value
+ 147:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 148:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PSP(void)
+ 149:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 150:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 151:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 152:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, psp\n"  : "=r" (result) );
+ 153:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 154:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 155:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 156:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 157:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 158:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Process Stack Pointer
+ 159:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Process Stack Pointer (PSP).
+ 160:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    topOfProcStack  Process Stack Pointer value to set
+ 161:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 162:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PSP(uint32_t topOfProcStack)
+ 163:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 164:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
+ 165:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 166:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 167:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 168:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 169:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Main Stack Pointer
+ 170:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Main Stack Pointer (MSP).
+ 171:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               MSP Register value
+ 172:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 173:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
+ 174:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 175:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 176:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 177:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, msp\n" : "=r" (result) );
+ 178:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 179:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 180:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 181:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 182:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 183:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Main Stack Pointer
+ 184:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Main Stack Pointer (MSP).
+ 185:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 186:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \param [in]    topOfMainStack  Main Stack Pointer value to set
+ 187:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 188:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+ 189:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 190:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+ 191:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 192:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 193:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 194:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 195:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Priority Mask
+ 196:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current state of the priority mask bit from the Priority Mask Register.
+ 197:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Priority Mask value
+ 198:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 199:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PRIMASK(void)
+ 200:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 201:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 202:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 203:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, primask" : "=r" (result) );
+ 204:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 205:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 206:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 207:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 208:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 209:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Priority Mask
+ 210:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Priority Mask Register.
+ 211:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    priMask  Priority Mask
+ 212:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 213:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PRIMASK(uint32_t priMask)
+ 214:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 215:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+ 216:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 217:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 218:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 219:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if       (__CORTEX_M >= 0x03U)
+ 220:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 221:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 222:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable FIQ
+ 223:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+ 224:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 225:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 226:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_fault_irq(void)
+ 227:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 228:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie f" : : : "memory");
+ 229:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 230:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 231:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 232:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 233:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable FIQ
+ 234:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+ 235:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 236:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 237:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_fault_irq(void)
+ 238:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 239:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid f" : : : "memory");
+ 240:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 241:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 242:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 243:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 244:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Base Priority
+ 245:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Base Priority register.
+ 246:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Base Priority register value
+ 247:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 248:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_BASEPRI(void)
+ 249:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 250:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 251:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 252:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, basepri" : "=r" (result) );
+ 253:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 254:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 255:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 256:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 257:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 258:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Base Priority
+ 259:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register.
+ 260:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 261:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 262:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI(uint32_t value)
+ 263:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 264:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR basepri, %0" : : "r" (value) : "memory");
+  40              		.loc 2 264 0
+  41 0002 2024     		movs	r4, #32
+  42              		.syntax unified
+  43              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+  44 0004 84F31188 		MSR basepri, r4
+  45              	@ 0 "" 2
+  46              	.LVL1:
+  47              		.thumb
+  48              		.syntax unified
+  49              	.LBE177:
+  50              	.LBE176:
+  51              	.LBE175:
+  52              	.LBE174:
+ 107:lib/chibios/os/rt/src/chevents.c **** 
+ 108:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck((esp != NULL) && (elp != NULL));
+ 109:lib/chibios/os/rt/src/chevents.c **** 
+ 110:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 111:lib/chibios/os/rt/src/chevents.c ****   elp->next     = esp->next;
+  53              		.loc 1 111 0
+  54 0008 0468     		ldr	r4, [r0]
+  55 000a 0C60     		str	r4, [r1]
+ 112:lib/chibios/os/rt/src/chevents.c ****   esp->next     = elp;
+  56              		.loc 1 112 0
+  57 000c 0160     		str	r1, [r0]
+ 113:lib/chibios/os/rt/src/chevents.c ****   elp->listener = currp;
+  58              		.loc 1 113 0
+  59 000e 0548     		ldr	r0, .L2
+  60              	.LVL2:
+  61 0010 8069     		ldr	r0, [r0, #24]
+ 114:lib/chibios/os/rt/src/chevents.c ****   elp->events   = events;
+  62              		.loc 1 114 0
+  63 0012 C1E90102 		strd	r0, r2, [r1, #4]
+ 115:lib/chibios/os/rt/src/chevents.c ****   elp->flags    = (eventflags_t)0;
+  64              		.loc 1 115 0
+  65 0016 0022     		movs	r2, #0
+  66              	.LVL3:
+ 116:lib/chibios/os/rt/src/chevents.c ****   elp->wflags   = wflags;
+  67              		.loc 1 116 0
+  68 0018 C1E90323 		strd	r2, r3, [r1, #12]
+  69              	.LVL4:
+  70              	.LBB178:
+  71              	.LBB179:
+  72              	.LBB180:
+  73              	.LBB181:
+  74              	.LBB182:
+  75              		.loc 2 264 0
+  76              		.syntax unified
+  77              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+  78 001c 82F31188 		MSR basepri, r2
+  79              	@ 0 "" 2
+  80              	.LVL5:
+  81              		.thumb
+  82              		.syntax unified
+  83              	.LBE182:
+  84              	.LBE181:
+  85              	.LBE180:
+  86              	.LBE179:
+  87              	.LBE178:
+ 117:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 118:lib/chibios/os/rt/src/chevents.c **** }
+  88              		.loc 1 118 0
+  89 0020 10BD     		pop	{r4, pc}
+  90              	.L3:
+  91 0022 00BF     		.align	2
+  92              	.L2:
+  93 0024 00000000 		.word	ch
+  94              		.cfi_endproc
+  95              	.LFE248:
+  97              		.section	.text.chEvtUnregister,"ax",%progbits
+  98              		.align	1
+  99              		.global	chEvtUnregister
+ 100              		.syntax unified
+ 101              		.thumb
+ 102              		.thumb_func
+ 103              		.fpu softvfp
+ 105              	chEvtUnregister:
+ 106              	.LFB249:
+ 119:lib/chibios/os/rt/src/chevents.c **** 
+ 120:lib/chibios/os/rt/src/chevents.c **** /**
+ 121:lib/chibios/os/rt/src/chevents.c ****  * @brief   Unregisters an Event Listener from its Event Source.
+ 122:lib/chibios/os/rt/src/chevents.c ****  * @note    If the event listener is not registered on the specified event
+ 123:lib/chibios/os/rt/src/chevents.c ****  *          source then the function does nothing.
+ 124:lib/chibios/os/rt/src/chevents.c ****  * @note    For optimal performance it is better to perform the unregister
+ 125:lib/chibios/os/rt/src/chevents.c ****  *          operations in inverse order of the register operations (elements
+ 126:lib/chibios/os/rt/src/chevents.c ****  *          are found on top of the list).
+ 127:lib/chibios/os/rt/src/chevents.c ****  *
+ 128:lib/chibios/os/rt/src/chevents.c ****  * @param[in] esp       pointer to the  @p event_source_t structure
+ 129:lib/chibios/os/rt/src/chevents.c ****  * @param[in] elp       pointer to the @p event_listener_t structure
+ 130:lib/chibios/os/rt/src/chevents.c ****  *
+ 131:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 132:lib/chibios/os/rt/src/chevents.c ****  */
+ 133:lib/chibios/os/rt/src/chevents.c **** void chEvtUnregister(event_source_t *esp, event_listener_t *elp) {
+ 107              		.loc 1 133 0
+ 108              		.cfi_startproc
+ 109              		@ args = 0, pretend = 0, frame = 0
+ 110              		@ frame_needed = 0, uses_anonymous_args = 0
+ 111              		@ link register save eliminated.
+ 112              	.LVL6:
+ 113              	.LBB183:
+ 114              	.LBB184:
+ 115              	.LBB185:
+ 116              	.LBB186:
+ 117              		.loc 2 264 0
+ 118 0000 2023     		movs	r3, #32
+ 119              		.syntax unified
+ 120              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 121 0002 83F31188 		MSR basepri, r3
+ 122              	@ 0 "" 2
+ 123              	.LVL7:
+ 124              		.thumb
+ 125              		.syntax unified
+ 126              	.LBE186:
+ 127              	.LBE185:
+ 128              	.LBE184:
+ 129              	.LBE183:
+ 134:lib/chibios/os/rt/src/chevents.c ****   event_listener_t *p;
+ 135:lib/chibios/os/rt/src/chevents.c **** 
+ 136:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck((esp != NULL) && (elp != NULL));
+ 137:lib/chibios/os/rt/src/chevents.c **** 
+ 138:lib/chibios/os/rt/src/chevents.c ****   /*lint -save -e9087 -e740 [11.3, 1.3] Cast required by list handling.*/
+ 139:lib/chibios/os/rt/src/chevents.c ****   p = (event_listener_t *)esp;
+ 130              		.loc 1 139 0
+ 131 0006 0246     		mov	r2, r0
+ 132              	.LVL8:
+ 133              	.L5:
+ 140:lib/chibios/os/rt/src/chevents.c ****   /*lint -restore*/
+ 141:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 142:lib/chibios/os/rt/src/chevents.c ****   /*lint -save -e9087 -e740 [11.3, 1.3] Cast required by list handling.*/
+ 143:lib/chibios/os/rt/src/chevents.c ****   while (p->next != (event_listener_t *)esp) {
+ 134              		.loc 1 143 0
+ 135 0008 1368     		ldr	r3, [r2]
+ 136 000a 8342     		cmp	r3, r0
+ 137 000c 03D0     		beq	.L6
+ 144:lib/chibios/os/rt/src/chevents.c ****   /*lint -restore*/
+ 145:lib/chibios/os/rt/src/chevents.c ****     if (p->next == elp) {
+ 138              		.loc 1 145 0
+ 139 000e 8B42     		cmp	r3, r1
+ 140 0010 05D1     		bne	.L8
+ 146:lib/chibios/os/rt/src/chevents.c ****       p->next = elp->next;
+ 141              		.loc 1 146 0
+ 142 0012 0B68     		ldr	r3, [r1]
+ 143 0014 1360     		str	r3, [r2]
+ 144              	.L6:
+ 145              	.LVL9:
+ 146              	.LBB187:
+ 147              	.LBB188:
+ 148              	.LBB189:
+ 149              	.LBB190:
+ 150              	.LBB191:
+ 151              		.loc 2 264 0
+ 152 0016 0023     		movs	r3, #0
+ 153              		.syntax unified
+ 154              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 155 0018 83F31188 		MSR basepri, r3
+ 156              	@ 0 "" 2
+ 157              	.LVL10:
+ 158              		.thumb
+ 159              		.syntax unified
+ 160              	.LBE191:
+ 161              	.LBE190:
+ 162              	.LBE189:
+ 163              	.LBE188:
+ 164              	.LBE187:
+ 147:lib/chibios/os/rt/src/chevents.c ****       break;
+ 148:lib/chibios/os/rt/src/chevents.c ****     }
+ 149:lib/chibios/os/rt/src/chevents.c ****     p = p->next;
+ 150:lib/chibios/os/rt/src/chevents.c ****   }
+ 151:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 152:lib/chibios/os/rt/src/chevents.c **** }
+ 165              		.loc 1 152 0
+ 166 001c 7047     		bx	lr
+ 167              	.L8:
+ 168 001e 1A46     		mov	r2, r3
+ 169              	.LVL11:
+ 170 0020 F2E7     		b	.L5
+ 171              		.cfi_endproc
+ 172              	.LFE249:
+ 174              		.section	.text.chEvtGetAndClearEvents,"ax",%progbits
+ 175              		.align	1
+ 176              		.global	chEvtGetAndClearEvents
+ 177              		.syntax unified
+ 178              		.thumb
+ 179              		.thumb_func
+ 180              		.fpu softvfp
+ 182              	chEvtGetAndClearEvents:
+ 183              	.LFB250:
+ 153:lib/chibios/os/rt/src/chevents.c **** 
+ 154:lib/chibios/os/rt/src/chevents.c **** /**
+ 155:lib/chibios/os/rt/src/chevents.c ****  * @brief   Clears the pending events specified in the events mask.
+ 156:lib/chibios/os/rt/src/chevents.c ****  *
+ 157:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    the events to be cleared
+ 158:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of pending events that were cleared.
+ 159:lib/chibios/os/rt/src/chevents.c ****  *
+ 160:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 161:lib/chibios/os/rt/src/chevents.c ****  */
+ 162:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtGetAndClearEvents(eventmask_t events) {
+ 184              		.loc 1 162 0
+ 185              		.cfi_startproc
+ 186              		@ args = 0, pretend = 0, frame = 0
+ 187              		@ frame_needed = 0, uses_anonymous_args = 0
+ 188              		@ link register save eliminated.
+ 189              	.LVL12:
+ 190              	.LBB192:
+ 191              	.LBB193:
+ 192              	.LBB194:
+ 193              	.LBB195:
+ 194              		.loc 2 264 0
+ 195 0000 2023     		movs	r3, #32
+ 196              		.syntax unified
+ 197              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 198 0002 83F31188 		MSR basepri, r3
+ 199              	@ 0 "" 2
+ 200              	.LVL13:
+ 201              		.thumb
+ 202              		.syntax unified
+ 203              	.LBE195:
+ 204              	.LBE194:
+ 205              	.LBE193:
+ 206              	.LBE192:
+ 163:lib/chibios/os/rt/src/chevents.c ****   eventmask_t m;
+ 164:lib/chibios/os/rt/src/chevents.c **** 
+ 165:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 166:lib/chibios/os/rt/src/chevents.c ****   m = currp->epending & events;
+ 207              		.loc 1 166 0
+ 208 0006 054B     		ldr	r3, .L10
+ 209 0008 9A69     		ldr	r2, [r3, #24]
+ 210 000a 536B     		ldr	r3, [r2, #52]
+ 211              	.LVL14:
+ 167:lib/chibios/os/rt/src/chevents.c ****   currp->epending &= ~events;
+ 212              		.loc 1 167 0
+ 213 000c 23EA0001 		bic	r1, r3, r0
+ 214 0010 5163     		str	r1, [r2, #52]
+ 215              	.LVL15:
+ 216              	.LBB196:
+ 217              	.LBB197:
+ 218              	.LBB198:
+ 219              	.LBB199:
+ 220              	.LBB200:
+ 221              		.loc 2 264 0
+ 222 0012 0022     		movs	r2, #0
+ 223              		.syntax unified
+ 224              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 225 0014 82F31188 		MSR basepri, r2
+ 226              	@ 0 "" 2
+ 227              	.LVL16:
+ 228              		.thumb
+ 229              		.syntax unified
+ 230              	.LBE200:
+ 231              	.LBE199:
+ 232              	.LBE198:
+ 233              	.LBE197:
+ 234              	.LBE196:
+ 168:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 169:lib/chibios/os/rt/src/chevents.c **** 
+ 170:lib/chibios/os/rt/src/chevents.c ****   return m;
+ 171:lib/chibios/os/rt/src/chevents.c **** }
+ 235              		.loc 1 171 0
+ 236 0018 1840     		ands	r0, r0, r3
+ 237              	.LVL17:
+ 238 001a 7047     		bx	lr
+ 239              	.L11:
+ 240              		.align	2
+ 241              	.L10:
+ 242 001c 00000000 		.word	ch
+ 243              		.cfi_endproc
+ 244              	.LFE250:
+ 246              		.section	.text.chEvtAddEvents,"ax",%progbits
+ 247              		.align	1
+ 248              		.global	chEvtAddEvents
+ 249              		.syntax unified
+ 250              		.thumb
+ 251              		.thumb_func
+ 252              		.fpu softvfp
+ 254              	chEvtAddEvents:
+ 255              	.LFB251:
+ 172:lib/chibios/os/rt/src/chevents.c **** 
+ 173:lib/chibios/os/rt/src/chevents.c **** /**
+ 174:lib/chibios/os/rt/src/chevents.c ****  * @brief   Adds (OR) a set of events to the current thread, this is
+ 175:lib/chibios/os/rt/src/chevents.c ****  *          @b much faster than using @p chEvtBroadcast() or @p chEvtSignal().
+ 176:lib/chibios/os/rt/src/chevents.c ****  *
+ 177:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    the events to be added
+ 178:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of currently pending events.
+ 179:lib/chibios/os/rt/src/chevents.c ****  *
+ 180:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 181:lib/chibios/os/rt/src/chevents.c ****  */
+ 182:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtAddEvents(eventmask_t events) {
+ 256              		.loc 1 182 0
+ 257              		.cfi_startproc
+ 258              		@ args = 0, pretend = 0, frame = 0
+ 259              		@ frame_needed = 0, uses_anonymous_args = 0
+ 260              		@ link register save eliminated.
+ 261              	.LVL18:
+ 262              	.LBB201:
+ 263              	.LBB202:
+ 264              	.LBB203:
+ 265              	.LBB204:
+ 266              		.loc 2 264 0
+ 267 0000 2023     		movs	r3, #32
+ 268              		.syntax unified
+ 269              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 270 0002 83F31188 		MSR basepri, r3
+ 271              	@ 0 "" 2
+ 272              	.LVL19:
+ 273              		.thumb
+ 274              		.syntax unified
+ 275              	.LBE204:
+ 276              	.LBE203:
+ 277              	.LBE202:
+ 278              	.LBE201:
+ 183:lib/chibios/os/rt/src/chevents.c **** 
+ 184:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 185:lib/chibios/os/rt/src/chevents.c ****   currp->epending |= events;
+ 279              		.loc 1 185 0
+ 280 0006 044B     		ldr	r3, .L13
+ 281 0008 9B69     		ldr	r3, [r3, #24]
+ 282 000a 5A6B     		ldr	r2, [r3, #52]
+ 283 000c 1043     		orrs	r0, r0, r2
+ 284              	.LVL20:
+ 285 000e 5863     		str	r0, [r3, #52]
+ 286              	.LVL21:
+ 287              	.LBB205:
+ 288              	.LBB206:
+ 289              	.LBB207:
+ 290              	.LBB208:
+ 291              	.LBB209:
+ 292              		.loc 2 264 0
+ 293 0010 0023     		movs	r3, #0
+ 294              		.syntax unified
+ 295              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 296 0012 83F31188 		MSR basepri, r3
+ 297              	@ 0 "" 2
+ 298              	.LVL22:
+ 299              		.thumb
+ 300              		.syntax unified
+ 301              	.LBE209:
+ 302              	.LBE208:
+ 303              	.LBE207:
+ 304              	.LBE206:
+ 305              	.LBE205:
+ 186:lib/chibios/os/rt/src/chevents.c ****   events = currp->epending;
+ 187:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 188:lib/chibios/os/rt/src/chevents.c **** 
+ 189:lib/chibios/os/rt/src/chevents.c ****   return events;
+ 190:lib/chibios/os/rt/src/chevents.c **** }
+ 306              		.loc 1 190 0
+ 307 0016 7047     		bx	lr
+ 308              	.L14:
+ 309              		.align	2
+ 310              	.L13:
+ 311 0018 00000000 		.word	ch
+ 312              		.cfi_endproc
+ 313              	.LFE251:
+ 315              		.section	.text.chEvtGetAndClearFlags,"ax",%progbits
+ 316              		.align	1
+ 317              		.global	chEvtGetAndClearFlags
+ 318              		.syntax unified
+ 319              		.thumb
+ 320              		.thumb_func
+ 321              		.fpu softvfp
+ 323              	chEvtGetAndClearFlags:
+ 324              	.LFB253:
+ 191:lib/chibios/os/rt/src/chevents.c **** 
+ 192:lib/chibios/os/rt/src/chevents.c **** /**
+ 193:lib/chibios/os/rt/src/chevents.c ****  * @brief   Signals all the Event Listeners registered on the specified Event
+ 194:lib/chibios/os/rt/src/chevents.c ****  *          Source.
+ 195:lib/chibios/os/rt/src/chevents.c ****  * @details This function variants ORs the specified event flags to all the
+ 196:lib/chibios/os/rt/src/chevents.c ****  *          threads registered on the @p event_source_t in addition to the
+ 197:lib/chibios/os/rt/src/chevents.c ****  *          event flags specified by the threads themselves in the
+ 198:lib/chibios/os/rt/src/chevents.c ****  *          @p event_listener_t objects.
+ 199:lib/chibios/os/rt/src/chevents.c ****  * @post    This function does not reschedule so a call to a rescheduling
+ 200:lib/chibios/os/rt/src/chevents.c ****  *          function must be performed before unlocking the kernel. Note that
+ 201:lib/chibios/os/rt/src/chevents.c ****  *          interrupt handlers always reschedule on exit so an explicit
+ 202:lib/chibios/os/rt/src/chevents.c ****  *          reschedule must not be performed in ISRs.
+ 203:lib/chibios/os/rt/src/chevents.c ****  *
+ 204:lib/chibios/os/rt/src/chevents.c ****  * @param[in] esp       pointer to the @p event_source_t structure
+ 205:lib/chibios/os/rt/src/chevents.c ****  * @param[in] flags     the flags set to be added to the listener flags mask
+ 206:lib/chibios/os/rt/src/chevents.c ****  *
+ 207:lib/chibios/os/rt/src/chevents.c ****  * @iclass
+ 208:lib/chibios/os/rt/src/chevents.c ****  */
+ 209:lib/chibios/os/rt/src/chevents.c **** void chEvtBroadcastFlagsI(event_source_t *esp, eventflags_t flags) {
+ 210:lib/chibios/os/rt/src/chevents.c ****   event_listener_t *elp;
+ 211:lib/chibios/os/rt/src/chevents.c **** 
+ 212:lib/chibios/os/rt/src/chevents.c ****   chDbgCheckClassI();
+ 213:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck(esp != NULL);
+ 214:lib/chibios/os/rt/src/chevents.c **** 
+ 215:lib/chibios/os/rt/src/chevents.c ****   elp = esp->next;
+ 216:lib/chibios/os/rt/src/chevents.c ****   /*lint -save -e9087 -e740 [11.3, 1.3] Cast required by list handling.*/
+ 217:lib/chibios/os/rt/src/chevents.c ****   while (elp != (event_listener_t *)esp) {
+ 218:lib/chibios/os/rt/src/chevents.c ****   /*lint -restore*/
+ 219:lib/chibios/os/rt/src/chevents.c ****     elp->flags |= flags;
+ 220:lib/chibios/os/rt/src/chevents.c ****     /* When flags == 0 the thread will always be signaled because the
+ 221:lib/chibios/os/rt/src/chevents.c ****        source does not emit any flag.*/
+ 222:lib/chibios/os/rt/src/chevents.c ****     if ((flags == (eventflags_t)0) ||
+ 223:lib/chibios/os/rt/src/chevents.c ****         ((elp->flags & elp->wflags) != (eventflags_t)0)) {
+ 224:lib/chibios/os/rt/src/chevents.c ****       chEvtSignalI(elp->listener, elp->events);
+ 225:lib/chibios/os/rt/src/chevents.c ****     }
+ 226:lib/chibios/os/rt/src/chevents.c ****     elp = elp->next;
+ 227:lib/chibios/os/rt/src/chevents.c ****   }
+ 228:lib/chibios/os/rt/src/chevents.c **** }
+ 229:lib/chibios/os/rt/src/chevents.c **** 
+ 230:lib/chibios/os/rt/src/chevents.c **** /**
+ 231:lib/chibios/os/rt/src/chevents.c ****  * @brief   Returns the flags associated to an @p event_listener_t.
+ 232:lib/chibios/os/rt/src/chevents.c ****  * @details The flags are returned and the @p event_listener_t flags mask is
+ 233:lib/chibios/os/rt/src/chevents.c ****  *          cleared.
+ 234:lib/chibios/os/rt/src/chevents.c ****  *
+ 235:lib/chibios/os/rt/src/chevents.c ****  * @param[in] elp       pointer to the @p event_listener_t structure
+ 236:lib/chibios/os/rt/src/chevents.c ****  * @return              The flags added to the listener by the associated
+ 237:lib/chibios/os/rt/src/chevents.c ****  *                      event source.
+ 238:lib/chibios/os/rt/src/chevents.c ****  *
+ 239:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 240:lib/chibios/os/rt/src/chevents.c ****  */
+ 241:lib/chibios/os/rt/src/chevents.c **** eventflags_t chEvtGetAndClearFlags(event_listener_t *elp) {
+ 325              		.loc 1 241 0
+ 326              		.cfi_startproc
+ 327              		@ args = 0, pretend = 0, frame = 0
+ 328              		@ frame_needed = 0, uses_anonymous_args = 0
+ 329              		@ link register save eliminated.
+ 330              	.LVL23:
+ 331              		.loc 1 241 0
+ 332 0000 0246     		mov	r2, r0
+ 333              	.LBB210:
+ 334              	.LBB211:
+ 335              	.LBB212:
+ 336              	.LBB213:
+ 337              		.loc 2 264 0
+ 338 0002 2023     		movs	r3, #32
+ 339              		.syntax unified
+ 340              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 341 0004 83F31188 		MSR basepri, r3
+ 342              	@ 0 "" 2
+ 343              	.LVL24:
+ 344              		.thumb
+ 345              		.syntax unified
+ 346              	.LBE213:
+ 347              	.LBE212:
+ 348              	.LBE211:
+ 349              	.LBE210:
+ 242:lib/chibios/os/rt/src/chevents.c ****   eventflags_t flags;
+ 243:lib/chibios/os/rt/src/chevents.c **** 
+ 244:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 245:lib/chibios/os/rt/src/chevents.c ****   flags = elp->flags;
+ 246:lib/chibios/os/rt/src/chevents.c ****   elp->flags = (eventflags_t)0;
+ 350              		.loc 1 246 0
+ 351 0008 0023     		movs	r3, #0
+ 245:lib/chibios/os/rt/src/chevents.c ****   elp->flags = (eventflags_t)0;
+ 352              		.loc 1 245 0
+ 353 000a C068     		ldr	r0, [r0, #12]
+ 354              	.LVL25:
+ 355              		.loc 1 246 0
+ 356 000c D360     		str	r3, [r2, #12]
+ 357              	.LVL26:
+ 358              	.LBB214:
+ 359              	.LBB215:
+ 360              	.LBB216:
+ 361              	.LBB217:
+ 362              	.LBB218:
+ 363              		.loc 2 264 0
+ 364              		.syntax unified
+ 365              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 366 000e 83F31188 		MSR basepri, r3
+ 367              	@ 0 "" 2
+ 368              	.LVL27:
+ 369              		.thumb
+ 370              		.syntax unified
+ 371              	.LBE218:
+ 372              	.LBE217:
+ 373              	.LBE216:
+ 374              	.LBE215:
+ 375              	.LBE214:
+ 247:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 248:lib/chibios/os/rt/src/chevents.c **** 
+ 249:lib/chibios/os/rt/src/chevents.c ****   return flags;
+ 250:lib/chibios/os/rt/src/chevents.c **** }
+ 376              		.loc 1 250 0
+ 377 0012 7047     		bx	lr
+ 378              		.cfi_endproc
+ 379              	.LFE253:
+ 381              		.section	.text.chEvtSignalI,"ax",%progbits
+ 382              		.align	1
+ 383              		.global	chEvtSignalI
+ 384              		.syntax unified
+ 385              		.thumb
+ 386              		.thumb_func
+ 387              		.fpu softvfp
+ 389              	chEvtSignalI:
+ 390              	.LFB255:
+ 251:lib/chibios/os/rt/src/chevents.c **** 
+ 252:lib/chibios/os/rt/src/chevents.c **** /**
+ 253:lib/chibios/os/rt/src/chevents.c ****  * @brief   Adds a set of event flags directly to the specified @p thread_t.
+ 254:lib/chibios/os/rt/src/chevents.c ****  *
+ 255:lib/chibios/os/rt/src/chevents.c ****  * @param[in] tp        the thread to be signaled
+ 256:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    the events set to be ORed
+ 257:lib/chibios/os/rt/src/chevents.c ****  *
+ 258:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 259:lib/chibios/os/rt/src/chevents.c ****  */
+ 260:lib/chibios/os/rt/src/chevents.c **** void chEvtSignal(thread_t *tp, eventmask_t events) {
+ 261:lib/chibios/os/rt/src/chevents.c **** 
+ 262:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck(tp != NULL);
+ 263:lib/chibios/os/rt/src/chevents.c **** 
+ 264:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 265:lib/chibios/os/rt/src/chevents.c ****   chEvtSignalI(tp, events);
+ 266:lib/chibios/os/rt/src/chevents.c ****   chSchRescheduleS();
+ 267:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 268:lib/chibios/os/rt/src/chevents.c **** }
+ 269:lib/chibios/os/rt/src/chevents.c **** 
+ 270:lib/chibios/os/rt/src/chevents.c **** /**
+ 271:lib/chibios/os/rt/src/chevents.c ****  * @brief   Adds a set of event flags directly to the specified @p thread_t.
+ 272:lib/chibios/os/rt/src/chevents.c ****  * @post    This function does not reschedule so a call to a rescheduling
+ 273:lib/chibios/os/rt/src/chevents.c ****  *          function must be performed before unlocking the kernel. Note that
+ 274:lib/chibios/os/rt/src/chevents.c ****  *          interrupt handlers always reschedule on exit so an explicit
+ 275:lib/chibios/os/rt/src/chevents.c ****  *          reschedule must not be performed in ISRs.
+ 276:lib/chibios/os/rt/src/chevents.c ****  *
+ 277:lib/chibios/os/rt/src/chevents.c ****  * @param[in] tp        the thread to be signaled
+ 278:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    the events set to be ORed
+ 279:lib/chibios/os/rt/src/chevents.c ****  *
+ 280:lib/chibios/os/rt/src/chevents.c ****  * @iclass
+ 281:lib/chibios/os/rt/src/chevents.c ****  */
+ 282:lib/chibios/os/rt/src/chevents.c **** void chEvtSignalI(thread_t *tp, eventmask_t events) {
+ 391              		.loc 1 282 0
+ 392              		.cfi_startproc
+ 393              		@ args = 0, pretend = 0, frame = 0
+ 394              		@ frame_needed = 0, uses_anonymous_args = 0
+ 395              		@ link register save eliminated.
+ 396              	.LVL28:
+ 283:lib/chibios/os/rt/src/chevents.c **** 
+ 284:lib/chibios/os/rt/src/chevents.c ****   chDbgCheckClassI();
+ 285:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck(tp != NULL);
+ 286:lib/chibios/os/rt/src/chevents.c **** 
+ 287:lib/chibios/os/rt/src/chevents.c ****   tp->epending |= events;
+ 397              		.loc 1 287 0
+ 398 0000 436B     		ldr	r3, [r0, #52]
+ 399 0002 1943     		orrs	r1, r1, r3
+ 400              	.LVL29:
+ 288:lib/chibios/os/rt/src/chevents.c ****   /* Test on the AND/OR conditions wait states.*/
+ 289:lib/chibios/os/rt/src/chevents.c ****   if (((tp->state == CH_STATE_WTOREVT) &&
+ 401              		.loc 1 289 0
+ 402 0004 90F82030 		ldrb	r3, [r0, #32]	@ zero_extendqisi2
+ 287:lib/chibios/os/rt/src/chevents.c ****   /* Test on the AND/OR conditions wait states.*/
+ 403              		.loc 1 287 0
+ 404 0008 4163     		str	r1, [r0, #52]
+ 405              		.loc 1 289 0
+ 406 000a 0A2B     		cmp	r3, #10
+ 407 000c 03D1     		bne	.L17
+ 290:lib/chibios/os/rt/src/chevents.c ****        ((tp->epending & tp->u.ewmask) != (eventmask_t)0)) ||
+ 408              		.loc 1 290 0 discriminator 1
+ 409 000e 436A     		ldr	r3, [r0, #36]
+ 289:lib/chibios/os/rt/src/chevents.c ****        ((tp->epending & tp->u.ewmask) != (eventmask_t)0)) ||
+ 410              		.loc 1 289 0 discriminator 1
+ 411 0010 1942     		tst	r1, r3
+ 412 0012 05D1     		bne	.L18
+ 413 0014 7047     		bx	lr
+ 414              	.L17:
+ 415              		.loc 1 290 0
+ 416 0016 0B2B     		cmp	r3, #11
+ 417 0018 06D1     		bne	.L16
+ 291:lib/chibios/os/rt/src/chevents.c ****       ((tp->state == CH_STATE_WTANDEVT) &&
+ 292:lib/chibios/os/rt/src/chevents.c ****        ((tp->epending & tp->u.ewmask) == tp->u.ewmask))) {
+ 418              		.loc 1 292 0
+ 419 001a 436A     		ldr	r3, [r0, #36]
+ 291:lib/chibios/os/rt/src/chevents.c ****       ((tp->state == CH_STATE_WTANDEVT) &&
+ 420              		.loc 1 291 0
+ 421 001c 8B43     		bics	r3, r3, r1
+ 422 001e 03D1     		bne	.L16
+ 423              	.L18:
+ 293:lib/chibios/os/rt/src/chevents.c ****     tp->u.rdymsg = MSG_OK;
+ 424              		.loc 1 293 0
+ 425 0020 0023     		movs	r3, #0
+ 426 0022 4362     		str	r3, [r0, #36]
+ 294:lib/chibios/os/rt/src/chevents.c ****     (void) chSchReadyI(tp);
+ 427              		.loc 1 294 0
+ 428 0024 FFF7FEBF 		b	chSchReadyI
+ 429              	.LVL30:
+ 430              	.L16:
+ 295:lib/chibios/os/rt/src/chevents.c ****   }
+ 296:lib/chibios/os/rt/src/chevents.c **** }
+ 431              		.loc 1 296 0
+ 432 0028 7047     		bx	lr
+ 433              		.cfi_endproc
+ 434              	.LFE255:
+ 436              		.section	.text.chEvtBroadcastFlagsI,"ax",%progbits
+ 437              		.align	1
+ 438              		.global	chEvtBroadcastFlagsI
+ 439              		.syntax unified
+ 440              		.thumb
+ 441              		.thumb_func
+ 442              		.fpu softvfp
+ 444              	chEvtBroadcastFlagsI:
+ 445              	.LFB252:
+ 209:lib/chibios/os/rt/src/chevents.c ****   event_listener_t *elp;
+ 446              		.loc 1 209 0
+ 447              		.cfi_startproc
+ 448              		@ args = 0, pretend = 0, frame = 0
+ 449              		@ frame_needed = 0, uses_anonymous_args = 0
+ 450              	.LVL31:
+ 451 0000 70B5     		push	{r4, r5, r6, lr}
+ 452              		.cfi_def_cfa_offset 16
+ 453              		.cfi_offset 4, -16
+ 454              		.cfi_offset 5, -12
+ 455              		.cfi_offset 6, -8
+ 456              		.cfi_offset 14, -4
+ 215:lib/chibios/os/rt/src/chevents.c ****   /*lint -save -e9087 -e740 [11.3, 1.3] Cast required by list handling.*/
+ 457              		.loc 1 215 0
+ 458 0002 0468     		ldr	r4, [r0]
+ 459              	.LVL32:
+ 209:lib/chibios/os/rt/src/chevents.c ****   event_listener_t *elp;
+ 460              		.loc 1 209 0
+ 461 0004 0546     		mov	r5, r0
+ 462 0006 0E46     		mov	r6, r1
+ 463              	.LVL33:
+ 464              	.L21:
+ 217:lib/chibios/os/rt/src/chevents.c ****   /*lint -restore*/
+ 465              		.loc 1 217 0
+ 466 0008 AC42     		cmp	r4, r5
+ 467 000a 00D1     		bne	.L24
+ 228:lib/chibios/os/rt/src/chevents.c **** 
+ 468              		.loc 1 228 0
+ 469 000c 70BD     		pop	{r4, r5, r6, pc}
+ 470              	.LVL34:
+ 471              	.L24:
+ 219:lib/chibios/os/rt/src/chevents.c ****     /* When flags == 0 the thread will always be signaled because the
+ 472              		.loc 1 219 0
+ 473 000e E368     		ldr	r3, [r4, #12]
+ 474 0010 3343     		orrs	r3, r3, r6
+ 475 0012 E360     		str	r3, [r4, #12]
+ 222:lib/chibios/os/rt/src/chevents.c ****         ((elp->flags & elp->wflags) != (eventflags_t)0)) {
+ 476              		.loc 1 222 0
+ 477 0014 16B1     		cbz	r6, .L22
+ 223:lib/chibios/os/rt/src/chevents.c ****       chEvtSignalI(elp->listener, elp->events);
+ 478              		.loc 1 223 0 discriminator 1
+ 479 0016 2269     		ldr	r2, [r4, #16]
+ 222:lib/chibios/os/rt/src/chevents.c ****         ((elp->flags & elp->wflags) != (eventflags_t)0)) {
+ 480              		.loc 1 222 0 discriminator 1
+ 481 0018 1342     		tst	r3, r2
+ 482 001a 03D0     		beq	.L23
+ 483              	.L22:
+ 224:lib/chibios/os/rt/src/chevents.c ****     }
+ 484              		.loc 1 224 0
+ 485 001c D4E90101 		ldrd	r0, r1, [r4, #4]
+ 486 0020 FFF7FEFF 		bl	chEvtSignalI
+ 487              	.LVL35:
+ 488              	.L23:
+ 226:lib/chibios/os/rt/src/chevents.c ****   }
+ 489              		.loc 1 226 0
+ 490 0024 2468     		ldr	r4, [r4]
+ 491              	.LVL36:
+ 492 0026 EFE7     		b	.L21
+ 493              		.cfi_endproc
+ 494              	.LFE252:
+ 496              		.section	.text.chEvtSignal,"ax",%progbits
+ 497              		.align	1
+ 498              		.global	chEvtSignal
+ 499              		.syntax unified
+ 500              		.thumb
+ 501              		.thumb_func
+ 502              		.fpu softvfp
+ 504              	chEvtSignal:
+ 505              	.LFB254:
+ 260:lib/chibios/os/rt/src/chevents.c **** 
+ 506              		.loc 1 260 0
+ 507              		.cfi_startproc
+ 508              		@ args = 0, pretend = 0, frame = 0
+ 509              		@ frame_needed = 0, uses_anonymous_args = 0
+ 510              	.LVL37:
+ 511 0000 08B5     		push	{r3, lr}
+ 512              		.cfi_def_cfa_offset 8
+ 513              		.cfi_offset 3, -8
+ 514              		.cfi_offset 14, -4
+ 515              	.LBB219:
+ 516              	.LBB220:
+ 517              	.LBB221:
+ 518              	.LBB222:
+ 519              		.loc 2 264 0
+ 520 0002 2023     		movs	r3, #32
+ 521              		.syntax unified
+ 522              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 523 0004 83F31188 		MSR basepri, r3
+ 524              	@ 0 "" 2
+ 525              	.LVL38:
+ 526              		.thumb
+ 527              		.syntax unified
+ 528              	.LBE222:
+ 529              	.LBE221:
+ 530              	.LBE220:
+ 531              	.LBE219:
+ 265:lib/chibios/os/rt/src/chevents.c ****   chSchRescheduleS();
+ 532              		.loc 1 265 0
+ 533 0008 FFF7FEFF 		bl	chEvtSignalI
+ 534              	.LVL39:
+ 266:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 535              		.loc 1 266 0
+ 536 000c FFF7FEFF 		bl	chSchRescheduleS
+ 537              	.LVL40:
+ 538              	.LBB223:
+ 539              	.LBB224:
+ 540              	.LBB225:
+ 541              	.LBB226:
+ 542              	.LBB227:
+ 543              		.loc 2 264 0
+ 544 0010 0023     		movs	r3, #0
+ 545              		.syntax unified
+ 546              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 547 0012 83F31188 		MSR basepri, r3
+ 548              	@ 0 "" 2
+ 549              	.LVL41:
+ 550              		.thumb
+ 551              		.syntax unified
+ 552              	.LBE227:
+ 553              	.LBE226:
+ 554              	.LBE225:
+ 555              	.LBE224:
+ 556              	.LBE223:
+ 268:lib/chibios/os/rt/src/chevents.c **** 
+ 557              		.loc 1 268 0
+ 558 0016 08BD     		pop	{r3, pc}
+ 559              		.cfi_endproc
+ 560              	.LFE254:
+ 562              		.section	.text.chEvtBroadcastFlags,"ax",%progbits
+ 563              		.align	1
+ 564              		.global	chEvtBroadcastFlags
+ 565              		.syntax unified
+ 566              		.thumb
+ 567              		.thumb_func
+ 568              		.fpu softvfp
+ 570              	chEvtBroadcastFlags:
+ 571              	.LFB256:
+ 297:lib/chibios/os/rt/src/chevents.c **** 
+ 298:lib/chibios/os/rt/src/chevents.c **** /**
+ 299:lib/chibios/os/rt/src/chevents.c ****  * @brief   Signals all the Event Listeners registered on the specified Event
+ 300:lib/chibios/os/rt/src/chevents.c ****  *          Source.
+ 301:lib/chibios/os/rt/src/chevents.c ****  * @details This function variants ORs the specified event flags to all the
+ 302:lib/chibios/os/rt/src/chevents.c ****  *          threads registered on the @p event_source_t in addition to the
+ 303:lib/chibios/os/rt/src/chevents.c ****  *          event flags specified by the threads themselves in the
+ 304:lib/chibios/os/rt/src/chevents.c ****  *          @p event_listener_t objects.
+ 305:lib/chibios/os/rt/src/chevents.c ****  *
+ 306:lib/chibios/os/rt/src/chevents.c ****  * @param[in] esp       pointer to the @p event_source_t structure
+ 307:lib/chibios/os/rt/src/chevents.c ****  * @param[in] flags     the flags set to be added to the listener flags mask
+ 308:lib/chibios/os/rt/src/chevents.c ****  *
+ 309:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 310:lib/chibios/os/rt/src/chevents.c ****  */
+ 311:lib/chibios/os/rt/src/chevents.c **** void chEvtBroadcastFlags(event_source_t *esp, eventflags_t flags) {
+ 572              		.loc 1 311 0
+ 573              		.cfi_startproc
+ 574              		@ args = 0, pretend = 0, frame = 0
+ 575              		@ frame_needed = 0, uses_anonymous_args = 0
+ 576              	.LVL42:
+ 577 0000 08B5     		push	{r3, lr}
+ 578              		.cfi_def_cfa_offset 8
+ 579              		.cfi_offset 3, -8
+ 580              		.cfi_offset 14, -4
+ 581              	.LBB228:
+ 582              	.LBB229:
+ 583              	.LBB230:
+ 584              	.LBB231:
+ 585              		.loc 2 264 0
+ 586 0002 2023     		movs	r3, #32
+ 587              		.syntax unified
+ 588              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 589 0004 83F31188 		MSR basepri, r3
+ 590              	@ 0 "" 2
+ 591              	.LVL43:
+ 592              		.thumb
+ 593              		.syntax unified
+ 594              	.LBE231:
+ 595              	.LBE230:
+ 596              	.LBE229:
+ 597              	.LBE228:
+ 312:lib/chibios/os/rt/src/chevents.c **** 
+ 313:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 314:lib/chibios/os/rt/src/chevents.c ****   chEvtBroadcastFlagsI(esp, flags);
+ 598              		.loc 1 314 0
+ 599 0008 FFF7FEFF 		bl	chEvtBroadcastFlagsI
+ 600              	.LVL44:
+ 315:lib/chibios/os/rt/src/chevents.c ****   chSchRescheduleS();
+ 601              		.loc 1 315 0
+ 602 000c FFF7FEFF 		bl	chSchRescheduleS
+ 603              	.LVL45:
+ 604              	.LBB232:
+ 605              	.LBB233:
+ 606              	.LBB234:
+ 607              	.LBB235:
+ 608              	.LBB236:
+ 609              		.loc 2 264 0
+ 610 0010 0023     		movs	r3, #0
+ 611              		.syntax unified
+ 612              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 613 0012 83F31188 		MSR basepri, r3
+ 614              	@ 0 "" 2
+ 615              	.LVL46:
+ 616              		.thumb
+ 617              		.syntax unified
+ 618              	.LBE236:
+ 619              	.LBE235:
+ 620              	.LBE234:
+ 621              	.LBE233:
+ 622              	.LBE232:
+ 316:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 317:lib/chibios/os/rt/src/chevents.c **** }
+ 623              		.loc 1 317 0
+ 624 0016 08BD     		pop	{r3, pc}
+ 625              		.cfi_endproc
+ 626              	.LFE256:
+ 628              		.section	.text.chEvtGetAndClearFlagsI,"ax",%progbits
+ 629              		.align	1
+ 630              		.global	chEvtGetAndClearFlagsI
+ 631              		.syntax unified
+ 632              		.thumb
+ 633              		.thumb_func
+ 634              		.fpu softvfp
+ 636              	chEvtGetAndClearFlagsI:
+ 637              	.LFB257:
+ 318:lib/chibios/os/rt/src/chevents.c **** 
+ 319:lib/chibios/os/rt/src/chevents.c **** /**
+ 320:lib/chibios/os/rt/src/chevents.c ****  * @brief   Returns the flags associated to an @p event_listener_t.
+ 321:lib/chibios/os/rt/src/chevents.c ****  * @details The flags are returned and the @p event_listener_t flags mask is
+ 322:lib/chibios/os/rt/src/chevents.c ****  *          cleared.
+ 323:lib/chibios/os/rt/src/chevents.c ****  *
+ 324:lib/chibios/os/rt/src/chevents.c ****  * @param[in] elp       pointer to the @p event_listener_t structure
+ 325:lib/chibios/os/rt/src/chevents.c ****  * @return              The flags added to the listener by the associated
+ 326:lib/chibios/os/rt/src/chevents.c ****  *                      event source.
+ 327:lib/chibios/os/rt/src/chevents.c ****  *
+ 328:lib/chibios/os/rt/src/chevents.c ****  * @iclass
+ 329:lib/chibios/os/rt/src/chevents.c ****  */
+ 330:lib/chibios/os/rt/src/chevents.c **** eventflags_t chEvtGetAndClearFlagsI(event_listener_t *elp) {
+ 638              		.loc 1 330 0
+ 639              		.cfi_startproc
+ 640              		@ args = 0, pretend = 0, frame = 0
+ 641              		@ frame_needed = 0, uses_anonymous_args = 0
+ 642              		@ link register save eliminated.
+ 643              	.LVL47:
+ 644              		.loc 1 330 0
+ 645 0000 0346     		mov	r3, r0
+ 331:lib/chibios/os/rt/src/chevents.c ****   eventflags_t flags;
+ 332:lib/chibios/os/rt/src/chevents.c **** 
+ 333:lib/chibios/os/rt/src/chevents.c ****   flags = elp->flags;
+ 334:lib/chibios/os/rt/src/chevents.c ****   elp->flags = (eventflags_t)0;
+ 646              		.loc 1 334 0
+ 647 0002 0022     		movs	r2, #0
+ 333:lib/chibios/os/rt/src/chevents.c ****   elp->flags = (eventflags_t)0;
+ 648              		.loc 1 333 0
+ 649 0004 C068     		ldr	r0, [r0, #12]
+ 650              	.LVL48:
+ 651              		.loc 1 334 0
+ 652 0006 DA60     		str	r2, [r3, #12]
+ 335:lib/chibios/os/rt/src/chevents.c **** 
+ 336:lib/chibios/os/rt/src/chevents.c ****   return flags;
+ 337:lib/chibios/os/rt/src/chevents.c **** }
+ 653              		.loc 1 337 0
+ 654 0008 7047     		bx	lr
+ 655              		.cfi_endproc
+ 656              	.LFE257:
+ 658              		.section	.text.chEvtDispatch,"ax",%progbits
+ 659              		.align	1
+ 660              		.global	chEvtDispatch
+ 661              		.syntax unified
+ 662              		.thumb
+ 663              		.thumb_func
+ 664              		.fpu softvfp
+ 666              	chEvtDispatch:
+ 667              	.LFB258:
+ 338:lib/chibios/os/rt/src/chevents.c **** 
+ 339:lib/chibios/os/rt/src/chevents.c **** /**
+ 340:lib/chibios/os/rt/src/chevents.c ****  * @brief   Invokes the event handlers associated to an event flags mask.
+ 341:lib/chibios/os/rt/src/chevents.c ****  *
+ 342:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    mask of events to be dispatched
+ 343:lib/chibios/os/rt/src/chevents.c ****  * @param[in] handlers  an array of @p evhandler_t. The array must have size
+ 344:lib/chibios/os/rt/src/chevents.c ****  *                      equal to the number of bits in eventmask_t.
+ 345:lib/chibios/os/rt/src/chevents.c ****  *
+ 346:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 347:lib/chibios/os/rt/src/chevents.c ****  */
+ 348:lib/chibios/os/rt/src/chevents.c **** void chEvtDispatch(const evhandler_t *handlers, eventmask_t events) {
+ 668              		.loc 1 348 0
+ 669              		.cfi_startproc
+ 670              		@ args = 0, pretend = 0, frame = 0
+ 671              		@ frame_needed = 0, uses_anonymous_args = 0
+ 672              	.LVL49:
+ 673 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 674              		.cfi_def_cfa_offset 24
+ 675              		.cfi_offset 3, -24
+ 676              		.cfi_offset 4, -20
+ 677              		.cfi_offset 5, -16
+ 678              		.cfi_offset 6, -12
+ 679              		.cfi_offset 7, -8
+ 680              		.cfi_offset 14, -4
+ 681              		.loc 1 348 0
+ 682 0002 0646     		mov	r6, r0
+ 683 0004 0D46     		mov	r5, r1
+ 349:lib/chibios/os/rt/src/chevents.c ****   eventid_t eid;
+ 350:lib/chibios/os/rt/src/chevents.c **** 
+ 351:lib/chibios/os/rt/src/chevents.c ****   chDbgCheck(handlers != NULL);
+ 352:lib/chibios/os/rt/src/chevents.c **** 
+ 353:lib/chibios/os/rt/src/chevents.c ****   eid = (eventid_t)0;
+ 684              		.loc 1 353 0
+ 685 0006 0024     		movs	r4, #0
+ 354:lib/chibios/os/rt/src/chevents.c ****   while (events != (eventmask_t)0) {
+ 355:lib/chibios/os/rt/src/chevents.c ****     if ((events & EVENT_MASK(eid)) != (eventmask_t)0) {
+ 356:lib/chibios/os/rt/src/chevents.c ****       chDbgAssert(handlers[eid] != NULL, "null handler");
+ 357:lib/chibios/os/rt/src/chevents.c ****       events &= ~EVENT_MASK(eid);
+ 686              		.loc 1 357 0
+ 687 0008 0127     		movs	r7, #1
+ 688              	.LVL50:
+ 689              	.L35:
+ 354:lib/chibios/os/rt/src/chevents.c ****   while (events != (eventmask_t)0) {
+ 690              		.loc 1 354 0
+ 691 000a 05B9     		cbnz	r5, .L37
+ 358:lib/chibios/os/rt/src/chevents.c ****       handlers[eid](eid);
+ 359:lib/chibios/os/rt/src/chevents.c ****     }
+ 360:lib/chibios/os/rt/src/chevents.c ****     eid++;
+ 361:lib/chibios/os/rt/src/chevents.c ****   }
+ 362:lib/chibios/os/rt/src/chevents.c **** }
+ 692              		.loc 1 362 0
+ 693 000c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 694              	.LVL51:
+ 695              	.L37:
+ 355:lib/chibios/os/rt/src/chevents.c ****       chDbgAssert(handlers[eid] != NULL, "null handler");
+ 696              		.loc 1 355 0
+ 697 000e 25FA04F3 		lsr	r3, r5, r4
+ 698 0012 DB07     		lsls	r3, r3, #31
+ 699 0014 07D5     		bpl	.L36
+ 357:lib/chibios/os/rt/src/chevents.c ****       handlers[eid](eid);
+ 700              		.loc 1 357 0
+ 701 0016 07FA04F3 		lsl	r3, r7, r4
+ 702 001a 25EA0305 		bic	r5, r5, r3
+ 703              	.LVL52:
+ 358:lib/chibios/os/rt/src/chevents.c ****       handlers[eid](eid);
+ 704              		.loc 1 358 0
+ 705 001e 2046     		mov	r0, r4
+ 706 0020 56F82430 		ldr	r3, [r6, r4, lsl #2]
+ 707 0024 9847     		blx	r3
+ 708              	.LVL53:
+ 709              	.L36:
+ 360:lib/chibios/os/rt/src/chevents.c ****   }
+ 710              		.loc 1 360 0
+ 711 0026 0134     		adds	r4, r4, #1
+ 712              	.LVL54:
+ 713 0028 EFE7     		b	.L35
+ 714              		.cfi_endproc
+ 715              	.LFE258:
+ 717              		.section	.text.chEvtWaitOne,"ax",%progbits
+ 718              		.align	1
+ 719              		.global	chEvtWaitOne
+ 720              		.syntax unified
+ 721              		.thumb
+ 722              		.thumb_func
+ 723              		.fpu softvfp
+ 725              	chEvtWaitOne:
+ 726              	.LFB259:
+ 363:lib/chibios/os/rt/src/chevents.c **** 
+ 364:lib/chibios/os/rt/src/chevents.c **** #if (CH_CFG_OPTIMIZE_SPEED == TRUE) ||                                      \
+ 365:lib/chibios/os/rt/src/chevents.c ****     (CH_CFG_USE_EVENTS_TIMEOUT == FALSE) ||                                 \
+ 366:lib/chibios/os/rt/src/chevents.c ****     defined(__DOXYGEN__)
+ 367:lib/chibios/os/rt/src/chevents.c **** /**
+ 368:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for exactly one of the specified events.
+ 369:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for one event among those specified in
+ 370:lib/chibios/os/rt/src/chevents.c ****  *          @p events to become pending then the event is cleared and returned.
+ 371:lib/chibios/os/rt/src/chevents.c ****  * @note    One and only one event is served in the function, the one with the
+ 372:lib/chibios/os/rt/src/chevents.c ****  *          lowest event id. The function is meant to be invoked into a loop in
+ 373:lib/chibios/os/rt/src/chevents.c ****  *          order to serve all the pending events.<br>
+ 374:lib/chibios/os/rt/src/chevents.c ****  *          This means that Event Listeners with a lower event identifier have
+ 375:lib/chibios/os/rt/src/chevents.c ****  *          an higher priority.
+ 376:lib/chibios/os/rt/src/chevents.c ****  *
+ 377:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 378:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS enables all the events
+ 379:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the lowest event id served and cleared.
+ 380:lib/chibios/os/rt/src/chevents.c ****  *
+ 381:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 382:lib/chibios/os/rt/src/chevents.c ****  */
+ 383:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitOne(eventmask_t events) {
+ 727              		.loc 1 383 0
+ 728              		.cfi_startproc
+ 729              		@ args = 0, pretend = 0, frame = 0
+ 730              		@ frame_needed = 0, uses_anonymous_args = 0
+ 731              	.LVL55:
+ 732 0000 38B5     		push	{r3, r4, r5, lr}
+ 733              		.cfi_def_cfa_offset 16
+ 734              		.cfi_offset 3, -16
+ 735              		.cfi_offset 4, -12
+ 736              		.cfi_offset 5, -8
+ 737              		.cfi_offset 14, -4
+ 384:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 738              		.loc 1 384 0
+ 739 0002 0C4B     		ldr	r3, .L43
+ 383:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 740              		.loc 1 383 0
+ 741 0004 0546     		mov	r5, r0
+ 742              		.loc 1 384 0
+ 743 0006 9C69     		ldr	r4, [r3, #24]
+ 744              	.LVL56:
+ 745              	.LBB237:
+ 746              	.LBB238:
+ 747              	.LBB239:
+ 748              	.LBB240:
+ 749              		.loc 2 264 0
+ 750 0008 2023     		movs	r3, #32
+ 751              		.syntax unified
+ 752              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 753 000a 83F31188 		MSR basepri, r3
+ 754              	@ 0 "" 2
+ 755              	.LVL57:
+ 756              		.thumb
+ 757              		.syntax unified
+ 758              	.LBE240:
+ 759              	.LBE239:
+ 760              	.LBE238:
+ 761              	.LBE237:
+ 385:lib/chibios/os/rt/src/chevents.c ****   eventmask_t m;
+ 386:lib/chibios/os/rt/src/chevents.c **** 
+ 387:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 388:lib/chibios/os/rt/src/chevents.c ****   m = ctp->epending & events;
+ 762              		.loc 1 388 0
+ 763 000e 606B     		ldr	r0, [r4, #52]
+ 764              	.LVL58:
+ 389:lib/chibios/os/rt/src/chevents.c ****   if (m == (eventmask_t)0) {
+ 765              		.loc 1 389 0
+ 766 0010 2840     		ands	r0, r5, r0
+ 767              	.LVL59:
+ 768 0012 05D1     		bne	.L42
+ 390:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 391:lib/chibios/os/rt/src/chevents.c ****     chSchGoSleepS(CH_STATE_WTOREVT);
+ 769              		.loc 1 391 0
+ 770 0014 0A20     		movs	r0, #10
+ 771              	.LVL60:
+ 390:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 772              		.loc 1 390 0
+ 773 0016 6562     		str	r5, [r4, #36]
+ 774              		.loc 1 391 0
+ 775 0018 FFF7FEFF 		bl	chSchGoSleepS
+ 776              	.LVL61:
+ 392:lib/chibios/os/rt/src/chevents.c ****     m = ctp->epending & events;
+ 777              		.loc 1 392 0
+ 778 001c 606B     		ldr	r0, [r4, #52]
+ 779 001e 2840     		ands	r0, r0, r5
+ 780              	.LVL62:
+ 781              	.L42:
+ 393:lib/chibios/os/rt/src/chevents.c ****   }
+ 394:lib/chibios/os/rt/src/chevents.c ****   m ^= m & (m - (eventmask_t)1);
+ 782              		.loc 1 394 0
+ 783 0020 4342     		negs	r3, r0
+ 784 0022 1840     		ands	r0, r0, r3
+ 785              	.LVL63:
+ 395:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~m;
+ 786              		.loc 1 395 0
+ 787 0024 636B     		ldr	r3, [r4, #52]
+ 788 0026 23EA0003 		bic	r3, r3, r0
+ 789 002a 6363     		str	r3, [r4, #52]
+ 790              	.LVL64:
+ 791              	.LBB241:
+ 792              	.LBB242:
+ 793              	.LBB243:
+ 794              	.LBB244:
+ 795              	.LBB245:
+ 796              		.loc 2 264 0
+ 797 002c 0023     		movs	r3, #0
+ 798              		.syntax unified
+ 799              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 800 002e 83F31188 		MSR basepri, r3
+ 801              	@ 0 "" 2
+ 802              	.LVL65:
+ 803              		.thumb
+ 804              		.syntax unified
+ 805              	.LBE245:
+ 806              	.LBE244:
+ 807              	.LBE243:
+ 808              	.LBE242:
+ 809              	.LBE241:
+ 396:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 397:lib/chibios/os/rt/src/chevents.c **** 
+ 398:lib/chibios/os/rt/src/chevents.c ****   return m;
+ 399:lib/chibios/os/rt/src/chevents.c **** }
+ 810              		.loc 1 399 0
+ 811 0032 38BD     		pop	{r3, r4, r5, pc}
+ 812              	.LVL66:
+ 813              	.L44:
+ 814              		.align	2
+ 815              	.L43:
+ 816 0034 00000000 		.word	ch
+ 817              		.cfi_endproc
+ 818              	.LFE259:
+ 820              		.section	.text.chEvtWaitAny,"ax",%progbits
+ 821              		.align	1
+ 822              		.global	chEvtWaitAny
+ 823              		.syntax unified
+ 824              		.thumb
+ 825              		.thumb_func
+ 826              		.fpu softvfp
+ 828              	chEvtWaitAny:
+ 829              	.LFB260:
+ 400:lib/chibios/os/rt/src/chevents.c **** 
+ 401:lib/chibios/os/rt/src/chevents.c **** /**
+ 402:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for any of the specified events.
+ 403:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for any event among those specified in
+ 404:lib/chibios/os/rt/src/chevents.c ****  *          @p events to become pending then the events are cleared and
+ 405:lib/chibios/os/rt/src/chevents.c ****  *          returned.
+ 406:lib/chibios/os/rt/src/chevents.c ****  *
+ 407:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 408:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS enables all the events
+ 409:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the served and cleared events.
+ 410:lib/chibios/os/rt/src/chevents.c ****  *
+ 411:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 412:lib/chibios/os/rt/src/chevents.c ****  */
+ 413:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitAny(eventmask_t events) {
+ 830              		.loc 1 413 0
+ 831              		.cfi_startproc
+ 832              		@ args = 0, pretend = 0, frame = 0
+ 833              		@ frame_needed = 0, uses_anonymous_args = 0
+ 834              	.LVL67:
+ 835 0000 38B5     		push	{r3, r4, r5, lr}
+ 836              		.cfi_def_cfa_offset 16
+ 837              		.cfi_offset 3, -16
+ 838              		.cfi_offset 4, -12
+ 839              		.cfi_offset 5, -8
+ 840              		.cfi_offset 14, -4
+ 414:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 841              		.loc 1 414 0
+ 842 0002 0B4B     		ldr	r3, .L47
+ 413:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 843              		.loc 1 413 0
+ 844 0004 0546     		mov	r5, r0
+ 845              		.loc 1 414 0
+ 846 0006 9C69     		ldr	r4, [r3, #24]
+ 847              	.LVL68:
+ 848              	.LBB246:
+ 849              	.LBB247:
+ 850              	.LBB248:
+ 851              	.LBB249:
+ 852              		.loc 2 264 0
+ 853 0008 2023     		movs	r3, #32
+ 854              		.syntax unified
+ 855              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 856 000a 83F31188 		MSR basepri, r3
+ 857              	@ 0 "" 2
+ 858              	.LVL69:
+ 859              		.thumb
+ 860              		.syntax unified
+ 861              	.LBE249:
+ 862              	.LBE248:
+ 863              	.LBE247:
+ 864              	.LBE246:
+ 415:lib/chibios/os/rt/src/chevents.c ****   eventmask_t m;
+ 416:lib/chibios/os/rt/src/chevents.c **** 
+ 417:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 418:lib/chibios/os/rt/src/chevents.c ****   m = ctp->epending & events;
+ 865              		.loc 1 418 0
+ 866 000e 606B     		ldr	r0, [r4, #52]
+ 867              	.LVL70:
+ 419:lib/chibios/os/rt/src/chevents.c ****   if (m == (eventmask_t)0) {
+ 868              		.loc 1 419 0
+ 869 0010 2840     		ands	r0, r5, r0
+ 870              	.LVL71:
+ 871 0012 05D1     		bne	.L46
+ 420:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 421:lib/chibios/os/rt/src/chevents.c ****     chSchGoSleepS(CH_STATE_WTOREVT);
+ 872              		.loc 1 421 0
+ 873 0014 0A20     		movs	r0, #10
+ 874              	.LVL72:
+ 420:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 875              		.loc 1 420 0
+ 876 0016 6562     		str	r5, [r4, #36]
+ 877              		.loc 1 421 0
+ 878 0018 FFF7FEFF 		bl	chSchGoSleepS
+ 879              	.LVL73:
+ 422:lib/chibios/os/rt/src/chevents.c ****     m = ctp->epending & events;
+ 880              		.loc 1 422 0
+ 881 001c 606B     		ldr	r0, [r4, #52]
+ 882 001e 2840     		ands	r0, r0, r5
+ 883              	.LVL74:
+ 884              	.L46:
+ 423:lib/chibios/os/rt/src/chevents.c ****   }
+ 424:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~m;
+ 885              		.loc 1 424 0
+ 886 0020 636B     		ldr	r3, [r4, #52]
+ 887 0022 23EA0003 		bic	r3, r3, r0
+ 888 0026 6363     		str	r3, [r4, #52]
+ 889              	.LVL75:
+ 890              	.LBB250:
+ 891              	.LBB251:
+ 892              	.LBB252:
+ 893              	.LBB253:
+ 894              	.LBB254:
+ 895              		.loc 2 264 0
+ 896 0028 0023     		movs	r3, #0
+ 897              		.syntax unified
+ 898              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 899 002a 83F31188 		MSR basepri, r3
+ 900              	@ 0 "" 2
+ 901              	.LVL76:
+ 902              		.thumb
+ 903              		.syntax unified
+ 904              	.LBE254:
+ 905              	.LBE253:
+ 906              	.LBE252:
+ 907              	.LBE251:
+ 908              	.LBE250:
+ 425:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 426:lib/chibios/os/rt/src/chevents.c **** 
+ 427:lib/chibios/os/rt/src/chevents.c ****   return m;
+ 428:lib/chibios/os/rt/src/chevents.c **** }
+ 909              		.loc 1 428 0
+ 910 002e 38BD     		pop	{r3, r4, r5, pc}
+ 911              	.LVL77:
+ 912              	.L48:
+ 913              		.align	2
+ 914              	.L47:
+ 915 0030 00000000 		.word	ch
+ 916              		.cfi_endproc
+ 917              	.LFE260:
+ 919              		.section	.text.chEvtWaitAll,"ax",%progbits
+ 920              		.align	1
+ 921              		.global	chEvtWaitAll
+ 922              		.syntax unified
+ 923              		.thumb
+ 924              		.thumb_func
+ 925              		.fpu softvfp
+ 927              	chEvtWaitAll:
+ 928              	.LFB261:
+ 429:lib/chibios/os/rt/src/chevents.c **** 
+ 430:lib/chibios/os/rt/src/chevents.c **** /**
+ 431:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for all the specified events.
+ 432:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for all the events specified in @p events to
+ 433:lib/chibios/os/rt/src/chevents.c ****  *          become pending then the events are cleared and returned.
+ 434:lib/chibios/os/rt/src/chevents.c ****  *
+ 435:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 436:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS requires all the events
+ 437:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the served and cleared events.
+ 438:lib/chibios/os/rt/src/chevents.c ****  *
+ 439:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 440:lib/chibios/os/rt/src/chevents.c ****  */
+ 441:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitAll(eventmask_t events) {
+ 929              		.loc 1 441 0
+ 930              		.cfi_startproc
+ 931              		@ args = 0, pretend = 0, frame = 0
+ 932              		@ frame_needed = 0, uses_anonymous_args = 0
+ 933              	.LVL78:
+ 934 0000 38B5     		push	{r3, r4, r5, lr}
+ 935              		.cfi_def_cfa_offset 16
+ 936              		.cfi_offset 3, -16
+ 937              		.cfi_offset 4, -12
+ 938              		.cfi_offset 5, -8
+ 939              		.cfi_offset 14, -4
+ 442:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 940              		.loc 1 442 0
+ 941 0002 0B4B     		ldr	r3, .L51
+ 441:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 942              		.loc 1 441 0
+ 943 0004 0446     		mov	r4, r0
+ 944              		.loc 1 442 0
+ 945 0006 9D69     		ldr	r5, [r3, #24]
+ 946              	.LVL79:
+ 947              	.LBB255:
+ 948              	.LBB256:
+ 949              	.LBB257:
+ 950              	.LBB258:
+ 951              		.loc 2 264 0
+ 952 0008 2023     		movs	r3, #32
+ 953              		.syntax unified
+ 954              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 955 000a 83F31188 		MSR basepri, r3
+ 956              	@ 0 "" 2
+ 957              	.LVL80:
+ 958              		.thumb
+ 959              		.syntax unified
+ 960              	.LBE258:
+ 961              	.LBE257:
+ 962              	.LBE256:
+ 963              	.LBE255:
+ 443:lib/chibios/os/rt/src/chevents.c **** 
+ 444:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 445:lib/chibios/os/rt/src/chevents.c ****   if ((ctp->epending & events) != events) {
+ 964              		.loc 1 445 0
+ 965 000e 6B6B     		ldr	r3, [r5, #52]
+ 966 0010 30EA0303 		bics	r3, r0, r3
+ 967 0014 03D0     		beq	.L50
+ 446:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 968              		.loc 1 446 0
+ 969 0016 6862     		str	r0, [r5, #36]
+ 447:lib/chibios/os/rt/src/chevents.c ****     chSchGoSleepS(CH_STATE_WTANDEVT);
+ 970              		.loc 1 447 0
+ 971 0018 0B20     		movs	r0, #11
+ 972              	.LVL81:
+ 973 001a FFF7FEFF 		bl	chSchGoSleepS
+ 974              	.LVL82:
+ 975              	.L50:
+ 448:lib/chibios/os/rt/src/chevents.c ****   }
+ 449:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~events;
+ 976              		.loc 1 449 0
+ 977 001e 6B6B     		ldr	r3, [r5, #52]
+ 978 0020 23EA0403 		bic	r3, r3, r4
+ 979 0024 6B63     		str	r3, [r5, #52]
+ 980              	.LVL83:
+ 981              	.LBB259:
+ 982              	.LBB260:
+ 983              	.LBB261:
+ 984              	.LBB262:
+ 985              	.LBB263:
+ 986              		.loc 2 264 0
+ 987 0026 0023     		movs	r3, #0
+ 988              		.syntax unified
+ 989              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 990 0028 83F31188 		MSR basepri, r3
+ 991              	@ 0 "" 2
+ 992              	.LVL84:
+ 993              		.thumb
+ 994              		.syntax unified
+ 995              	.LBE263:
+ 996              	.LBE262:
+ 997              	.LBE261:
+ 998              	.LBE260:
+ 999              	.LBE259:
+ 450:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 451:lib/chibios/os/rt/src/chevents.c **** 
+ 452:lib/chibios/os/rt/src/chevents.c ****   return events;
+ 453:lib/chibios/os/rt/src/chevents.c **** }
+ 1000              		.loc 1 453 0
+ 1001 002c 2046     		mov	r0, r4
+ 1002 002e 38BD     		pop	{r3, r4, r5, pc}
+ 1003              	.LVL85:
+ 1004              	.L52:
+ 1005              		.align	2
+ 1006              	.L51:
+ 1007 0030 00000000 		.word	ch
+ 1008              		.cfi_endproc
+ 1009              	.LFE261:
+ 1011              		.section	.text.chEvtWaitOneTimeout,"ax",%progbits
+ 1012              		.align	1
+ 1013              		.global	chEvtWaitOneTimeout
+ 1014              		.syntax unified
+ 1015              		.thumb
+ 1016              		.thumb_func
+ 1017              		.fpu softvfp
+ 1019              	chEvtWaitOneTimeout:
+ 1020              	.LFB262:
+ 454:lib/chibios/os/rt/src/chevents.c **** #endif /* CH_CFG_OPTIMIZE_SPEED || !CH_CFG_USE_EVENTS_TIMEOUT */
+ 455:lib/chibios/os/rt/src/chevents.c **** 
+ 456:lib/chibios/os/rt/src/chevents.c **** #if (CH_CFG_USE_EVENTS_TIMEOUT == TRUE) || defined(__DOXYGEN__)
+ 457:lib/chibios/os/rt/src/chevents.c **** /**
+ 458:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for exactly one of the specified events.
+ 459:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for one event among those specified in
+ 460:lib/chibios/os/rt/src/chevents.c ****  *          @p events to become pending then the event is cleared and returned.
+ 461:lib/chibios/os/rt/src/chevents.c ****  * @note    One and only one event is served in the function, the one with the
+ 462:lib/chibios/os/rt/src/chevents.c ****  *          lowest event id. The function is meant to be invoked into a loop
+ 463:lib/chibios/os/rt/src/chevents.c ****  *          in order to serve all the pending events.<br>
+ 464:lib/chibios/os/rt/src/chevents.c ****  *          This means that Event Listeners with a lower event identifier have
+ 465:lib/chibios/os/rt/src/chevents.c ****  *          an higher priority.
+ 466:lib/chibios/os/rt/src/chevents.c ****  *
+ 467:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 468:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS enables all the events
+ 469:lib/chibios/os/rt/src/chevents.c ****  * @param[in] time      the number of ticks before the operation timeouts,
+ 470:lib/chibios/os/rt/src/chevents.c ****  *                      the following special values are allowed:
+ 471:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_IMMEDIATE immediate timeout.
+ 472:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_INFINITE no timeout.
+ 473:lib/chibios/os/rt/src/chevents.c ****  *                      .
+ 474:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the lowest event id served and cleared.
+ 475:lib/chibios/os/rt/src/chevents.c ****  * @retval 0            if the operation has timed out.
+ 476:lib/chibios/os/rt/src/chevents.c ****  *
+ 477:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 478:lib/chibios/os/rt/src/chevents.c ****  */
+ 479:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitOneTimeout(eventmask_t events, systime_t time) {
+ 1021              		.loc 1 479 0
+ 1022              		.cfi_startproc
+ 1023              		@ args = 0, pretend = 0, frame = 0
+ 1024              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1025              	.LVL86:
+ 480:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1026              		.loc 1 480 0
+ 1027 0000 104A     		ldr	r2, .L59
+ 479:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1028              		.loc 1 479 0
+ 1029 0002 70B5     		push	{r4, r5, r6, lr}
+ 1030              		.cfi_def_cfa_offset 16
+ 1031              		.cfi_offset 4, -16
+ 1032              		.cfi_offset 5, -12
+ 1033              		.cfi_offset 6, -8
+ 1034              		.cfi_offset 14, -4
+ 1035              		.loc 1 480 0
+ 1036 0004 9569     		ldr	r5, [r2, #24]
+ 1037              	.LVL87:
+ 479:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1038              		.loc 1 479 0
+ 1039 0006 0646     		mov	r6, r0
+ 1040              	.LBB264:
+ 1041              	.LBB265:
+ 1042              	.LBB266:
+ 1043              	.LBB267:
+ 1044              		.loc 2 264 0
+ 1045 0008 2022     		movs	r2, #32
+ 1046              		.syntax unified
+ 1047              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1048 000a 82F31188 		MSR basepri, r2
+ 1049              	@ 0 "" 2
+ 1050              	.LVL88:
+ 1051              		.thumb
+ 1052              		.syntax unified
+ 1053              	.LBE267:
+ 1054              	.LBE266:
+ 1055              	.LBE265:
+ 1056              	.LBE264:
+ 481:lib/chibios/os/rt/src/chevents.c ****   eventmask_t m;
+ 482:lib/chibios/os/rt/src/chevents.c **** 
+ 483:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 484:lib/chibios/os/rt/src/chevents.c ****   m = ctp->epending & events;
+ 1057              		.loc 1 484 0
+ 1058 000e 6C6B     		ldr	r4, [r5, #52]
+ 1059              	.LVL89:
+ 485:lib/chibios/os/rt/src/chevents.c ****   if (m == (eventmask_t)0) {
+ 1060              		.loc 1 485 0
+ 1061 0010 0440     		ands	r4, r0, r4
+ 1062              	.LVL90:
+ 1063 0012 0CD1     		bne	.L54
+ 486:lib/chibios/os/rt/src/chevents.c ****     if (TIME_IMMEDIATE == time) {
+ 1064              		.loc 1 486 0
+ 1065 0014 19B9     		cbnz	r1, .L55
+ 1066              	.LVL91:
+ 1067              	.L58:
+ 1068              	.LBB268:
+ 1069              	.LBB269:
+ 1070              	.LBB270:
+ 1071              	.LBB271:
+ 1072              	.LBB272:
+ 1073              		.loc 2 264 0
+ 1074              		.syntax unified
+ 1075              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1076 0016 84F31188 		MSR basepri, r4
+ 1077              	@ 0 "" 2
+ 1078              	.LVL92:
+ 1079              		.thumb
+ 1080              		.syntax unified
+ 1081              	.L53:
+ 1082              	.LBE272:
+ 1083              	.LBE271:
+ 1084              	.LBE270:
+ 1085              	.LBE269:
+ 1086              	.LBE268:
+ 487:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 488:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 489:lib/chibios/os/rt/src/chevents.c ****     }
+ 490:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 491:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTOREVT, time) < MSG_OK) {
+ 492:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 493:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 494:lib/chibios/os/rt/src/chevents.c ****     }
+ 495:lib/chibios/os/rt/src/chevents.c ****     m = ctp->epending & events;
+ 496:lib/chibios/os/rt/src/chevents.c ****   }
+ 497:lib/chibios/os/rt/src/chevents.c ****   m ^= m & (m - (eventmask_t)1);
+ 498:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~m;
+ 499:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 500:lib/chibios/os/rt/src/chevents.c **** 
+ 501:lib/chibios/os/rt/src/chevents.c ****   return m;
+ 502:lib/chibios/os/rt/src/chevents.c **** }
+ 1087              		.loc 1 502 0
+ 1088 001a 2046     		mov	r0, r4
+ 1089 001c 70BD     		pop	{r4, r5, r6, pc}
+ 1090              	.LVL93:
+ 1091              	.L55:
+ 490:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTOREVT, time) < MSG_OK) {
+ 1092              		.loc 1 490 0
+ 1093 001e 6862     		str	r0, [r5, #36]
+ 491:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 1094              		.loc 1 491 0
+ 1095 0020 0A20     		movs	r0, #10
+ 1096              	.LVL94:
+ 1097 0022 FFF7FEFF 		bl	chSchGoSleepTimeoutS
+ 1098              	.LVL95:
+ 1099 0026 0028     		cmp	r0, #0
+ 1100 0028 F5DB     		blt	.L58
+ 495:lib/chibios/os/rt/src/chevents.c ****   }
+ 1101              		.loc 1 495 0
+ 1102 002a 6C6B     		ldr	r4, [r5, #52]
+ 1103              	.LVL96:
+ 1104 002c 3440     		ands	r4, r4, r6
+ 1105              	.LVL97:
+ 1106              	.L54:
+ 497:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~m;
+ 1107              		.loc 1 497 0
+ 1108 002e 6342     		negs	r3, r4
+ 1109 0030 1C40     		ands	r4, r4, r3
+ 1110              	.LVL98:
+ 498:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 1111              		.loc 1 498 0
+ 1112 0032 6B6B     		ldr	r3, [r5, #52]
+ 1113 0034 23EA0403 		bic	r3, r3, r4
+ 1114 0038 6B63     		str	r3, [r5, #52]
+ 1115              	.LVL99:
+ 1116              	.LBB273:
+ 1117              	.LBB274:
+ 1118              	.LBB275:
+ 1119              	.LBB276:
+ 1120              	.LBB277:
+ 1121              		.loc 2 264 0
+ 1122 003a 0023     		movs	r3, #0
+ 1123              		.syntax unified
+ 1124              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1125 003c 83F31188 		MSR basepri, r3
+ 1126              	@ 0 "" 2
+ 1127              	.LVL100:
+ 1128              		.thumb
+ 1129              		.syntax unified
+ 1130              	.LBE277:
+ 1131              	.LBE276:
+ 1132              	.LBE275:
+ 1133              	.LBE274:
+ 1134              	.LBE273:
+ 501:lib/chibios/os/rt/src/chevents.c **** }
+ 1135              		.loc 1 501 0
+ 1136 0040 EBE7     		b	.L53
+ 1137              	.L60:
+ 1138 0042 00BF     		.align	2
+ 1139              	.L59:
+ 1140 0044 00000000 		.word	ch
+ 1141              		.cfi_endproc
+ 1142              	.LFE262:
+ 1144              		.section	.text.chEvtWaitAnyTimeout,"ax",%progbits
+ 1145              		.align	1
+ 1146              		.global	chEvtWaitAnyTimeout
+ 1147              		.syntax unified
+ 1148              		.thumb
+ 1149              		.thumb_func
+ 1150              		.fpu softvfp
+ 1152              	chEvtWaitAnyTimeout:
+ 1153              	.LFB263:
+ 503:lib/chibios/os/rt/src/chevents.c **** 
+ 504:lib/chibios/os/rt/src/chevents.c **** /**
+ 505:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for any of the specified events.
+ 506:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for any event among those specified in
+ 507:lib/chibios/os/rt/src/chevents.c ****  *          @p events to become pending then the events are cleared and
+ 508:lib/chibios/os/rt/src/chevents.c ****  *          returned.
+ 509:lib/chibios/os/rt/src/chevents.c ****  *
+ 510:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 511:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS enables all the events
+ 512:lib/chibios/os/rt/src/chevents.c ****  * @param[in] time      the number of ticks before the operation timeouts,
+ 513:lib/chibios/os/rt/src/chevents.c ****  *                      the following special values are allowed:
+ 514:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_IMMEDIATE immediate timeout.
+ 515:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_INFINITE no timeout.
+ 516:lib/chibios/os/rt/src/chevents.c ****  *                      .
+ 517:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the served and cleared events.
+ 518:lib/chibios/os/rt/src/chevents.c ****  * @retval 0            if the operation has timed out.
+ 519:lib/chibios/os/rt/src/chevents.c ****  *
+ 520:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 521:lib/chibios/os/rt/src/chevents.c ****  */
+ 522:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitAnyTimeout(eventmask_t events, systime_t time) {
+ 1154              		.loc 1 522 0
+ 1155              		.cfi_startproc
+ 1156              		@ args = 0, pretend = 0, frame = 0
+ 1157              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1158              	.LVL101:
+ 523:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1159              		.loc 1 523 0
+ 1160 0000 0F4A     		ldr	r2, .L67
+ 522:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1161              		.loc 1 522 0
+ 1162 0002 70B5     		push	{r4, r5, r6, lr}
+ 1163              		.cfi_def_cfa_offset 16
+ 1164              		.cfi_offset 4, -16
+ 1165              		.cfi_offset 5, -12
+ 1166              		.cfi_offset 6, -8
+ 1167              		.cfi_offset 14, -4
+ 1168              		.loc 1 523 0
+ 1169 0004 9569     		ldr	r5, [r2, #24]
+ 1170              	.LVL102:
+ 522:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1171              		.loc 1 522 0
+ 1172 0006 0646     		mov	r6, r0
+ 1173              	.LBB278:
+ 1174              	.LBB279:
+ 1175              	.LBB280:
+ 1176              	.LBB281:
+ 1177              		.loc 2 264 0
+ 1178 0008 2022     		movs	r2, #32
+ 1179              		.syntax unified
+ 1180              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1181 000a 82F31188 		MSR basepri, r2
+ 1182              	@ 0 "" 2
+ 1183              	.LVL103:
+ 1184              		.thumb
+ 1185              		.syntax unified
+ 1186              	.LBE281:
+ 1187              	.LBE280:
+ 1188              	.LBE279:
+ 1189              	.LBE278:
+ 524:lib/chibios/os/rt/src/chevents.c ****   eventmask_t m;
+ 525:lib/chibios/os/rt/src/chevents.c **** 
+ 526:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 527:lib/chibios/os/rt/src/chevents.c ****   m = ctp->epending & events;
+ 1190              		.loc 1 527 0
+ 1191 000e 6C6B     		ldr	r4, [r5, #52]
+ 1192              	.LVL104:
+ 528:lib/chibios/os/rt/src/chevents.c ****   if (m == (eventmask_t)0) {
+ 1193              		.loc 1 528 0
+ 1194 0010 0440     		ands	r4, r0, r4
+ 1195              	.LVL105:
+ 1196 0012 0CD1     		bne	.L62
+ 529:lib/chibios/os/rt/src/chevents.c ****     if (TIME_IMMEDIATE == time) {
+ 1197              		.loc 1 529 0
+ 1198 0014 19B9     		cbnz	r1, .L63
+ 1199              	.LVL106:
+ 1200              	.L66:
+ 1201              	.LBB282:
+ 1202              	.LBB283:
+ 1203              	.LBB284:
+ 1204              	.LBB285:
+ 1205              	.LBB286:
+ 1206              		.loc 2 264 0
+ 1207              		.syntax unified
+ 1208              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1209 0016 84F31188 		MSR basepri, r4
+ 1210              	@ 0 "" 2
+ 1211              	.LVL107:
+ 1212              		.thumb
+ 1213              		.syntax unified
+ 1214              	.L61:
+ 1215              	.LBE286:
+ 1216              	.LBE285:
+ 1217              	.LBE284:
+ 1218              	.LBE283:
+ 1219              	.LBE282:
+ 530:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 531:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 532:lib/chibios/os/rt/src/chevents.c ****     }
+ 533:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 534:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTOREVT, time) < MSG_OK) {
+ 535:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 536:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 537:lib/chibios/os/rt/src/chevents.c ****     }
+ 538:lib/chibios/os/rt/src/chevents.c ****     m = ctp->epending & events;
+ 539:lib/chibios/os/rt/src/chevents.c ****   }
+ 540:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~m;
+ 541:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 542:lib/chibios/os/rt/src/chevents.c **** 
+ 543:lib/chibios/os/rt/src/chevents.c ****   return m;
+ 544:lib/chibios/os/rt/src/chevents.c **** }
+ 1220              		.loc 1 544 0
+ 1221 001a 2046     		mov	r0, r4
+ 1222 001c 70BD     		pop	{r4, r5, r6, pc}
+ 1223              	.LVL108:
+ 1224              	.L63:
+ 533:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTOREVT, time) < MSG_OK) {
+ 1225              		.loc 1 533 0
+ 1226 001e 6862     		str	r0, [r5, #36]
+ 534:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 1227              		.loc 1 534 0
+ 1228 0020 0A20     		movs	r0, #10
+ 1229              	.LVL109:
+ 1230 0022 FFF7FEFF 		bl	chSchGoSleepTimeoutS
+ 1231              	.LVL110:
+ 1232 0026 0028     		cmp	r0, #0
+ 1233 0028 F5DB     		blt	.L66
+ 538:lib/chibios/os/rt/src/chevents.c ****   }
+ 1234              		.loc 1 538 0
+ 1235 002a 6C6B     		ldr	r4, [r5, #52]
+ 1236              	.LVL111:
+ 1237 002c 3440     		ands	r4, r4, r6
+ 1238              	.LVL112:
+ 1239              	.L62:
+ 540:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 1240              		.loc 1 540 0
+ 1241 002e 6B6B     		ldr	r3, [r5, #52]
+ 1242 0030 23EA0403 		bic	r3, r3, r4
+ 1243 0034 6B63     		str	r3, [r5, #52]
+ 1244              	.LVL113:
+ 1245              	.LBB287:
+ 1246              	.LBB288:
+ 1247              	.LBB289:
+ 1248              	.LBB290:
+ 1249              	.LBB291:
+ 1250              		.loc 2 264 0
+ 1251 0036 0023     		movs	r3, #0
+ 1252              		.syntax unified
+ 1253              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1254 0038 83F31188 		MSR basepri, r3
+ 1255              	@ 0 "" 2
+ 1256              	.LVL114:
+ 1257              		.thumb
+ 1258              		.syntax unified
+ 1259              	.LBE291:
+ 1260              	.LBE290:
+ 1261              	.LBE289:
+ 1262              	.LBE288:
+ 1263              	.LBE287:
+ 543:lib/chibios/os/rt/src/chevents.c **** }
+ 1264              		.loc 1 543 0
+ 1265 003c EDE7     		b	.L61
+ 1266              	.L68:
+ 1267 003e 00BF     		.align	2
+ 1268              	.L67:
+ 1269 0040 00000000 		.word	ch
+ 1270              		.cfi_endproc
+ 1271              	.LFE263:
+ 1273              		.section	.text.chEvtWaitAllTimeout,"ax",%progbits
+ 1274              		.align	1
+ 1275              		.global	chEvtWaitAllTimeout
+ 1276              		.syntax unified
+ 1277              		.thumb
+ 1278              		.thumb_func
+ 1279              		.fpu softvfp
+ 1281              	chEvtWaitAllTimeout:
+ 1282              	.LFB264:
+ 545:lib/chibios/os/rt/src/chevents.c **** 
+ 546:lib/chibios/os/rt/src/chevents.c **** /**
+ 547:lib/chibios/os/rt/src/chevents.c ****  * @brief   Waits for all the specified events.
+ 548:lib/chibios/os/rt/src/chevents.c ****  * @details The function waits for all the events specified in @p events to
+ 549:lib/chibios/os/rt/src/chevents.c ****  *          become pending then the events are cleared and returned.
+ 550:lib/chibios/os/rt/src/chevents.c ****  *
+ 551:lib/chibios/os/rt/src/chevents.c ****  * @param[in] events    events that the function should wait
+ 552:lib/chibios/os/rt/src/chevents.c ****  *                      for, @p ALL_EVENTS requires all the events
+ 553:lib/chibios/os/rt/src/chevents.c ****  * @param[in] time      the number of ticks before the operation timeouts,
+ 554:lib/chibios/os/rt/src/chevents.c ****  *                      the following special values are allowed:
+ 555:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_IMMEDIATE immediate timeout.
+ 556:lib/chibios/os/rt/src/chevents.c ****  *                      - @a TIME_INFINITE no timeout.
+ 557:lib/chibios/os/rt/src/chevents.c ****  *                      .
+ 558:lib/chibios/os/rt/src/chevents.c ****  * @return              The mask of the served and cleared events.
+ 559:lib/chibios/os/rt/src/chevents.c ****  * @retval 0            if the operation has timed out.
+ 560:lib/chibios/os/rt/src/chevents.c ****  *
+ 561:lib/chibios/os/rt/src/chevents.c ****  * @api
+ 562:lib/chibios/os/rt/src/chevents.c ****  */
+ 563:lib/chibios/os/rt/src/chevents.c **** eventmask_t chEvtWaitAllTimeout(eventmask_t events, systime_t time) {
+ 1283              		.loc 1 563 0
+ 1284              		.cfi_startproc
+ 1285              		@ args = 0, pretend = 0, frame = 0
+ 1286              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1287              	.LVL115:
+ 564:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1288              		.loc 1 564 0
+ 1289 0000 114A     		ldr	r2, .L73
+ 563:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1290              		.loc 1 563 0
+ 1291 0002 38B5     		push	{r3, r4, r5, lr}
+ 1292              		.cfi_def_cfa_offset 16
+ 1293              		.cfi_offset 3, -16
+ 1294              		.cfi_offset 4, -12
+ 1295              		.cfi_offset 5, -8
+ 1296              		.cfi_offset 14, -4
+ 1297              		.loc 1 564 0
+ 1298 0004 9569     		ldr	r5, [r2, #24]
+ 1299              	.LVL116:
+ 563:lib/chibios/os/rt/src/chevents.c ****   thread_t *ctp = currp;
+ 1300              		.loc 1 563 0
+ 1301 0006 0446     		mov	r4, r0
+ 1302              	.LBB292:
+ 1303              	.LBB293:
+ 1304              	.LBB294:
+ 1305              	.LBB295:
+ 1306              		.loc 2 264 0
+ 1307 0008 2022     		movs	r2, #32
+ 1308              		.syntax unified
+ 1309              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1310 000a 82F31188 		MSR basepri, r2
+ 1311              	@ 0 "" 2
+ 1312              	.LVL117:
+ 1313              		.thumb
+ 1314              		.syntax unified
+ 1315              	.LBE295:
+ 1316              	.LBE294:
+ 1317              	.LBE293:
+ 1318              	.LBE292:
+ 565:lib/chibios/os/rt/src/chevents.c **** 
+ 566:lib/chibios/os/rt/src/chevents.c ****   chSysLock();
+ 567:lib/chibios/os/rt/src/chevents.c ****   if ((ctp->epending & events) != events) {
+ 1319              		.loc 1 567 0
+ 1320 000e 6A6B     		ldr	r2, [r5, #52]
+ 1321 0010 30EA0202 		bics	r2, r0, r2
+ 1322 0014 0FD0     		beq	.L70
+ 568:lib/chibios/os/rt/src/chevents.c ****     if (TIME_IMMEDIATE == time) {
+ 1323              		.loc 1 568 0
+ 1324 0016 21B9     		cbnz	r1, .L71
+ 1325              	.LVL118:
+ 1326              	.LBB296:
+ 1327              	.LBB297:
+ 1328              	.LBB298:
+ 1329              	.LBB299:
+ 1330              	.LBB300:
+ 1331              		.loc 2 264 0
+ 1332              		.syntax unified
+ 1333              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1334 0018 81F31188 		MSR basepri, r1
+ 1335              	@ 0 "" 2
+ 1336              	.LVL119:
+ 1337              		.thumb
+ 1338              		.syntax unified
+ 1339              	.LBE300:
+ 1340              	.LBE299:
+ 1341              	.LBE298:
+ 1342              	.LBE297:
+ 1343              	.LBE296:
+ 569:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 570:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 1344              		.loc 1 570 0
+ 1345 001c 0C46     		mov	r4, r1
+ 1346              	.LVL120:
+ 1347              	.L72:
+ 571:lib/chibios/os/rt/src/chevents.c ****     }
+ 572:lib/chibios/os/rt/src/chevents.c ****     ctp->u.ewmask = events;
+ 573:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTANDEVT, time) < MSG_OK) {
+ 574:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 575:lib/chibios/os/rt/src/chevents.c ****       return (eventmask_t)0;
+ 576:lib/chibios/os/rt/src/chevents.c ****     }
+ 577:lib/chibios/os/rt/src/chevents.c ****   }
+ 578:lib/chibios/os/rt/src/chevents.c ****   ctp->epending &= ~events;
+ 579:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 580:lib/chibios/os/rt/src/chevents.c **** 
+ 581:lib/chibios/os/rt/src/chevents.c ****   return events;
+ 582:lib/chibios/os/rt/src/chevents.c **** }
+ 1348              		.loc 1 582 0
+ 1349 001e 2046     		mov	r0, r4
+ 1350 0020 38BD     		pop	{r3, r4, r5, pc}
+ 1351              	.LVL121:
+ 1352              	.L71:
+ 572:lib/chibios/os/rt/src/chevents.c ****     if (chSchGoSleepTimeoutS(CH_STATE_WTANDEVT, time) < MSG_OK) {
+ 1353              		.loc 1 572 0
+ 1354 0022 6862     		str	r0, [r5, #36]
+ 573:lib/chibios/os/rt/src/chevents.c ****       chSysUnlock();
+ 1355              		.loc 1 573 0
+ 1356 0024 0B20     		movs	r0, #11
+ 1357              	.LVL122:
+ 1358 0026 FFF7FEFF 		bl	chSchGoSleepTimeoutS
+ 1359              	.LVL123:
+ 1360 002a 0028     		cmp	r0, #0
+ 1361 002c 03DA     		bge	.L70
+ 1362              	.LVL124:
+ 1363              	.LBB301:
+ 1364              	.LBB302:
+ 1365              	.LBB303:
+ 1366              	.LBB304:
+ 1367              	.LBB305:
+ 1368              		.loc 2 264 0
+ 1369 002e 0024     		movs	r4, #0
+ 1370              	.LVL125:
+ 1371              		.syntax unified
+ 1372              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1373 0030 84F31188 		MSR basepri, r4
+ 1374              	@ 0 "" 2
+ 1375              	.LVL126:
+ 1376              		.thumb
+ 1377              		.syntax unified
+ 1378              	.LBE305:
+ 1379              	.LBE304:
+ 1380              	.LBE303:
+ 1381              	.LBE302:
+ 1382              	.LBE301:
+ 575:lib/chibios/os/rt/src/chevents.c ****     }
+ 1383              		.loc 1 575 0
+ 1384 0034 F3E7     		b	.L72
+ 1385              	.LVL127:
+ 1386              	.L70:
+ 578:lib/chibios/os/rt/src/chevents.c ****   chSysUnlock();
+ 1387              		.loc 1 578 0
+ 1388 0036 6B6B     		ldr	r3, [r5, #52]
+ 1389 0038 23EA0403 		bic	r3, r3, r4
+ 1390 003c 6B63     		str	r3, [r5, #52]
+ 1391              	.LVL128:
+ 1392              	.LBB306:
+ 1393              	.LBB307:
+ 1394              	.LBB308:
+ 1395              	.LBB309:
+ 1396              	.LBB310:
+ 1397              		.loc 2 264 0
+ 1398 003e 0023     		movs	r3, #0
+ 1399              		.syntax unified
+ 1400              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 1401 0040 83F31188 		MSR basepri, r3
+ 1402              	@ 0 "" 2
+ 1403              	.LVL129:
+ 1404              		.thumb
+ 1405              		.syntax unified
+ 1406              	.LBE310:
+ 1407              	.LBE309:
+ 1408              	.LBE308:
+ 1409              	.LBE307:
+ 1410              	.LBE306:
+ 581:lib/chibios/os/rt/src/chevents.c **** }
+ 1411              		.loc 1 581 0
+ 1412 0044 EBE7     		b	.L72
+ 1413              	.L74:
+ 1414 0046 00BF     		.align	2
+ 1415              	.L73:
+ 1416 0048 00000000 		.word	ch
+ 1417              		.cfi_endproc
+ 1418              	.LFE264:
+ 1420              		.text
+ 1421              	.Letext0:
+ 1422              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 1423              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 1424              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 1425              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 1426              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 1427              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 1428              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 1429              		.file 10 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 1430              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 1431              		.file 12 "./lib/chibios/os/rt/include/chtm.h"
+ 1432              		.file 13 "./lib/chibios/os/rt/include/chsem.h"
+ 1433              		.file 14 "./lib/chibios/os/rt/include/chmtx.h"
+ 1434              		.file 15 "./lib/chibios/os/rt/include/chsys.h"
+ 1435              		.file 16 "./lib/chibios/os/rt/include/chregistry.h"
+ 1436              		.file 17 "./lib/chibios/os/rt/include/chevents.h"
+ 1437              		.file 18 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 chevents.c
+/var/tmp//ccFQwmUr.s:16     .text.chEvtRegisterMaskWithFlags:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:23     .text.chEvtRegisterMaskWithFlags:0000000000000000 chEvtRegisterMaskWithFlags
+/var/tmp//ccFQwmUr.s:93     .text.chEvtRegisterMaskWithFlags:0000000000000024 $d
+/var/tmp//ccFQwmUr.s:98     .text.chEvtUnregister:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:105    .text.chEvtUnregister:0000000000000000 chEvtUnregister
+/var/tmp//ccFQwmUr.s:175    .text.chEvtGetAndClearEvents:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:182    .text.chEvtGetAndClearEvents:0000000000000000 chEvtGetAndClearEvents
+/var/tmp//ccFQwmUr.s:242    .text.chEvtGetAndClearEvents:000000000000001c $d
+/var/tmp//ccFQwmUr.s:247    .text.chEvtAddEvents:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:254    .text.chEvtAddEvents:0000000000000000 chEvtAddEvents
+/var/tmp//ccFQwmUr.s:311    .text.chEvtAddEvents:0000000000000018 $d
+/var/tmp//ccFQwmUr.s:316    .text.chEvtGetAndClearFlags:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:323    .text.chEvtGetAndClearFlags:0000000000000000 chEvtGetAndClearFlags
+/var/tmp//ccFQwmUr.s:382    .text.chEvtSignalI:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:389    .text.chEvtSignalI:0000000000000000 chEvtSignalI
+/var/tmp//ccFQwmUr.s:437    .text.chEvtBroadcastFlagsI:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:444    .text.chEvtBroadcastFlagsI:0000000000000000 chEvtBroadcastFlagsI
+/var/tmp//ccFQwmUr.s:497    .text.chEvtSignal:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:504    .text.chEvtSignal:0000000000000000 chEvtSignal
+/var/tmp//ccFQwmUr.s:563    .text.chEvtBroadcastFlags:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:570    .text.chEvtBroadcastFlags:0000000000000000 chEvtBroadcastFlags
+/var/tmp//ccFQwmUr.s:629    .text.chEvtGetAndClearFlagsI:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:636    .text.chEvtGetAndClearFlagsI:0000000000000000 chEvtGetAndClearFlagsI
+/var/tmp//ccFQwmUr.s:659    .text.chEvtDispatch:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:666    .text.chEvtDispatch:0000000000000000 chEvtDispatch
+/var/tmp//ccFQwmUr.s:718    .text.chEvtWaitOne:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:725    .text.chEvtWaitOne:0000000000000000 chEvtWaitOne
+/var/tmp//ccFQwmUr.s:816    .text.chEvtWaitOne:0000000000000034 $d
+/var/tmp//ccFQwmUr.s:821    .text.chEvtWaitAny:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:828    .text.chEvtWaitAny:0000000000000000 chEvtWaitAny
+/var/tmp//ccFQwmUr.s:915    .text.chEvtWaitAny:0000000000000030 $d
+/var/tmp//ccFQwmUr.s:920    .text.chEvtWaitAll:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:927    .text.chEvtWaitAll:0000000000000000 chEvtWaitAll
+/var/tmp//ccFQwmUr.s:1007   .text.chEvtWaitAll:0000000000000030 $d
+/var/tmp//ccFQwmUr.s:1012   .text.chEvtWaitOneTimeout:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:1019   .text.chEvtWaitOneTimeout:0000000000000000 chEvtWaitOneTimeout
+/var/tmp//ccFQwmUr.s:1140   .text.chEvtWaitOneTimeout:0000000000000044 $d
+/var/tmp//ccFQwmUr.s:1145   .text.chEvtWaitAnyTimeout:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:1152   .text.chEvtWaitAnyTimeout:0000000000000000 chEvtWaitAnyTimeout
+/var/tmp//ccFQwmUr.s:1269   .text.chEvtWaitAnyTimeout:0000000000000040 $d
+/var/tmp//ccFQwmUr.s:1274   .text.chEvtWaitAllTimeout:0000000000000000 $t
+/var/tmp//ccFQwmUr.s:1281   .text.chEvtWaitAllTimeout:0000000000000000 chEvtWaitAllTimeout
+/var/tmp//ccFQwmUr.s:1416   .text.chEvtWaitAllTimeout:0000000000000048 $d
+
+UNDEFINED SYMBOLS
+ch
+chSchReadyI
+chSchRescheduleS
+chSchGoSleepS
+chSchGoSleepTimeoutS

@@ -1,0 +1,817 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"matrix.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.matrix_init_user,"ax",%progbits
+  18              		.align	1
+  19              		.weak	matrix_init_user
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	matrix_init_user:
+  26              	.LFB133:
+  27              		.file 1 "keyboards/massdrop/alt/matrix.c"
+   1:keyboards/massdrop/alt/matrix.c **** /*
+   2:keyboards/massdrop/alt/matrix.c **** Copyright 2018 Massdrop Inc.
+   3:keyboards/massdrop/alt/matrix.c **** 
+   4:keyboards/massdrop/alt/matrix.c **** This program is free software: you can redistribute it and/or modify
+   5:keyboards/massdrop/alt/matrix.c **** it under the terms of the GNU General Public License as published by
+   6:keyboards/massdrop/alt/matrix.c **** the Free Software Foundation, either version 2 of the License, or
+   7:keyboards/massdrop/alt/matrix.c **** (at your option) any later version.
+   8:keyboards/massdrop/alt/matrix.c **** 
+   9:keyboards/massdrop/alt/matrix.c **** This program is distributed in the hope that it will be useful,
+  10:keyboards/massdrop/alt/matrix.c **** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11:keyboards/massdrop/alt/matrix.c **** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12:keyboards/massdrop/alt/matrix.c **** GNU General Public License for more details.
+  13:keyboards/massdrop/alt/matrix.c **** 
+  14:keyboards/massdrop/alt/matrix.c **** You should have received a copy of the GNU General Public License
+  15:keyboards/massdrop/alt/matrix.c **** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16:keyboards/massdrop/alt/matrix.c **** */
+  17:keyboards/massdrop/alt/matrix.c **** 
+  18:keyboards/massdrop/alt/matrix.c **** #include "alt.h"
+  19:keyboards/massdrop/alt/matrix.c **** 
+  20:keyboards/massdrop/alt/matrix.c **** #include "d51_util.h"
+  21:keyboards/massdrop/alt/matrix.c **** #include "debug.h"
+  22:keyboards/massdrop/alt/matrix.c **** #include "clks.h"
+  23:keyboards/massdrop/alt/matrix.c **** #include <string.h>
+  24:keyboards/massdrop/alt/matrix.c **** 
+  25:keyboards/massdrop/alt/matrix.c **** matrix_row_t mlatest[MATRIX_ROWS];
+  26:keyboards/massdrop/alt/matrix.c **** matrix_row_t mlast[MATRIX_ROWS];
+  27:keyboards/massdrop/alt/matrix.c **** matrix_row_t mdebounced[MATRIX_ROWS];
+  28:keyboards/massdrop/alt/matrix.c **** 
+  29:keyboards/massdrop/alt/matrix.c **** uint8_t row_ports[] = { MATRIX_ROW_PORTS };
+  30:keyboards/massdrop/alt/matrix.c **** uint8_t row_pins[] = { MATRIX_ROW_PINS };
+  31:keyboards/massdrop/alt/matrix.c **** uint8_t col_ports[] = { MATRIX_COL_PORTS };
+  32:keyboards/massdrop/alt/matrix.c **** uint8_t col_pins[] = { MATRIX_COL_PINS };
+  33:keyboards/massdrop/alt/matrix.c **** uint32_t row_masks[2]; //NOTE: If more than PA PB used in the future, adjust code to accomodate
+  34:keyboards/massdrop/alt/matrix.c **** 
+  35:keyboards/massdrop/alt/matrix.c **** __attribute__ ((weak))
+  36:keyboards/massdrop/alt/matrix.c **** void matrix_init_kb(void) {
+  37:keyboards/massdrop/alt/matrix.c ****     matrix_init_user();
+  38:keyboards/massdrop/alt/matrix.c **** }
+  39:keyboards/massdrop/alt/matrix.c **** 
+  40:keyboards/massdrop/alt/matrix.c **** __attribute__ ((weak))
+  41:keyboards/massdrop/alt/matrix.c **** void matrix_scan_kb(void) {
+  42:keyboards/massdrop/alt/matrix.c ****     matrix_scan_user();
+  43:keyboards/massdrop/alt/matrix.c **** }
+  44:keyboards/massdrop/alt/matrix.c **** 
+  45:keyboards/massdrop/alt/matrix.c **** __attribute__ ((weak))
+  46:keyboards/massdrop/alt/matrix.c **** void matrix_init_user(void) {
+  28              		.loc 1 46 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  47:keyboards/massdrop/alt/matrix.c **** }
+  33              		.loc 1 47 0
+  34 0000 7047     		bx	lr
+  35              		.cfi_endproc
+  36              	.LFE133:
+  38              		.thumb_set matrix_init_user.localalias.0,matrix_init_user
+  39              		.section	.text.matrix_init_kb,"ax",%progbits
+  40              		.align	1
+  41              		.weak	matrix_init_kb
+  42              		.syntax unified
+  43              		.thumb
+  44              		.thumb_func
+  45              		.fpu fpv4-sp-d16
+  47              	matrix_init_kb:
+  48              	.LFB131:
+  36:keyboards/massdrop/alt/matrix.c ****     matrix_init_user();
+  49              		.loc 1 36 0
+  50              		.cfi_startproc
+  51              		@ args = 0, pretend = 0, frame = 0
+  52              		@ frame_needed = 0, uses_anonymous_args = 0
+  53 0000 08B5     		push	{r3, lr}
+  54              		.cfi_def_cfa_offset 8
+  55              		.cfi_offset 3, -8
+  56              		.cfi_offset 14, -4
+  37:keyboards/massdrop/alt/matrix.c **** }
+  57              		.loc 1 37 0
+  58 0002 FFF7FEFF 		bl	matrix_init_user
+  59              	.LVL0:
+  38:keyboards/massdrop/alt/matrix.c **** 
+  60              		.loc 1 38 0
+  61 0006 08BD     		pop	{r3, pc}
+  62              		.cfi_endproc
+  63              	.LFE131:
+  65              		.section	.text.matrix_scan_user,"ax",%progbits
+  66              		.align	1
+  67              		.weak	matrix_scan_user
+  68              		.syntax unified
+  69              		.thumb
+  70              		.thumb_func
+  71              		.fpu fpv4-sp-d16
+  73              	matrix_scan_user:
+  74              	.LFB140:
+  75              		.cfi_startproc
+  76              		@ args = 0, pretend = 0, frame = 0
+  77              		@ frame_needed = 0, uses_anonymous_args = 0
+  78              		@ link register save eliminated.
+  79 0000 7047     		bx	lr
+  80              		.cfi_endproc
+  81              	.LFE140:
+  83              		.section	.text.matrix_scan_kb,"ax",%progbits
+  84              		.align	1
+  85              		.weak	matrix_scan_kb
+  86              		.syntax unified
+  87              		.thumb
+  88              		.thumb_func
+  89              		.fpu fpv4-sp-d16
+  91              	matrix_scan_kb:
+  92              	.LFB132:
+  41:keyboards/massdrop/alt/matrix.c ****     matrix_scan_user();
+  93              		.loc 1 41 0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 0
+  96              		@ frame_needed = 0, uses_anonymous_args = 0
+  41:keyboards/massdrop/alt/matrix.c ****     matrix_scan_user();
+  97              		.loc 1 41 0
+  98 0000 08B5     		push	{r3, lr}
+  99              		.cfi_def_cfa_offset 8
+ 100              		.cfi_offset 3, -8
+ 101              		.cfi_offset 14, -4
+  42:keyboards/massdrop/alt/matrix.c **** }
+ 102              		.loc 1 42 0
+ 103 0002 FFF7FEFF 		bl	matrix_scan_user
+ 104              	.LVL1:
+  43:keyboards/massdrop/alt/matrix.c **** 
+ 105              		.loc 1 43 0
+ 106 0006 08BD     		pop	{r3, pc}
+ 107              		.cfi_endproc
+ 108              	.LFE132:
+ 110              		.section	.text.matrix_init,"ax",%progbits
+ 111              		.align	1
+ 112              		.global	matrix_init
+ 113              		.syntax unified
+ 114              		.thumb
+ 115              		.thumb_func
+ 116              		.fpu fpv4-sp-d16
+ 118              	matrix_init:
+ 119              	.LFB135:
+  48:keyboards/massdrop/alt/matrix.c **** 
+  49:keyboards/massdrop/alt/matrix.c **** __attribute__ ((weak))
+  50:keyboards/massdrop/alt/matrix.c **** void matrix_scan_user(void) {
+  51:keyboards/massdrop/alt/matrix.c **** }
+  52:keyboards/massdrop/alt/matrix.c **** 
+  53:keyboards/massdrop/alt/matrix.c **** void matrix_init(void)
+  54:keyboards/massdrop/alt/matrix.c **** {
+ 120              		.loc 1 54 0
+ 121              		.cfi_startproc
+ 122              		@ args = 0, pretend = 0, frame = 0
+ 123              		@ frame_needed = 0, uses_anonymous_args = 0
+  55:keyboards/massdrop/alt/matrix.c ****     memset(mlatest, 0, MATRIX_ROWS * sizeof(matrix_row_t));
+ 124              		.loc 1 55 0
+ 125 0000 2C4A     		ldr	r2, .L10
+ 126 0002 2D49     		ldr	r1, .L10+4
+ 127 0004 0023     		movs	r3, #0
+  54:keyboards/massdrop/alt/matrix.c ****     memset(mlatest, 0, MATRIX_ROWS * sizeof(matrix_row_t));
+ 128              		.loc 1 54 0
+ 129 0006 F0B5     		push	{r4, r5, r6, r7, lr}
+ 130              		.cfi_def_cfa_offset 20
+ 131              		.cfi_offset 4, -20
+ 132              		.cfi_offset 5, -16
+ 133              		.cfi_offset 6, -12
+ 134              		.cfi_offset 7, -8
+ 135              		.cfi_offset 14, -4
+ 136              		.loc 1 55 0
+ 137 0008 1360     		str	r3, [r2]	@ unaligned
+ 138 000a 5360     		str	r3, [r2, #4]	@ unaligned
+ 139 000c 1381     		strh	r3, [r2, #8]	@ movhi
+  56:keyboards/massdrop/alt/matrix.c ****     memset(mlast, 0, MATRIX_ROWS * sizeof(matrix_row_t));
+ 140              		.loc 1 56 0
+ 141 000e 2B4A     		ldr	r2, .L10+8
+ 142 0010 2B4D     		ldr	r5, .L10+12
+ 143 0012 1360     		str	r3, [r2]	@ unaligned
+ 144 0014 5360     		str	r3, [r2, #4]	@ unaligned
+ 145 0016 1381     		strh	r3, [r2, #8]	@ movhi
+  57:keyboards/massdrop/alt/matrix.c ****     memset(mdebounced, 0, MATRIX_ROWS * sizeof(matrix_row_t));
+ 146              		.loc 1 57 0
+ 147 0018 2A4A     		ldr	r2, .L10+16
+  58:keyboards/massdrop/alt/matrix.c **** 
+  59:keyboards/massdrop/alt/matrix.c ****     row_masks[PA] = 0;
+  60:keyboards/massdrop/alt/matrix.c ****     row_masks[PB] = 0;
+  61:keyboards/massdrop/alt/matrix.c **** 
+  62:keyboards/massdrop/alt/matrix.c ****     uint8_t row;
+  63:keyboards/massdrop/alt/matrix.c ****     for (row = 0; row < MATRIX_ROWS; row++)
+  64:keyboards/massdrop/alt/matrix.c ****     {
+  65:keyboards/massdrop/alt/matrix.c ****         PORT->Group[row_ports[row]].DIRCLR.reg = 1 << row_pins[row]; //Input
+ 148              		.loc 1 65 0
+ 149 001a 2B4E     		ldr	r6, .L10+20
+  57:keyboards/massdrop/alt/matrix.c ****     memset(mdebounced, 0, MATRIX_ROWS * sizeof(matrix_row_t));
+ 150              		.loc 1 57 0
+ 151 001c 1360     		str	r3, [r2]	@ unaligned
+ 152 001e 5360     		str	r3, [r2, #4]	@ unaligned
+ 153 0020 1381     		strh	r3, [r2, #8]	@ movhi
+  59:keyboards/massdrop/alt/matrix.c ****     row_masks[PB] = 0;
+ 154              		.loc 1 59 0
+ 155 0022 2A4A     		ldr	r2, .L10+24
+  60:keyboards/massdrop/alt/matrix.c **** 
+ 156              		.loc 1 60 0
+ 157 0024 C2E90033 		strd	r3, r3, [r2]
+ 158              	.LVL2:
+ 159 0028 01F1050C 		add	ip, r1, #5
+ 160              		.loc 1 65 0
+ 161 002c 0127     		movs	r7, #1
+ 162              	.LVL3:
+ 163              	.L6:
+ 164              		.loc 1 65 0 is_stmt 0 discriminator 3
+ 165 002e 15F8013F 		ldrb	r3, [r5, #1]!	@ zero_extendqisi2
+ 166 0032 11F8010F 		ldrb	r0, [r1, #1]!	@ zero_extendqisi2
+ 167              	.LVL4:
+ 168 0036 06EBC313 		add	r3, r6, r3, lsl #7
+ 169 003a 07FA00F0 		lsl	r0, r7, r0
+ 170 003e 5860     		str	r0, [r3, #4]
+  66:keyboards/massdrop/alt/matrix.c ****         PORT->Group[row_ports[row]].OUTCLR.reg = 1 << row_pins[row]; //Low
+ 171              		.loc 1 66 0 is_stmt 1 discriminator 3
+ 172 0040 2878     		ldrb	r0, [r5]	@ zero_extendqisi2
+ 173 0042 0C78     		ldrb	r4, [r1]	@ zero_extendqisi2
+ 174 0044 06EBC013 		add	r3, r6, r0, lsl #7
+ 175 0048 07FA04FE 		lsl	lr, r7, r4
+ 176 004c C3F814E0 		str	lr, [r3, #20]
+  67:keyboards/massdrop/alt/matrix.c ****         PORT->Group[row_ports[row]].PINCFG[row_pins[row]].bit.INEN = 1; //Input Enable,
+ 177              		.loc 1 67 0 discriminator 3
+ 178 0050 2344     		add	r3, r3, r4
+  63:keyboards/massdrop/alt/matrix.c ****     {
+ 179              		.loc 1 63 0 discriminator 3
+ 180 0052 6145     		cmp	r1, ip
+ 181              		.loc 1 67 0 discriminator 3
+ 182 0054 93F84040 		ldrb	r4, [r3, #64]	@ zero_extendqisi2
+ 183 0058 44F00204 		orr	r4, r4, #2
+ 184 005c 83F84040 		strb	r4, [r3, #64]
+  68:keyboards/massdrop/alt/matrix.c ****         PORT->Group[row_ports[row]].PINCFG[row_pins[row]].bit.PULLEN = 1; //Pull Enable
+ 185              		.loc 1 68 0 discriminator 3
+ 186 0060 93F84040 		ldrb	r4, [r3, #64]	@ zero_extendqisi2
+ 187 0064 44F00404 		orr	r4, r4, #4
+ 188 0068 83F84040 		strb	r4, [r3, #64]
+  69:keyboards/massdrop/alt/matrix.c ****         row_masks[row_ports[row]] |= 1 << row_pins[row]; //Add pin to proper row mask
+ 189              		.loc 1 69 0 discriminator 3
+ 190 006c 52F82030 		ldr	r3, [r2, r0, lsl #2]
+ 191 0070 43EA0E03 		orr	r3, r3, lr
+ 192 0074 42F82030 		str	r3, [r2, r0, lsl #2]
+ 193              	.LVL5:
+  63:keyboards/massdrop/alt/matrix.c ****     {
+ 194              		.loc 1 63 0 discriminator 3
+ 195 0078 D9D1     		bne	.L6
+ 196 007a 154B     		ldr	r3, .L10+28
+  70:keyboards/massdrop/alt/matrix.c ****     }
+  71:keyboards/massdrop/alt/matrix.c **** 
+  72:keyboards/massdrop/alt/matrix.c ****     uint8_t col;
+  73:keyboards/massdrop/alt/matrix.c ****     for (col = 0; col < MATRIX_COLS; col++)
+  74:keyboards/massdrop/alt/matrix.c ****     {
+  75:keyboards/massdrop/alt/matrix.c ****         PORT->Group[col_ports[col]].DIRSET.reg = 1 << col_pins[col]; //Output
+ 197              		.loc 1 75 0
+ 198 007c 124C     		ldr	r4, .L10+20
+ 199 007e 03F10F02 		add	r2, r3, #15
+ 200 0082 1646     		mov	r6, r2
+ 201 0084 0125     		movs	r5, #1
+ 202              	.LVL6:
+ 203              	.L7:
+ 204              		.loc 1 75 0 is_stmt 0 discriminator 3
+ 205 0086 12F8011F 		ldrb	r1, [r2, #1]!	@ zero_extendqisi2
+ 206 008a 13F8010F 		ldrb	r0, [r3, #1]!	@ zero_extendqisi2
+ 207              	.LVL7:
+ 208 008e 04EBC111 		add	r1, r4, r1, lsl #7
+ 209 0092 05FA00F0 		lsl	r0, r5, r0
+ 210 0096 8860     		str	r0, [r1, #8]
+  76:keyboards/massdrop/alt/matrix.c ****         PORT->Group[col_ports[col]].OUTCLR.reg = 1 << col_pins[col]; //Low
+ 211              		.loc 1 76 0 is_stmt 1 discriminator 3
+ 212 0098 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 213 009a 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 214 009c 04EBC111 		add	r1, r4, r1, lsl #7
+ 215 00a0 05FA00F0 		lsl	r0, r5, r0
+  73:keyboards/massdrop/alt/matrix.c ****     {
+ 216              		.loc 1 73 0 discriminator 3
+ 217 00a4 9E42     		cmp	r6, r3
+ 218              		.loc 1 76 0 discriminator 3
+ 219 00a6 4861     		str	r0, [r1, #20]
+ 220              	.LVL8:
+  73:keyboards/massdrop/alt/matrix.c ****     {
+ 221              		.loc 1 73 0 discriminator 3
+ 222 00a8 EDD1     		bne	.L7
+  77:keyboards/massdrop/alt/matrix.c ****     }
+  78:keyboards/massdrop/alt/matrix.c **** 
+  79:keyboards/massdrop/alt/matrix.c ****     matrix_init_quantum();
+  80:keyboards/massdrop/alt/matrix.c **** }
+ 223              		.loc 1 80 0
+ 224 00aa BDE8F040 		pop	{r4, r5, r6, r7, lr}
+ 225              		.cfi_restore 14
+ 226              		.cfi_restore 7
+ 227              		.cfi_restore 6
+ 228              		.cfi_restore 5
+ 229              		.cfi_restore 4
+ 230              		.cfi_def_cfa_offset 0
+  79:keyboards/massdrop/alt/matrix.c **** }
+ 231              		.loc 1 79 0
+ 232 00ae FFF7FEBF 		b	matrix_init_quantum
+ 233              	.LVL9:
+ 234              	.L11:
+ 235 00b2 00BF     		.align	2
+ 236              	.L10:
+ 237 00b4 00000000 		.word	mlatest
+ 238 00b8 FFFFFFFF 		.word	.LANCHOR0-1
+ 239 00bc 00000000 		.word	mlast
+ 240 00c0 FFFFFFFF 		.word	.LANCHOR1-1
+ 241 00c4 00000000 		.word	mdebounced
+ 242 00c8 00800041 		.word	1090551808
+ 243 00cc 00000000 		.word	row_masks
+ 244 00d0 04000000 		.word	.LANCHOR0+4
+ 245              		.cfi_endproc
+ 246              	.LFE135:
+ 248              		.section	.text.matrix_scan,"ax",%progbits
+ 249              		.align	1
+ 250              		.global	matrix_scan
+ 251              		.syntax unified
+ 252              		.thumb
+ 253              		.thumb_func
+ 254              		.fpu fpv4-sp-d16
+ 256              	matrix_scan:
+ 257              	.LFB136:
+  81:keyboards/massdrop/alt/matrix.c **** 
+  82:keyboards/massdrop/alt/matrix.c **** uint64_t mdebouncing = 0;
+  83:keyboards/massdrop/alt/matrix.c **** uint8_t matrix_scan(void)
+  84:keyboards/massdrop/alt/matrix.c **** {
+ 258              		.loc 1 84 0
+ 259              		.cfi_startproc
+ 260              		@ args = 0, pretend = 0, frame = 8
+ 261              		@ frame_needed = 0, uses_anonymous_args = 0
+ 262 0000 2DE9F74F 		push	{r0, r1, r2, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 263              		.cfi_def_cfa_offset 48
+ 264              		.cfi_offset 4, -36
+ 265              		.cfi_offset 5, -32
+ 266              		.cfi_offset 6, -28
+ 267              		.cfi_offset 7, -24
+ 268              		.cfi_offset 8, -20
+ 269              		.cfi_offset 9, -16
+ 270              		.cfi_offset 10, -12
+ 271              		.cfi_offset 11, -8
+ 272              		.cfi_offset 14, -4
+  85:keyboards/massdrop/alt/matrix.c ****     uint8_t mchanged;
+  86:keyboards/massdrop/alt/matrix.c ****     uint8_t row;
+  87:keyboards/massdrop/alt/matrix.c ****     uint8_t col;
+  88:keyboards/massdrop/alt/matrix.c ****     uint32_t scans[2]; //PA PB
+  89:keyboards/massdrop/alt/matrix.c **** 
+  90:keyboards/massdrop/alt/matrix.c ****     if (timer_read64() < mdebouncing) return 1; //mdebouncing == 0 when no debouncing active
+ 273              		.loc 1 90 0
+ 274 0004 FFF7FEFF 		bl	timer_read64
+ 275              	.LVL10:
+ 276 0008 3F4B     		ldr	r3, .L27
+ 277 000a D3E90245 		ldrd	r4, [r3, #8]
+ 278 000e A942     		cmp	r1, r5
+ 279 0010 08BF     		it	eq
+ 280 0012 A042     		cmpeq	r0, r4
+ 281 0014 9846     		mov	r8, r3
+ 282 0016 6AD3     		bcc	.L13
+  91:keyboards/massdrop/alt/matrix.c **** 
+  92:keyboards/massdrop/alt/matrix.c ****     memset(mlatest, 0, MATRIX_ROWS * sizeof(matrix_row_t)); //Zero the result buffer
+ 283              		.loc 1 92 0
+ 284 0018 3C4C     		ldr	r4, .L27+4
+ 285 001a DFF80491 		ldr	r9, .L27+24
+  93:keyboards/massdrop/alt/matrix.c **** 
+  94:keyboards/massdrop/alt/matrix.c ****     for (col = 0; col < MATRIX_COLS; col++)
+  95:keyboards/massdrop/alt/matrix.c ****     {
+  96:keyboards/massdrop/alt/matrix.c ****         PORT->Group[col_ports[col]].OUTSET.reg = 1 << col_pins[col]; //Set col output
+ 286              		.loc 1 96 0
+ 287 001e 3C4F     		ldr	r7, .L27+8
+  97:keyboards/massdrop/alt/matrix.c **** 
+  98:keyboards/massdrop/alt/matrix.c ****         wait_us(1); //Delay for output
+  99:keyboards/massdrop/alt/matrix.c **** 
+ 100:keyboards/massdrop/alt/matrix.c ****         scans[PA] = PORT->Group[PA].IN.reg & row_masks[PA]; //Read PA row pins data
+ 288              		.loc 1 100 0
+ 289 0020 DFF800B1 		ldr	fp, .L27+28
+  92:keyboards/massdrop/alt/matrix.c **** 
+ 290              		.loc 1 92 0
+ 291 0024 0025     		movs	r5, #0
+ 292 0026 2560     		str	r5, [r4]	@ unaligned
+ 293 0028 6560     		str	r5, [r4, #4]	@ unaligned
+ 294 002a 2581     		strh	r5, [r4, #8]	@ movhi
+ 295              	.LVL11:
+ 296 002c 09F10F0A 		add	r10, r9, #15
+  96:keyboards/massdrop/alt/matrix.c **** 
+ 297              		.loc 1 96 0
+ 298 0030 0126     		movs	r6, #1
+ 299              	.LVL12:
+ 300              	.L16:
+ 301 0032 1AF8013F 		ldrb	r3, [r10, #1]!	@ zero_extendqisi2
+ 302 0036 19F8012F 		ldrb	r2, [r9, #1]!	@ zero_extendqisi2
+ 303 003a 07EBC313 		add	r3, r7, r3, lsl #7
+ 304 003e 06FA02F2 		lsl	r2, r6, r2
+ 305 0042 9A61     		str	r2, [r3, #24]
+  98:keyboards/massdrop/alt/matrix.c **** 
+ 306              		.loc 1 98 0
+ 307 0044 0120     		movs	r0, #1
+ 308 0046 FFF7FEFF 		bl	CLK_delay_us
+ 309              	.LVL13:
+ 310              		.loc 1 100 0
+ 311 004a 3A6A     		ldr	r2, [r7, #32]
+ 312 004c DBF80030 		ldr	r3, [fp]
+ 101:keyboards/massdrop/alt/matrix.c ****         scans[PB] = PORT->Group[PB].IN.reg & row_masks[PB]; //Read PB row pins data
+ 102:keyboards/massdrop/alt/matrix.c **** 
+ 103:keyboards/massdrop/alt/matrix.c ****         PORT->Group[col_ports[col]].OUTCLR.reg = 1 << col_pins[col]; //Clear col output
+ 104:keyboards/massdrop/alt/matrix.c **** 
+ 105:keyboards/massdrop/alt/matrix.c ****         for (row = 0; row < MATRIX_ROWS; row++)
+ 106:keyboards/massdrop/alt/matrix.c ****         {
+ 107:keyboards/massdrop/alt/matrix.c ****             //Move scan bits from scans array into proper row bit locations
+ 108:keyboards/massdrop/alt/matrix.c ****             if (scans[row_ports[row]] & (1 << row_pins[row]))
+ 313              		.loc 1 108 0
+ 314 0050 3048     		ldr	r0, .L27+12
+ 100:keyboards/massdrop/alt/matrix.c ****         scans[PB] = PORT->Group[PB].IN.reg & row_masks[PB]; //Read PB row pins data
+ 315              		.loc 1 100 0
+ 316 0052 1340     		ands	r3, r3, r2
+ 317 0054 0093     		str	r3, [sp]
+ 101:keyboards/massdrop/alt/matrix.c ****         scans[PB] = PORT->Group[PB].IN.reg & row_masks[PB]; //Read PB row pins data
+ 318              		.loc 1 101 0
+ 319 0056 D7F8A020 		ldr	r2, [r7, #160]
+ 320 005a DBF80430 		ldr	r3, [fp, #4]
+ 321 005e 1340     		ands	r3, r3, r2
+ 322 0060 0193     		str	r3, [sp, #4]
+ 103:keyboards/massdrop/alt/matrix.c **** 
+ 323              		.loc 1 103 0
+ 324 0062 9AF80030 		ldrb	r3, [r10]	@ zero_extendqisi2
+ 325 0066 99F80020 		ldrb	r2, [r9]	@ zero_extendqisi2
+ 326 006a 07EBC313 		add	r3, r7, r3, lsl #7
+ 327 006e 06FA02F2 		lsl	r2, r6, r2
+ 328 0072 5A61     		str	r2, [r3, #20]
+ 329              	.LVL14:
+ 109:keyboards/massdrop/alt/matrix.c ****                 mlatest[row] |= 1 << col;
+ 330              		.loc 1 109 0
+ 331 0074 06FA05F2 		lsl	r2, r6, r5
+ 332 0078 12B2     		sxth	r2, r2
+ 333 007a 0023     		movs	r3, #0
+ 334              	.LVL15:
+ 335              	.L15:
+ 108:keyboards/massdrop/alt/matrix.c ****                 mlatest[row] |= 1 << col;
+ 336              		.loc 1 108 0
+ 337 007c 18F803C0 		ldrb	ip, [r8, r3]	@ zero_extendqisi2
+ 338 0080 02A9     		add	r1, sp, #8
+ 339 0082 01EB8C0C 		add	ip, r1, ip, lsl #2
+ 340 0086 195C     		ldrb	r1, [r3, r0]	@ zero_extendqisi2
+ 341 0088 5CF808CC 		ldr	ip, [ip, #-8]
+ 342 008c 06FA01F1 		lsl	r1, r6, r1
+ 343 0090 11EA0C0F 		tst	r1, ip
+ 344              		.loc 1 109 0
+ 345 0094 1EBF     		ittt	ne
+ 346 0096 34F81310 		ldrhne	r1, [r4, r3, lsl #1]
+ 347 009a 1143     		orrne	r1, r1, r2
+ 348 009c 24F81310 		strhne	r1, [r4, r3, lsl #1]	@ movhi
+ 349              	.LVL16:
+ 350 00a0 0133     		adds	r3, r3, #1
+ 351              	.LVL17:
+ 105:keyboards/massdrop/alt/matrix.c ****         {
+ 352              		.loc 1 105 0
+ 353 00a2 052B     		cmp	r3, #5
+ 354 00a4 EAD1     		bne	.L15
+ 355              	.LVL18:
+ 356 00a6 0135     		adds	r5, r5, #1
+ 357              	.LVL19:
+  94:keyboards/massdrop/alt/matrix.c ****     {
+ 358              		.loc 1 94 0 discriminator 2
+ 359 00a8 0F2D     		cmp	r5, #15
+ 360 00aa C2D1     		bne	.L16
+ 361 00ac 0023     		movs	r3, #0
+ 110:keyboards/massdrop/alt/matrix.c ****         }
+ 111:keyboards/massdrop/alt/matrix.c ****     }
+ 112:keyboards/massdrop/alt/matrix.c **** 
+ 113:keyboards/massdrop/alt/matrix.c ****     mchanged = 0; //Default to no matrix change since last
+ 114:keyboards/massdrop/alt/matrix.c **** 
+ 115:keyboards/massdrop/alt/matrix.c ****     for (row = 0; row < MATRIX_ROWS; row++)
+ 116:keyboards/massdrop/alt/matrix.c ****     {
+ 117:keyboards/massdrop/alt/matrix.c ****         if (mlast[row] != mlatest[row])
+ 362              		.loc 1 117 0
+ 363 00ae 1A49     		ldr	r1, .L27+16
+ 113:keyboards/massdrop/alt/matrix.c **** 
+ 364              		.loc 1 113 0
+ 365 00b0 1A46     		mov	r2, r3
+ 366              	.L18:
+ 367              	.LVL20:
+ 368              		.loc 1 117 0
+ 369 00b2 34F81300 		ldrh	r0, [r4, r3, lsl #1]
+ 370 00b6 31F81350 		ldrh	r5, [r1, r3, lsl #1]
+ 118:keyboards/massdrop/alt/matrix.c ****             mchanged = 1;
+ 119:keyboards/massdrop/alt/matrix.c ****         mlast[row] = mlatest[row];
+ 371              		.loc 1 119 0
+ 372 00ba 21F81300 		strh	r0, [r1, r3, lsl #1]	@ movhi
+ 373 00be 0133     		adds	r3, r3, #1
+ 374              	.LVL21:
+ 118:keyboards/massdrop/alt/matrix.c ****             mchanged = 1;
+ 375              		.loc 1 118 0
+ 376 00c0 8542     		cmp	r5, r0
+ 377 00c2 18BF     		it	ne
+ 378 00c4 0122     		movne	r2, #1
+ 379              	.LVL22:
+ 115:keyboards/massdrop/alt/matrix.c ****     {
+ 380              		.loc 1 115 0
+ 381 00c6 052B     		cmp	r3, #5
+ 382 00c8 F3D1     		bne	.L18
+ 120:keyboards/massdrop/alt/matrix.c ****     }
+ 121:keyboards/massdrop/alt/matrix.c **** 
+ 122:keyboards/massdrop/alt/matrix.c ****     if (!mchanged)
+ 383              		.loc 1 122 0
+ 384 00ca A2B9     		cbnz	r2, .L19
+ 385              	.LVL23:
+ 123:keyboards/massdrop/alt/matrix.c ****     {
+ 124:keyboards/massdrop/alt/matrix.c ****         for (row = 0; row < MATRIX_ROWS; row++)
+ 125:keyboards/massdrop/alt/matrix.c ****             mdebounced[row] = mlatest[row];
+ 386              		.loc 1 125 0
+ 387 00cc 134B     		ldr	r3, .L27+20
+ 388 00ce 2288     		ldrh	r2, [r4]
+ 389              	.LVL24:
+ 390 00d0 1A80     		strh	r2, [r3]	@ movhi
+ 391              	.LVL25:
+ 392 00d2 6288     		ldrh	r2, [r4, #2]
+ 393 00d4 5A80     		strh	r2, [r3, #2]	@ movhi
+ 394              	.LVL26:
+ 395 00d6 A288     		ldrh	r2, [r4, #4]
+ 396 00d8 9A80     		strh	r2, [r3, #4]	@ movhi
+ 397              	.LVL27:
+ 398 00da E288     		ldrh	r2, [r4, #6]
+ 399 00dc DA80     		strh	r2, [r3, #6]	@ movhi
+ 400              	.LVL28:
+ 401 00de 2289     		ldrh	r2, [r4, #8]
+ 402 00e0 1A81     		strh	r2, [r3, #8]	@ movhi
+ 403              	.LVL29:
+ 126:keyboards/massdrop/alt/matrix.c ****         mdebouncing = 0;
+ 404              		.loc 1 126 0
+ 405 00e2 0022     		movs	r2, #0
+ 406 00e4 0023     		movs	r3, #0
+ 407 00e6 C8E90223 		strd	r2, [r8, #8]
+ 408              	.LVL30:
+ 409              	.L20:
+ 127:keyboards/massdrop/alt/matrix.c ****     }
+ 128:keyboards/massdrop/alt/matrix.c ****     else
+ 129:keyboards/massdrop/alt/matrix.c ****     {
+ 130:keyboards/massdrop/alt/matrix.c ****         //Begin or extend debounce on change
+ 131:keyboards/massdrop/alt/matrix.c ****         mdebouncing = timer_read64() + DEBOUNCE;
+ 132:keyboards/massdrop/alt/matrix.c ****     }
+ 133:keyboards/massdrop/alt/matrix.c **** 
+ 134:keyboards/massdrop/alt/matrix.c ****     matrix_scan_quantum();
+ 410              		.loc 1 134 0
+ 411 00ea FFF7FEFF 		bl	matrix_scan_quantum
+ 412              	.LVL31:
+ 413              	.L13:
+ 135:keyboards/massdrop/alt/matrix.c **** 
+ 136:keyboards/massdrop/alt/matrix.c ****     return 1;
+ 137:keyboards/massdrop/alt/matrix.c **** }
+ 414              		.loc 1 137 0
+ 415 00ee 0120     		movs	r0, #1
+ 416 00f0 03B0     		add	sp, sp, #12
+ 417              		.cfi_remember_state
+ 418              		.cfi_def_cfa_offset 36
+ 419              		@ sp needed
+ 420 00f2 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 421              	.LVL32:
+ 422              	.L19:
+ 423              		.cfi_restore_state
+ 131:keyboards/massdrop/alt/matrix.c ****     }
+ 424              		.loc 1 131 0
+ 425 00f6 FFF7FEFF 		bl	timer_read64
+ 426              	.LVL33:
+ 427 00fa 431D     		adds	r3, r0, #5
+ 428 00fc 41F10004 		adc	r4, r1, #0
+ 429 0100 C8E90234 		strd	r3, [r8, #8]
+ 430 0104 F1E7     		b	.L20
+ 431              	.L28:
+ 432 0106 00BF     		.align	2
+ 433              	.L27:
+ 434 0108 00000000 		.word	.LANCHOR1
+ 435 010c 00000000 		.word	mlatest
+ 436 0110 00800041 		.word	1090551808
+ 437 0114 00000000 		.word	.LANCHOR0
+ 438 0118 00000000 		.word	mlast
+ 439 011c 00000000 		.word	mdebounced
+ 440 0120 04000000 		.word	.LANCHOR0+4
+ 441 0124 00000000 		.word	row_masks
+ 442              		.cfi_endproc
+ 443              	.LFE136:
+ 445              		.section	.text.matrix_get_row,"ax",%progbits
+ 446              		.align	1
+ 447              		.global	matrix_get_row
+ 448              		.syntax unified
+ 449              		.thumb
+ 450              		.thumb_func
+ 451              		.fpu fpv4-sp-d16
+ 453              	matrix_get_row:
+ 454              	.LFB137:
+ 138:keyboards/massdrop/alt/matrix.c **** 
+ 139:keyboards/massdrop/alt/matrix.c **** matrix_row_t matrix_get_row(uint8_t row)
+ 140:keyboards/massdrop/alt/matrix.c **** {
+ 455              		.loc 1 140 0
+ 456              		.cfi_startproc
+ 457              		@ args = 0, pretend = 0, frame = 0
+ 458              		@ frame_needed = 0, uses_anonymous_args = 0
+ 459              		@ link register save eliminated.
+ 460              	.LVL34:
+ 141:keyboards/massdrop/alt/matrix.c ****     return mdebounced[row];
+ 142:keyboards/massdrop/alt/matrix.c **** }
+ 461              		.loc 1 142 0
+ 462 0000 014B     		ldr	r3, .L30
+ 463 0002 33F81000 		ldrh	r0, [r3, r0, lsl #1]
+ 464              	.LVL35:
+ 465 0006 7047     		bx	lr
+ 466              	.L31:
+ 467              		.align	2
+ 468              	.L30:
+ 469 0008 00000000 		.word	mdebounced
+ 470              		.cfi_endproc
+ 471              	.LFE137:
+ 473              		.section	.text.matrix_print,"ax",%progbits
+ 474              		.align	1
+ 475              		.global	matrix_print
+ 476              		.syntax unified
+ 477              		.thumb
+ 478              		.thumb_func
+ 479              		.fpu fpv4-sp-d16
+ 481              	matrix_print:
+ 482              	.LFB138:
+ 143:keyboards/massdrop/alt/matrix.c **** 
+ 144:keyboards/massdrop/alt/matrix.c **** void matrix_print(void)
+ 145:keyboards/massdrop/alt/matrix.c **** {
+ 483              		.loc 1 145 0
+ 484              		.cfi_startproc
+ 485              		@ args = 0, pretend = 0, frame = 0
+ 486              		@ frame_needed = 0, uses_anonymous_args = 0
+ 487              		@ link register save eliminated.
+ 488              	.LVL36:
+ 146:keyboards/massdrop/alt/matrix.c ****     char buf[(MATRIX_COLS+8)*(MATRIX_ROWS+1)] = "R C";
+ 147:keyboards/massdrop/alt/matrix.c ****     char *pbuf = buf+3;
+ 148:keyboards/massdrop/alt/matrix.c ****     uint32_t cols;
+ 149:keyboards/massdrop/alt/matrix.c ****     uint32_t rows;
+ 150:keyboards/massdrop/alt/matrix.c ****     matrix_row_t row;
+ 151:keyboards/massdrop/alt/matrix.c **** 
+ 152:keyboards/massdrop/alt/matrix.c ****     for (cols = 1; cols <= MATRIX_COLS; cols++)
+ 153:keyboards/massdrop/alt/matrix.c ****     {
+ 154:keyboards/massdrop/alt/matrix.c ****         *pbuf = (cols%10)+48;
+ 155:keyboards/massdrop/alt/matrix.c ****         pbuf++;
+ 156:keyboards/massdrop/alt/matrix.c ****     }
+ 157:keyboards/massdrop/alt/matrix.c ****     *pbuf = '\r'; pbuf++;
+ 158:keyboards/massdrop/alt/matrix.c ****     *pbuf = '\n'; pbuf++;
+ 159:keyboards/massdrop/alt/matrix.c **** 
+ 160:keyboards/massdrop/alt/matrix.c ****     for (rows = 1; rows <= MATRIX_ROWS; rows++)
+ 161:keyboards/massdrop/alt/matrix.c ****     {
+ 162:keyboards/massdrop/alt/matrix.c ****         row = matrix_get_row(rows-1);
+ 163:keyboards/massdrop/alt/matrix.c ****         if (rows < 10) { *pbuf = rows+48; pbuf++; *pbuf = ' '; pbuf++; *pbuf = ' '; pbuf++; }
+ 164:keyboards/massdrop/alt/matrix.c ****         else { *pbuf = (rows/10)+48; pbuf++; *pbuf = (rows%10)+48; pbuf++; *pbuf = ' '; pbuf++; }
+ 165:keyboards/massdrop/alt/matrix.c ****         for (cols = 0; cols < MATRIX_COLS; cols++)
+ 166:keyboards/massdrop/alt/matrix.c ****         {
+ 167:keyboards/massdrop/alt/matrix.c ****             if (row & 1 << cols) *pbuf = 'X';
+ 168:keyboards/massdrop/alt/matrix.c ****             else                 *pbuf = '.';
+ 169:keyboards/massdrop/alt/matrix.c ****             pbuf++;
+ 170:keyboards/massdrop/alt/matrix.c ****         }
+ 171:keyboards/massdrop/alt/matrix.c ****         *pbuf = '\r'; pbuf++;
+ 172:keyboards/massdrop/alt/matrix.c ****         *pbuf = '\n'; pbuf++;
+ 173:keyboards/massdrop/alt/matrix.c ****     }
+ 174:keyboards/massdrop/alt/matrix.c ****     *pbuf = 0;
+ 175:keyboards/massdrop/alt/matrix.c ****     dprint(buf);
+ 176:keyboards/massdrop/alt/matrix.c **** }
+ 489              		.loc 1 176 0
+ 490 0000 7047     		bx	lr
+ 491              		.cfi_endproc
+ 492              	.LFE138:
+ 494              		.global	mdebouncing
+ 495              		.comm	row_masks,8,4
+ 496              		.global	col_pins
+ 497              		.global	col_ports
+ 498              		.global	row_pins
+ 499              		.global	row_ports
+ 500              		.comm	mdebounced,10,2
+ 501              		.comm	mlast,10,2
+ 502              		.comm	mlatest,10,2
+ 503              		.comm	dmac_desc_wb,16,16
+ 504              		.comm	dmac_desc,16,16
+ 505              		.data
+ 506              		.set	.LANCHOR0,. + 0
+ 509              	row_pins:
+ 510 0000 00       		.byte	0
+ 511 0001 01       		.byte	1
+ 512 0002 02       		.byte	2
+ 513 0003 03       		.byte	3
+ 514 0004 04       		.byte	4
+ 517              	col_pins:
+ 518 0005 04       		.byte	4
+ 519 0006 05       		.byte	5
+ 520 0007 06       		.byte	6
+ 521 0008 07       		.byte	7
+ 522 0009 08       		.byte	8
+ 523 000a 09       		.byte	9
+ 524 000b 0A       		.byte	10
+ 525 000c 0B       		.byte	11
+ 526 000d 0C       		.byte	12
+ 527 000e 0D       		.byte	13
+ 528 000f 05       		.byte	5
+ 529 0010 06       		.byte	6
+ 530 0011 07       		.byte	7
+ 531 0012 0A       		.byte	10
+ 532 0013 0B       		.byte	11
+ 535              	col_ports:
+ 536 0014 01       		.byte	1
+ 537 0015 01       		.byte	1
+ 538 0016 01       		.byte	1
+ 539 0017 01       		.byte	1
+ 540 0018 01       		.byte	1
+ 541 0019 01       		.byte	1
+ 542 001a 01       		.byte	1
+ 543 001b 01       		.byte	1
+ 544 001c 01       		.byte	1
+ 545 001d 01       		.byte	1
+ 546 001e 00       		.byte	0
+ 547 001f 00       		.byte	0
+ 548 0020 00       		.byte	0
+ 549 0021 00       		.byte	0
+ 550 0022 00       		.byte	0
+ 551              		.bss
+ 552              		.align	3
+ 553              		.set	.LANCHOR1,. + 0
+ 556              	row_ports:
+ 557 0000 00000000 		.space	5
+ 557      00
+ 558 0005 000000   		.space	3
+ 561              	mdebouncing:
+ 562 0008 00000000 		.space	8
+ 562      00000000 
+ 563              		.text
+ 564              	.Letext0:
+ 565              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 566              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 567              		.file 4 "tmk_core/protocol/arm_atsam/clks.h"
+ 568              		.file 5 "keyboards/massdrop/alt/matrix.h"
+ 569              		.file 6 "tmk_core/common/action.h"
+ 570              		.file 7 "tmk_core/common/report.h"
+ 571              		.file 8 "tmk_core/common/host.h"
+ 572              		.file 9 "tmk_core/common/debug.h"
+ 573              		.file 10 "quantum/keycode_config.h"
+ 574              		.file 11 "quantum/keymap.h"
+ 575              		.file 12 "quantum/color.h"
+ 576              		.file 13 "quantum/rgb_matrix_types.h"
+ 577              		.file 14 "quantum/rgb_matrix.h"
+ 578              		.file 15 "tmk_core/common/action_layer.h"
+ 579              		.file 16 "tmk_core/common/timer.h"
+ 580              		.file 17 "tmk_core/common/action_util.h"
+ 581              		.file 18 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 582              		.file 19 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 583              		.file 20 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 584              		.file 21 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 585              		.file 22 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 586              		.file 23 "quantum/quantum.h"
+ 587              		.file 24 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/samd51j18a.h"
+ 588              		.file 25 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 589              		.file 26 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 590              		.file 27 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 591              		.file 28 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/port.h"
+ 592              		.file 29 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 593              		.file 30 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 594              		.file 31 "tmk_core/protocol/arm_atsam/usb/udi_cdc.h"
+ 595              		.file 32 "tmk_core/protocol/arm_atsam/usb/usb2422.h"
+ 596              		.file 33 "tmk_core/protocol/arm_atsam/d51_util.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 matrix.c
+/var/tmp//ccQxd5pO.s:18     .text.matrix_init_user:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:25     .text.matrix_init_user:0000000000000000 matrix_init_user
+/var/tmp//ccQxd5pO.s:25     .text.matrix_init_user:0000000000000000 matrix_init_user.localalias.0
+/var/tmp//ccQxd5pO.s:40     .text.matrix_init_kb:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:47     .text.matrix_init_kb:0000000000000000 matrix_init_kb
+/var/tmp//ccQxd5pO.s:66     .text.matrix_scan_user:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:73     .text.matrix_scan_user:0000000000000000 matrix_scan_user
+/var/tmp//ccQxd5pO.s:84     .text.matrix_scan_kb:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:91     .text.matrix_scan_kb:0000000000000000 matrix_scan_kb
+/var/tmp//ccQxd5pO.s:111    .text.matrix_init:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:118    .text.matrix_init:0000000000000000 matrix_init
+/var/tmp//ccQxd5pO.s:237    .text.matrix_init:00000000000000b4 $d
+                            *COM*:000000000000000a mlatest
+                            *COM*:000000000000000a mlast
+                            *COM*:000000000000000a mdebounced
+                            *COM*:0000000000000008 row_masks
+/var/tmp//ccQxd5pO.s:249    .text.matrix_scan:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:256    .text.matrix_scan:0000000000000000 matrix_scan
+/var/tmp//ccQxd5pO.s:434    .text.matrix_scan:0000000000000108 $d
+/var/tmp//ccQxd5pO.s:446    .text.matrix_get_row:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:453    .text.matrix_get_row:0000000000000000 matrix_get_row
+/var/tmp//ccQxd5pO.s:469    .text.matrix_get_row:0000000000000008 $d
+/var/tmp//ccQxd5pO.s:474    .text.matrix_print:0000000000000000 $t
+/var/tmp//ccQxd5pO.s:481    .text.matrix_print:0000000000000000 matrix_print
+/var/tmp//ccQxd5pO.s:561    .bss:0000000000000008 mdebouncing
+/var/tmp//ccQxd5pO.s:517    .data:0000000000000005 col_pins
+/var/tmp//ccQxd5pO.s:535    .data:0000000000000014 col_ports
+/var/tmp//ccQxd5pO.s:509    .data:0000000000000000 row_pins
+/var/tmp//ccQxd5pO.s:556    .bss:0000000000000000 row_ports
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+/var/tmp//ccQxd5pO.s:552    .bss:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+matrix_init_quantum
+timer_read64
+CLK_delay_us
+matrix_scan_quantum

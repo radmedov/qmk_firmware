@@ -1,0 +1,463 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"led_matrix_programs.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	led_setups_count
+  18              		.global	led_setups
+  19              		.global	leds_rainbow_s
+  20              		.global	leds_rainbow_ns
+  21              		.global	leds_black_with_red_stripe
+  22              		.global	leds_white_with_red_stripe
+  23              		.global	leds_white
+  24              		.global	leds_blue
+  25              		.global	leds_green
+  26              		.global	leds_red
+  27              		.global	leds_off
+  28              		.global	leds_yellow
+  29              		.global	leds_teal_salmon
+  30              		.section	.rodata
+  33              	led_setups_count:
+  34 0000 0B       		.byte	11
+  35              		.data
+  36              		.align	2
+  39              	led_setups:
+  40 0000 00000000 		.word	leds_rainbow_s
+  41 0004 00000000 		.word	leds_rainbow_ns
+  42 0008 00000000 		.word	leds_teal_salmon
+  43 000c 00000000 		.word	leds_yellow
+  44 0010 00000000 		.word	leds_red
+  45 0014 00000000 		.word	leds_green
+  46 0018 00000000 		.word	leds_blue
+  47 001c 00000000 		.word	leds_white
+  48 0020 00000000 		.word	leds_white_with_red_stripe
+  49 0024 00000000 		.word	leds_black_with_red_stripe
+  50 0028 00000000 		.word	leds_off
+  53              	leds_rainbow_s:
+  54 002c 00000000 		.word	0
+  55 0030 295C8541 		.word	1099258921
+  56 0034 FF       		.byte	-1
+  57 0035 FF       		.byte	-1
+  58 0036 00       		.byte	0
+  59 0037 FF       		.byte	-1
+  60 0038 00       		.byte	0
+  61 0039 00       		.byte	0
+  62 003a 0000     		.space	2
+  63 003c 05000000 		.word	5
+  64 0040 00000000 		.space	4
+  65 0044 295C8541 		.word	1099258921
+  66 0048 EC510542 		.word	1107644908
+  67 004c FF       		.byte	-1
+  68 004d 00       		.byte	0
+  69 004e FF       		.byte	-1
+  70 004f FF       		.byte	-1
+  71 0050 00       		.byte	0
+  72 0051 00       		.byte	0
+  73 0052 0000     		.space	2
+  74 0054 05000000 		.word	5
+  75 0058 00000000 		.space	4
+  76 005c EC510542 		.word	1107644908
+  77 0060 00004842 		.word	1112014848
+  78 0064 00       		.byte	0
+  79 0065 00       		.byte	0
+  80 0066 FF       		.byte	-1
+  81 0067 FF       		.byte	-1
+  82 0068 00       		.byte	0
+  83 0069 FF       		.byte	-1
+  84 006a 0000     		.space	2
+  85 006c 05000000 		.word	5
+  86 0070 00000000 		.space	4
+  87 0074 00004842 		.word	1112014848
+  88 0078 0A578542 		.word	1116034826
+  89 007c 00       		.byte	0
+  90 007d 00       		.byte	0
+  91 007e FF       		.byte	-1
+  92 007f 00       		.byte	0
+  93 0080 FF       		.byte	-1
+  94 0081 FF       		.byte	-1
+  95 0082 0000     		.space	2
+  96 0084 05000000 		.word	5
+  97 0088 00000000 		.space	4
+  98 008c 0A578542 		.word	1116034826
+  99 0090 F6A8A642 		.word	1118218486
+ 100 0094 00       		.byte	0
+ 101 0095 FF       		.byte	-1
+ 102 0096 00       		.byte	0
+ 103 0097 00       		.byte	0
+ 104 0098 FF       		.byte	-1
+ 105 0099 FF       		.byte	-1
+ 106 009a 0000     		.space	2
+ 107 009c 05000000 		.word	5
+ 108 00a0 00000000 		.space	4
+ 109 00a4 F6A8A642 		.word	1118218486
+ 110 00a8 0000C842 		.word	1120403456
+ 111 00ac FF       		.byte	-1
+ 112 00ad FF       		.byte	-1
+ 113 00ae 00       		.byte	0
+ 114 00af 00       		.byte	0
+ 115 00b0 FF       		.byte	-1
+ 116 00b1 00       		.byte	0
+ 117 00b2 0000     		.space	2
+ 118 00b4 05000000 		.word	5
+ 119 00b8 00000000 		.space	4
+ 120 00bc 00000000 		.space	20
+ 120      00000000 
+ 120      00000000 
+ 120      00000000 
+ 120      00000000 
+ 121 00d0 01       		.byte	1
+ 122 00d1 000000   		.space	3
+ 125              	leds_rainbow_ns:
+ 126 00d4 00000000 		.word	0
+ 127 00d8 295C8541 		.word	1099258921
+ 128 00dc FF       		.byte	-1
+ 129 00dd FF       		.byte	-1
+ 130 00de 00       		.byte	0
+ 131 00df FF       		.byte	-1
+ 132 00e0 00       		.byte	0
+ 133 00e1 00       		.byte	0
+ 134 00e2 0000     		.space	2
+ 135 00e4 01000000 		.word	1
+ 136 00e8 00000000 		.space	4
+ 137 00ec 295C8541 		.word	1099258921
+ 138 00f0 EC510542 		.word	1107644908
+ 139 00f4 FF       		.byte	-1
+ 140 00f5 00       		.byte	0
+ 141 00f6 FF       		.byte	-1
+ 142 00f7 FF       		.byte	-1
+ 143 00f8 00       		.byte	0
+ 144 00f9 00       		.byte	0
+ 145 00fa 0000     		.space	2
+ 146 00fc 01000000 		.word	1
+ 147 0100 00000000 		.space	4
+ 148 0104 EC510542 		.word	1107644908
+ 149 0108 00004842 		.word	1112014848
+ 150 010c 00       		.byte	0
+ 151 010d 00       		.byte	0
+ 152 010e FF       		.byte	-1
+ 153 010f FF       		.byte	-1
+ 154 0110 00       		.byte	0
+ 155 0111 FF       		.byte	-1
+ 156 0112 0000     		.space	2
+ 157 0114 01000000 		.word	1
+ 158 0118 00000000 		.space	4
+ 159 011c 00004842 		.word	1112014848
+ 160 0120 0A578542 		.word	1116034826
+ 161 0124 00       		.byte	0
+ 162 0125 00       		.byte	0
+ 163 0126 FF       		.byte	-1
+ 164 0127 00       		.byte	0
+ 165 0128 FF       		.byte	-1
+ 166 0129 FF       		.byte	-1
+ 167 012a 0000     		.space	2
+ 168 012c 01000000 		.word	1
+ 169 0130 00000000 		.space	4
+ 170 0134 0A578542 		.word	1116034826
+ 171 0138 F6A8A642 		.word	1118218486
+ 172 013c 00       		.byte	0
+ 173 013d FF       		.byte	-1
+ 174 013e 00       		.byte	0
+ 175 013f 00       		.byte	0
+ 176 0140 FF       		.byte	-1
+ 177 0141 FF       		.byte	-1
+ 178 0142 0000     		.space	2
+ 179 0144 01000000 		.word	1
+ 180 0148 00000000 		.space	4
+ 181 014c F6A8A642 		.word	1118218486
+ 182 0150 0000C842 		.word	1120403456
+ 183 0154 FF       		.byte	-1
+ 184 0155 FF       		.byte	-1
+ 185 0156 00       		.byte	0
+ 186 0157 00       		.byte	0
+ 187 0158 FF       		.byte	-1
+ 188 0159 00       		.byte	0
+ 189 015a 0000     		.space	2
+ 190 015c 01000000 		.word	1
+ 191 0160 00000000 		.space	4
+ 192 0164 00000000 		.space	20
+ 192      00000000 
+ 192      00000000 
+ 192      00000000 
+ 192      00000000 
+ 193 0178 01       		.byte	1
+ 194 0179 000000   		.space	3
+ 197              	leds_black_with_red_stripe:
+ 198 017c 00000000 		.word	0
+ 199 0180 00007041 		.word	1097859072
+ 200 0184 00       		.byte	0
+ 201 0185 FF       		.byte	-1
+ 202 0186 00       		.byte	0
+ 203 0187 00       		.byte	0
+ 204 0188 00       		.byte	0
+ 205 0189 00       		.byte	0
+ 206 018a 0000     		.space	2
+ 207 018c 04000000 		.word	4
+ 208 0190 00000000 		.space	4
+ 209 0194 00007041 		.word	1097859072
+ 210 0198 0000F041 		.word	1106247680
+ 211 019c FF       		.byte	-1
+ 212 019d 00       		.byte	0
+ 213 019e 00       		.byte	0
+ 214 019f 00       		.byte	0
+ 215 01a0 00       		.byte	0
+ 216 01a1 00       		.byte	0
+ 217 01a2 0000     		.space	2
+ 218 01a4 04000000 		.word	4
+ 219 01a8 00000000 		.space	4
+ 220 01ac 00000000 		.space	20
+ 220      00000000 
+ 220      00000000 
+ 220      00000000 
+ 220      00000000 
+ 221 01c0 01       		.byte	1
+ 222 01c1 000000   		.space	3
+ 225              	leds_white_with_red_stripe:
+ 226 01c4 00000000 		.word	0
+ 227 01c8 0000C842 		.word	1120403456
+ 228 01cc FF       		.byte	-1
+ 229 01cd FF       		.byte	-1
+ 230 01ce FF       		.byte	-1
+ 231 01cf FF       		.byte	-1
+ 232 01d0 FF       		.byte	-1
+ 233 01d1 FF       		.byte	-1
+ 234 01d2 0000     		.space	2
+ 235 01d4 00000000 		.word	0
+ 236 01d8 00000000 		.space	4
+ 237 01dc 00000000 		.word	0
+ 238 01e0 00007041 		.word	1097859072
+ 239 01e4 00       		.byte	0
+ 240 01e5 00       		.byte	0
+ 241 01e6 00       		.byte	0
+ 242 01e7 FF       		.byte	-1
+ 243 01e8 00       		.byte	0
+ 244 01e9 FF       		.byte	-1
+ 245 01ea 0000     		.space	2
+ 246 01ec 0C000000 		.word	12
+ 247 01f0 00000000 		.space	4
+ 248 01f4 00007041 		.word	1097859072
+ 249 01f8 0000F041 		.word	1106247680
+ 250 01fc 00       		.byte	0
+ 251 01fd 00       		.byte	0
+ 252 01fe FF       		.byte	-1
+ 253 01ff 00       		.byte	0
+ 254 0200 FF       		.byte	-1
+ 255 0201 00       		.byte	0
+ 256 0202 0000     		.space	2
+ 257 0204 0C000000 		.word	12
+ 258 0208 00000000 		.space	4
+ 259 020c 00000000 		.space	20
+ 259      00000000 
+ 259      00000000 
+ 259      00000000 
+ 259      00000000 
+ 260 0220 01       		.byte	1
+ 261 0221 000000   		.space	3
+ 264              	leds_white:
+ 265 0224 00000000 		.word	0
+ 266 0228 0000C842 		.word	1120403456
+ 267 022c FF       		.byte	-1
+ 268 022d FF       		.byte	-1
+ 269 022e FF       		.byte	-1
+ 270 022f FF       		.byte	-1
+ 271 0230 FF       		.byte	-1
+ 272 0231 FF       		.byte	-1
+ 273 0232 0000     		.space	2
+ 274 0234 00000000 		.word	0
+ 275 0238 00000000 		.space	4
+ 276 023c 00000000 		.space	20
+ 276      00000000 
+ 276      00000000 
+ 276      00000000 
+ 276      00000000 
+ 277 0250 01       		.byte	1
+ 278 0251 000000   		.space	3
+ 281              	leds_blue:
+ 282 0254 00000000 		.word	0
+ 283 0258 0000C842 		.word	1120403456
+ 284 025c 00       		.byte	0
+ 285 025d 00       		.byte	0
+ 286 025e 00       		.byte	0
+ 287 025f 00       		.byte	0
+ 288 0260 FF       		.byte	-1
+ 289 0261 FF       		.byte	-1
+ 290 0262 0000     		.space	2
+ 291 0264 00000000 		.word	0
+ 292 0268 00000000 		.space	4
+ 293 026c 00000000 		.space	20
+ 293      00000000 
+ 293      00000000 
+ 293      00000000 
+ 293      00000000 
+ 294 0280 01       		.byte	1
+ 295 0281 000000   		.space	3
+ 298              	leds_green:
+ 299 0284 00000000 		.word	0
+ 300 0288 0000C842 		.word	1120403456
+ 301 028c 00       		.byte	0
+ 302 028d 00       		.byte	0
+ 303 028e FF       		.byte	-1
+ 304 028f FF       		.byte	-1
+ 305 0290 00       		.byte	0
+ 306 0291 00       		.byte	0
+ 307 0292 0000     		.space	2
+ 308 0294 00000000 		.word	0
+ 309 0298 00000000 		.space	4
+ 310 029c 00000000 		.space	20
+ 310      00000000 
+ 310      00000000 
+ 310      00000000 
+ 310      00000000 
+ 311 02b0 01       		.byte	1
+ 312 02b1 000000   		.space	3
+ 315              	leds_red:
+ 316 02b4 00000000 		.word	0
+ 317 02b8 0000C842 		.word	1120403456
+ 318 02bc FF       		.byte	-1
+ 319 02bd FF       		.byte	-1
+ 320 02be 00       		.byte	0
+ 321 02bf 00       		.byte	0
+ 322 02c0 00       		.byte	0
+ 323 02c1 00       		.byte	0
+ 324 02c2 0000     		.space	2
+ 325 02c4 00000000 		.word	0
+ 326 02c8 00000000 		.space	4
+ 327 02cc 00000000 		.space	20
+ 327      00000000 
+ 327      00000000 
+ 327      00000000 
+ 327      00000000 
+ 328 02e0 01       		.byte	1
+ 329 02e1 000000   		.space	3
+ 332              	leds_off:
+ 333 02e4 00000000 		.word	0
+ 334 02e8 0000C842 		.word	1120403456
+ 335 02ec 00       		.byte	0
+ 336 02ed 00       		.byte	0
+ 337 02ee 00       		.byte	0
+ 338 02ef 00       		.byte	0
+ 339 02f0 00       		.byte	0
+ 340 02f1 00       		.byte	0
+ 341 02f2 0000     		.space	2
+ 342 02f4 00000000 		.word	0
+ 343 02f8 00000000 		.space	4
+ 344 02fc 00000000 		.space	20
+ 344      00000000 
+ 344      00000000 
+ 344      00000000 
+ 344      00000000 
+ 345 0310 01       		.byte	1
+ 346 0311 000000   		.space	3
+ 349              	leds_yellow:
+ 350 0314 00000000 		.word	0
+ 351 0318 0000C842 		.word	1120403456
+ 352 031c FF       		.byte	-1
+ 353 031d FF       		.byte	-1
+ 354 031e FF       		.byte	-1
+ 355 031f FF       		.byte	-1
+ 356 0320 00       		.byte	0
+ 357 0321 00       		.byte	0
+ 358 0322 0000     		.space	2
+ 359 0324 00000000 		.word	0
+ 360 0328 00000000 		.space	4
+ 361 032c 00000000 		.space	20
+ 361      00000000 
+ 361      00000000 
+ 361      00000000 
+ 361      00000000 
+ 362 0340 01       		.byte	1
+ 363 0341 000000   		.space	3
+ 366              	leds_teal_salmon:
+ 367 0344 00000000 		.word	0
+ 368 0348 00000442 		.word	1107558400
+ 369 034c 18       		.byte	24
+ 370 034d 18       		.byte	24
+ 371 034e D7       		.byte	-41
+ 372 034f D7       		.byte	-41
+ 373 0350 CC       		.byte	-52
+ 374 0351 CC       		.byte	-52
+ 375 0352 0000     		.space	2
+ 376 0354 00000000 		.word	0
+ 377 0358 00000000 		.space	4
+ 378 035c 00000442 		.word	1107558400
+ 379 0360 00008442 		.word	1115947008
+ 380 0364 18       		.byte	24
+ 381 0365 FF       		.byte	-1
+ 382 0366 D7       		.byte	-41
+ 383 0367 72       		.byte	114
+ 384 0368 CC       		.byte	-52
+ 385 0369 76       		.byte	118
+ 386 036a 0000     		.space	2
+ 387 036c 00000000 		.word	0
+ 388 0370 00000000 		.space	4
+ 389 0374 00008442 		.word	1115947008
+ 390 0378 0000C842 		.word	1120403456
+ 391 037c FF       		.byte	-1
+ 392 037d FF       		.byte	-1
+ 393 037e 72       		.byte	114
+ 394 037f 72       		.byte	114
+ 395 0380 76       		.byte	118
+ 396 0381 76       		.byte	118
+ 397 0382 0000     		.space	2
+ 398 0384 00000000 		.word	0
+ 399 0388 00000000 		.space	4
+ 400 038c 00000000 		.space	20
+ 400      00000000 
+ 400      00000000 
+ 400      00000000 
+ 400      00000000 
+ 401 03a0 01       		.byte	1
+ 402 03a1 000000   		.space	3
+ 403              		.text
+ 404              	.Letext0:
+ 405              		.file 1 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 406              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 407              		.file 3 "tmk_core/protocol/arm_atsam/clks.h"
+ 408              		.file 4 "tmk_core/common/action.h"
+ 409              		.file 5 "tmk_core/common/report.h"
+ 410              		.file 6 "tmk_core/common/host.h"
+ 411              		.file 7 "tmk_core/common/debug.h"
+ 412              		.file 8 "quantum/keycode_config.h"
+ 413              		.file 9 "quantum/keymap.h"
+ 414              		.file 10 "quantum/color.h"
+ 415              		.file 11 "quantum/rgb_matrix_types.h"
+ 416              		.file 12 "quantum/rgb_matrix.h"
+ 417              		.file 13 "tmk_core/common/action_layer.h"
+ 418              		.file 14 "tmk_core/common/timer.h"
+ 419              		.file 15 "tmk_core/common/action_util.h"
+ 420              		.file 16 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 421              		.file 17 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 422              		.file 18 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 423              		.file 19 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 424              		.file 20 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 425              		.file 21 "quantum/quantum.h"
+ 426              		.file 22 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 427              		.file 23 "tmk_core/protocol/arm_atsam/led_matrix_programs.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 led_matrix_programs.c
+/var/tmp//ccWbvijE.s:33     .rodata:0000000000000000 led_setups_count
+/var/tmp//ccWbvijE.s:39     .data:0000000000000000 led_setups
+/var/tmp//ccWbvijE.s:53     .data:000000000000002c leds_rainbow_s
+/var/tmp//ccWbvijE.s:125    .data:00000000000000d4 leds_rainbow_ns
+/var/tmp//ccWbvijE.s:197    .data:000000000000017c leds_black_with_red_stripe
+/var/tmp//ccWbvijE.s:225    .data:00000000000001c4 leds_white_with_red_stripe
+/var/tmp//ccWbvijE.s:264    .data:0000000000000224 leds_white
+/var/tmp//ccWbvijE.s:281    .data:0000000000000254 leds_blue
+/var/tmp//ccWbvijE.s:298    .data:0000000000000284 leds_green
+/var/tmp//ccWbvijE.s:315    .data:00000000000002b4 leds_red
+/var/tmp//ccWbvijE.s:332    .data:00000000000002e4 leds_off
+/var/tmp//ccWbvijE.s:349    .data:0000000000000314 leds_yellow
+/var/tmp//ccWbvijE.s:366    .data:0000000000000344 leds_teal_salmon
+/var/tmp//ccWbvijE.s:36     .data:0000000000000000 $d
+
+NO UNDEFINED SYMBOLS

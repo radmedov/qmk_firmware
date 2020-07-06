@@ -1,0 +1,433 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"luts.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	frequency_lut
+  16              		.global	vibrato_lut
+  17              		.section	.rodata.frequency_lut,"a",%progbits
+  18              		.align	1
+  21              	frequency_lut:
+  22 0000 0B8E     		.short	-29173
+  23 0002 028C     		.short	-29694
+  24 0004 008A     		.short	-30208
+  25 0006 0588     		.short	-30715
+  26 0008 1286     		.short	-31214
+  27 000a 2684     		.short	-31706
+  28 000c 4182     		.short	-32191
+  29 000e 6380     		.short	-32669
+  30 0010 8C7E     		.short	32396
+  31 0012 BB7C     		.short	31931
+  32 0014 F27A     		.short	31474
+  33 0016 2E79     		.short	31022
+  34 0018 7277     		.short	30578
+  35 001a BB75     		.short	30139
+  36 001c 0B74     		.short	29707
+  37 001e 6172     		.short	29281
+  38 0020 BD70     		.short	28861
+  39 0022 206F     		.short	28448
+  40 0024 886D     		.short	28040
+  41 0026 F66B     		.short	27638
+  42 0028 696A     		.short	27241
+  43 002a E368     		.short	26851
+  44 002c 6267     		.short	26466
+  45 002e E665     		.short	26086
+  46 0030 7064     		.short	25712
+  47 0032 0063     		.short	25344
+  48 0034 9461     		.short	24980
+  49 0036 2E60     		.short	24622
+  50 0038 CD5E     		.short	24269
+  51 003a 715D     		.short	23921
+  52 003c 1A5C     		.short	23578
+  53 003e C85A     		.short	23240
+  54 0040 7B59     		.short	22907
+  55 0042 3358     		.short	22579
+  56 0044 EF56     		.short	22255
+  57 0046 B055     		.short	21936
+  58 0048 7554     		.short	21621
+  59 004a 3F53     		.short	21311
+  60 004c 0E52     		.short	21006
+  61 004e E150     		.short	20705
+  62 0050 B84F     		.short	20408
+  63 0052 934E     		.short	20115
+  64 0054 734D     		.short	19827
+  65 0056 574C     		.short	19543
+  66 0058 3E4B     		.short	19262
+  67 005a 2A4A     		.short	18986
+  68 005c 1A49     		.short	18714
+  69 005e 0E48     		.short	18446
+  70 0060 0547     		.short	18181
+  71 0062 0146     		.short	17921
+  72 0064 0045     		.short	17664
+  73 0066 0244     		.short	17410
+  74 0068 0943     		.short	17161
+  75 006a 1342     		.short	16915
+  76 006c 2041     		.short	16672
+  77 006e 3140     		.short	16433
+  78 0070 463F     		.short	16198
+  79 0072 5D3E     		.short	15965
+  80 0074 793D     		.short	15737
+  81 0076 973C     		.short	15511
+  82 0078 B93B     		.short	15289
+  83 007a DD3A     		.short	15069
+  84 007c 053A     		.short	14853
+  85 007e 3039     		.short	14640
+  86 0080 5E38     		.short	14430
+  87 0082 9037     		.short	14224
+  88 0084 C436     		.short	14020
+  89 0086 FB35     		.short	13819
+  90 0088 3435     		.short	13620
+  91 008a 7134     		.short	13425
+  92 008c B133     		.short	13233
+  93 008e F332     		.short	13043
+  94 0090 3832     		.short	12856
+  95 0092 8031     		.short	12672
+  96 0094 CA30     		.short	12490
+  97 0096 1730     		.short	12311
+  98 0098 662F     		.short	12134
+  99 009a B82E     		.short	11960
+ 100 009c 0D2E     		.short	11789
+ 101 009e 642D     		.short	11620
+ 102 00a0 BD2C     		.short	11453
+ 103 00a2 192C     		.short	11289
+ 104 00a4 772B     		.short	11127
+ 105 00a6 D82A     		.short	10968
+ 106 00a8 3A2A     		.short	10810
+ 107 00aa 9F29     		.short	10655
+ 108 00ac 0729     		.short	10503
+ 109 00ae 7028     		.short	10352
+ 110 00b0 DC27     		.short	10204
+ 111 00b2 4927     		.short	10057
+ 112 00b4 B926     		.short	9913
+ 113 00b6 2B26     		.short	9771
+ 114 00b8 9F25     		.short	9631
+ 115 00ba 1525     		.short	9493
+ 116 00bc 8D24     		.short	9357
+ 117 00be 0724     		.short	9223
+ 118 00c0 8223     		.short	9090
+ 119 00c2 0023     		.short	8960
+ 120 00c4 8022     		.short	8832
+ 121 00c6 0122     		.short	8705
+ 122 00c8 8421     		.short	8580
+ 123 00ca 0921     		.short	8457
+ 124 00cc 9020     		.short	8336
+ 125 00ce 1820     		.short	8216
+ 126 00d0 A31F     		.short	8099
+ 127 00d2 2E1F     		.short	7982
+ 128 00d4 BC1E     		.short	7868
+ 129 00d6 4B1E     		.short	7755
+ 130 00d8 DC1D     		.short	7644
+ 131 00da 6E1D     		.short	7534
+ 132 00dc 021D     		.short	7426
+ 133 00de 981C     		.short	7320
+ 134 00e0 2F1C     		.short	7215
+ 135 00e2 C81B     		.short	7112
+ 136 00e4 621B     		.short	7010
+ 137 00e6 FD1A     		.short	6909
+ 138 00e8 9A1A     		.short	6810
+ 139 00ea 381A     		.short	6712
+ 140 00ec D819     		.short	6616
+ 141 00ee 7919     		.short	6521
+ 142 00f0 1C19     		.short	6428
+ 143 00f2 C018     		.short	6336
+ 144 00f4 6518     		.short	6245
+ 145 00f6 0B18     		.short	6155
+ 146 00f8 B317     		.short	6067
+ 147 00fa 5C17     		.short	5980
+ 148 00fc 0617     		.short	5894
+ 149 00fe B216     		.short	5810
+ 150 0100 5E16     		.short	5726
+ 151 0102 0C16     		.short	5644
+ 152 0104 BB15     		.short	5563
+ 153 0106 6C15     		.short	5484
+ 154 0108 1D15     		.short	5405
+ 155 010a CF14     		.short	5327
+ 156 010c 8314     		.short	5251
+ 157 010e 3814     		.short	5176
+ 158 0110 EE13     		.short	5102
+ 159 0112 A413     		.short	5028
+ 160 0114 5C13     		.short	4956
+ 161 0116 1513     		.short	4885
+ 162 0118 CF12     		.short	4815
+ 163 011a 8A12     		.short	4746
+ 164 011c 4612     		.short	4678
+ 165 011e 0312     		.short	4611
+ 166 0120 C111     		.short	4545
+ 167 0122 8011     		.short	4480
+ 168 0124 4011     		.short	4416
+ 169 0126 0011     		.short	4352
+ 170 0128 C210     		.short	4290
+ 171 012a 8410     		.short	4228
+ 172 012c 4810     		.short	4168
+ 173 012e 0C10     		.short	4108
+ 174 0130 D10F     		.short	4049
+ 175 0132 970F     		.short	3991
+ 176 0134 5E0F     		.short	3934
+ 177 0136 250F     		.short	3877
+ 178 0138 EE0E     		.short	3822
+ 179 013a B70E     		.short	3767
+ 180 013c 810E     		.short	3713
+ 181 013e 4C0E     		.short	3660
+ 182 0140 170E     		.short	3607
+ 183 0142 E40D     		.short	3556
+ 184 0144 B10D     		.short	3505
+ 185 0146 7E0D     		.short	3454
+ 186 0148 4D0D     		.short	3405
+ 187 014a 1C0D     		.short	3356
+ 188 014c EC0C     		.short	3308
+ 189 014e BC0C     		.short	3260
+ 190 0150 8E0C     		.short	3214
+ 191 0152 600C     		.short	3168
+ 192 0154 320C     		.short	3122
+ 193 0156 050C     		.short	3077
+ 194 0158 D90B     		.short	3033
+ 195 015a AE0B     		.short	2990
+ 196 015c 830B     		.short	2947
+ 197 015e 590B     		.short	2905
+ 198 0160 2F0B     		.short	2863
+ 199 0162 060B     		.short	2822
+ 200 0164 DD0A     		.short	2781
+ 201 0166 B60A     		.short	2742
+ 202 0168 8E0A     		.short	2702
+ 203 016a 670A     		.short	2663
+ 204 016c 410A     		.short	2625
+ 205 016e 1C0A     		.short	2588
+ 206 0170 F709     		.short	2551
+ 207 0172 D209     		.short	2514
+ 208 0174 AE09     		.short	2478
+ 209 0176 8A09     		.short	2442
+ 210 0178 6709     		.short	2407
+ 211 017a 4509     		.short	2373
+ 212 017c 2309     		.short	2339
+ 213 017e 0109     		.short	2305
+ 214 0180 E008     		.short	2272
+ 215 0182 C008     		.short	2240
+ 216 0184 A008     		.short	2208
+ 217 0186 8008     		.short	2176
+ 218 0188 6108     		.short	2145
+ 219 018a 4208     		.short	2114
+ 220 018c 2408     		.short	2084
+ 221 018e 0608     		.short	2054
+ 222 0190 E807     		.short	2024
+ 223 0192 CB07     		.short	1995
+ 224 0194 AF07     		.short	1967
+ 225 0196 9207     		.short	1938
+ 226 0198 7707     		.short	1911
+ 227 019a 5B07     		.short	1883
+ 228 019c 4007     		.short	1856
+ 229 019e 2607     		.short	1830
+ 230 01a0 0B07     		.short	1803
+ 231 01a2 F206     		.short	1778
+ 232 01a4 D806     		.short	1752
+ 233 01a6 BF06     		.short	1727
+ 234 01a8 A606     		.short	1702
+ 235 01aa 8E06     		.short	1678
+ 236 01ac 7606     		.short	1654
+ 237 01ae 5E06     		.short	1630
+ 238 01b0 4706     		.short	1607
+ 239 01b2 3006     		.short	1584
+ 240 01b4 1906     		.short	1561
+ 241 01b6 0206     		.short	1538
+ 242 01b8 EC05     		.short	1516
+ 243 01ba D705     		.short	1495
+ 244 01bc C105     		.short	1473
+ 245 01be AC05     		.short	1452
+ 246 01c0 9705     		.short	1431
+ 247 01c2 8305     		.short	1411
+ 248 01c4 6E05     		.short	1390
+ 249 01c6 5B05     		.short	1371
+ 250 01c8 4705     		.short	1351
+ 251 01ca 3305     		.short	1331
+ 252 01cc 2005     		.short	1312
+ 253 01ce 0E05     		.short	1294
+ 254 01d0 FB04     		.short	1275
+ 255 01d2 E904     		.short	1257
+ 256 01d4 D704     		.short	1239
+ 257 01d6 C504     		.short	1221
+ 258 01d8 B304     		.short	1203
+ 259 01da A204     		.short	1186
+ 260 01dc 9104     		.short	1169
+ 261 01de 8004     		.short	1152
+ 262 01e0 7004     		.short	1136
+ 263 01e2 6004     		.short	1120
+ 264 01e4 5004     		.short	1104
+ 265 01e6 4004     		.short	1088
+ 266 01e8 3004     		.short	1072
+ 267 01ea 2104     		.short	1057
+ 268 01ec 1204     		.short	1042
+ 269 01ee 0304     		.short	1027
+ 270 01f0 F403     		.short	1012
+ 271 01f2 E503     		.short	997
+ 272 01f4 D703     		.short	983
+ 273 01f6 C903     		.short	969
+ 274 01f8 BB03     		.short	955
+ 275 01fa AD03     		.short	941
+ 276 01fc A003     		.short	928
+ 277 01fe 9303     		.short	915
+ 278 0200 8503     		.short	901
+ 279 0202 7903     		.short	889
+ 280 0204 6C03     		.short	876
+ 281 0206 5F03     		.short	863
+ 282 0208 5303     		.short	851
+ 283 020a 4703     		.short	839
+ 284 020c 3B03     		.short	827
+ 285 020e 2F03     		.short	815
+ 286 0210 2303     		.short	803
+ 287 0212 1803     		.short	792
+ 288 0214 0C03     		.short	780
+ 289 0216 0103     		.short	769
+ 290 0218 F602     		.short	758
+ 291 021a EB02     		.short	747
+ 292 021c E002     		.short	736
+ 293 021e D602     		.short	726
+ 294 0220 CB02     		.short	715
+ 295 0222 C102     		.short	705
+ 296 0224 B702     		.short	695
+ 297 0226 AD02     		.short	685
+ 298 0228 A302     		.short	675
+ 299 022a 9902     		.short	665
+ 300 022c 9002     		.short	656
+ 301 022e 8702     		.short	647
+ 302 0230 7D02     		.short	637
+ 303 0232 7402     		.short	628
+ 304 0234 6B02     		.short	619
+ 305 0236 6202     		.short	610
+ 306 0238 5902     		.short	601
+ 307 023a 5102     		.short	593
+ 308 023c 4802     		.short	584
+ 309 023e 4002     		.short	576
+ 310 0240 3802     		.short	568
+ 311 0242 3002     		.short	560
+ 312 0244 2802     		.short	552
+ 313 0246 2002     		.short	544
+ 314 0248 1802     		.short	536
+ 315 024a 1002     		.short	528
+ 316 024c 0902     		.short	521
+ 317 024e 0102     		.short	513
+ 318 0250 FA01     		.short	506
+ 319 0252 F201     		.short	498
+ 320 0254 EB01     		.short	491
+ 321 0256 E401     		.short	484
+ 322 0258 DD01     		.short	477
+ 323 025a D601     		.short	470
+ 324 025c D001     		.short	464
+ 325 025e C901     		.short	457
+ 326 0260 C201     		.short	450
+ 327 0262 BC01     		.short	444
+ 328 0264 B601     		.short	438
+ 329 0266 AF01     		.short	431
+ 330 0268 A901     		.short	425
+ 331 026a A301     		.short	419
+ 332 026c 9D01     		.short	413
+ 333 026e 9701     		.short	407
+ 334 0270 9101     		.short	401
+ 335 0272 8C01     		.short	396
+ 336 0274 8601     		.short	390
+ 337 0276 8001     		.short	384
+ 338 0278 7B01     		.short	379
+ 339 027a 7501     		.short	373
+ 340 027c 7001     		.short	368
+ 341 027e 6B01     		.short	363
+ 342 0280 6501     		.short	357
+ 343 0282 6001     		.short	352
+ 344 0284 5B01     		.short	347
+ 345 0286 5601     		.short	342
+ 346 0288 5101     		.short	337
+ 347 028a 4C01     		.short	332
+ 348 028c 4801     		.short	328
+ 349 028e 4301     		.short	323
+ 350 0290 3E01     		.short	318
+ 351 0292 3A01     		.short	314
+ 352 0294 3501     		.short	309
+ 353 0296 3101     		.short	305
+ 354 0298 2C01     		.short	300
+ 355 029a 2801     		.short	296
+ 356 029c 2401     		.short	292
+ 357 029e 2001     		.short	288
+ 358 02a0 1C01     		.short	284
+ 359 02a2 1801     		.short	280
+ 360 02a4 1401     		.short	276
+ 361 02a6 1001     		.short	272
+ 362 02a8 0C01     		.short	268
+ 363 02aa 0801     		.short	264
+ 364 02ac 0401     		.short	260
+ 365 02ae 0001     		.short	256
+ 366 02b0 FD00     		.short	253
+ 367 02b2 F900     		.short	249
+ 368 02b4 F500     		.short	245
+ 369 02b6 F200     		.short	242
+ 370 02b8 EE00     		.short	238
+ 371              		.section	.rodata.vibrato_lut,"a",%progbits
+ 372              		.align	2
+ 375              	vibrato_lut:
+ 376 0000 3149803F 		.word	1065371953
+ 377 0004 5D8B803F 		.word	1065388893
+ 378 0008 F8BF803F 		.word	1065402360
+ 379 000c CAE1803F 		.word	1065411018
+ 380 0010 73ED803F 		.word	1065414003
+ 381 0014 CAE1803F 		.word	1065411018
+ 382 0018 F8BF803F 		.word	1065402360
+ 383 001c 5D8B803F 		.word	1065388893
+ 384 0020 3149803F 		.word	1065371953
+ 385 0024 0000803F 		.word	1065353216
+ 386 0028 F16D7F3F 		.word	1065315825
+ 387 002c 75EA7E3F 		.word	1065282165
+ 388 0030 4C827E3F 		.word	1065255500
+ 389 0034 833F7E3F 		.word	1065238403
+ 390 0038 84287E3F 		.word	1065232516
+ 391 003c 833F7E3F 		.word	1065238403
+ 392 0040 4C827E3F 		.word	1065255500
+ 393 0044 75EA7E3F 		.word	1065282165
+ 394 0048 F16D7F3F 		.word	1065315825
+ 395 004c 0000803F 		.word	1065353216
+ 396              		.text
+ 397              	.Letext0:
+ 398              		.file 1 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 399              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 400              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 401              		.file 4 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 402              		.file 5 "./lib/chibios/os/rt/include/chsystypes.h"
+ 403              		.file 6 "./lib/chibios/os/rt/include/chschd.h"
+ 404              		.file 7 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 405              		.file 8 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 406              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 407              		.file 10 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 408              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 409              		.file 12 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 410              		.file 13 "./lib/chibios/os/rt/include/chtm.h"
+ 411              		.file 14 "./lib/chibios/os/rt/include/chsem.h"
+ 412              		.file 15 "./lib/chibios/os/rt/include/chmtx.h"
+ 413              		.file 16 "./lib/chibios/os/rt/include/chsys.h"
+ 414              		.file 17 "./lib/chibios/os/rt/include/chregistry.h"
+ 415              		.file 18 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 416              		.file 19 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 417              		.file 20 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 418              		.file 21 "./lib/chibios/os/hal/include/hal_dac.h"
+ 419              		.file 22 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 420              		.file 23 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 421              		.file 24 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 422              		.file 25 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 423              		.file 26 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 424              		.file 27 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 425              		.file 28 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 426              		.file 29 "./lib/chibios/os/hal/include/hal_usb.h"
+ 427              		.file 30 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 428              		.file 31 "quantum/audio/luts.h"
+ 429              		.file 32 "quantum/audio/luts.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 luts.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccmyg14Y.s:21     .rodata.frequency_lut:0000000000000000 frequency_lut
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccmyg14Y.s:375    .rodata.vibrato_lut:0000000000000000 vibrato_lut
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccmyg14Y.s:18     .rodata.frequency_lut:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccmyg14Y.s:372    .rodata.vibrato_lut:0000000000000000 $d
+
+NO UNDEFINED SYMBOLS

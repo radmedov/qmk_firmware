@@ -1,0 +1,1748 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"hal_pwm_lld.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.pwm_lld_init,"ax",%progbits
+  16              		.align	1
+  17              		.global	pwm_lld_init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	pwm_lld_init:
+  24              	.LFB281:
+  25              		.file 1 "lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c"
+   1:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*
+   2:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
+   3:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+   4:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     Licensed under the Apache License, Version 2.0 (the "License");
+   5:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     you may not use this file except in compliance with the License.
+   6:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     You may obtain a copy of the License at
+   7:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+   8:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****         http://www.apache.org/licenses/LICENSE-2.0
+   9:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  10:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     Unless required by applicable law or agreed to in writing, software
+  11:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     distributed under the License is distributed on an "AS IS" BASIS,
+  12:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  13:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     See the License for the specific language governing permissions and
+  14:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     limitations under the License.
+  15:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** */
+  16:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  17:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  18:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @file    TIMv1/hal_pwm_lld.c
+  19:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   STM32 PWM subsystem low level driver header.
+  20:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+  21:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @addtogroup PWM
+  22:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @{
+  23:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  24:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  25:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #include "hal.h"
+  26:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  27:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if HAL_USE_PWM || defined(__DOXYGEN__)
+  28:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  29:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  30:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver local definitions.                                                 */
+  31:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  32:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  33:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  34:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver exported variables.                                                */
+  35:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  36:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  37:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  38:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD1 driver identifier.
+  39:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD1 allocates the complex timer TIM1 when enabled.
+  40:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  41:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 || defined(__DOXYGEN__)
+  42:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD1;
+  43:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  44:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  45:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  46:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD2 driver identifier.
+  47:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD2 allocates the timer TIM2 when enabled.
+  48:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  49:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM2 || defined(__DOXYGEN__)
+  50:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD2;
+  51:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  52:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  53:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  54:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD3 driver identifier.
+  55:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD3 allocates the timer TIM3 when enabled.
+  56:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  57:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM3 || defined(__DOXYGEN__)
+  58:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD3;
+  59:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  60:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  61:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  62:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD4 driver identifier.
+  63:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD4 allocates the timer TIM4 when enabled.
+  64:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  65:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM4 || defined(__DOXYGEN__)
+  66:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD4;
+  67:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  68:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  69:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  70:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD5 driver identifier.
+  71:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD5 allocates the timer TIM5 when enabled.
+  72:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  73:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM5 || defined(__DOXYGEN__)
+  74:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD5;
+  75:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  76:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  77:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  78:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD8 driver identifier.
+  79:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD8 allocates the timer TIM8 when enabled.
+  80:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  81:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM8 || defined(__DOXYGEN__)
+  82:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD8;
+  83:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  84:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  85:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+  86:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   PWMD9 driver identifier.
+  87:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The driver PWMD9 allocates the timer TIM9 when enabled.
+  88:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+  89:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM9 || defined(__DOXYGEN__)
+  90:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** PWMDriver PWMD9;
+  91:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+  92:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  93:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  94:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver local variables and types.                                         */
+  95:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  96:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+  97:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+  98:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver local functions.                                                   */
+  99:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+ 100:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 101:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+ 102:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver interrupt handlers.                                                */
+ 103:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+ 104:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 105:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 || defined(__DOXYGEN__)
+ 106:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM1_SUPPRESS_ISR)
+ 107:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM1_UP_HANDLER)
+ 108:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM1_UP_HANDLER not defined"
+ 109:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 110:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 111:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM1 update interrupt handler.
+ 112:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    It is assumed that this interrupt is only activated if the callback
+ 113:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          pointer is not equal to @p NULL in order to not perform an extra
+ 114:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          check in a potentially critical interrupt handler.
+ 115:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 116:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 117:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 118:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM1_UP_HANDLER) {
+ 119:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 120:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 121:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 122:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD1);
+ 123:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 124:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 125:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 126:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 127:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM1_CC_HANDLER)
+ 128:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM1_CC_HANDLER not defined"
+ 129:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 130:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 131:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM1 compare interrupt handler.
+ 132:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    It is assumed that the various sources are only activated if the
+ 133:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          associated callback pointer is not equal to @p NULL in order to not
+ 134:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          perform an extra check in a potentially critical interrupt handler.
+ 135:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 136:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 137:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 138:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM1_CC_HANDLER) {
+ 139:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 140:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 141:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 142:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD1);
+ 143:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 144:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 145:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 146:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM1_SUPPRESS_ISR) */
+ 147:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM1 */
+ 148:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 149:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM2 || defined(__DOXYGEN__)
+ 150:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM2_SUPPRESS_ISR)
+ 151:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM2_HANDLER)
+ 152:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM2_HANDLER not defined"
+ 153:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 154:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 155:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM2 interrupt handler.
+ 156:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 157:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 158:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 159:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM2_HANDLER) {
+ 160:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 161:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 162:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 163:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD2);
+ 164:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 165:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 166:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 167:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM2_SUPPRESS_ISR) */
+ 168:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM2 */
+ 169:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 170:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM3 || defined(__DOXYGEN__)
+ 171:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM3_SUPPRESS_ISR)
+ 172:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM3_HANDLER)
+ 173:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM3_HANDLER not defined"
+ 174:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 175:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 176:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM3 interrupt handler.
+ 177:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 178:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 179:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 180:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM3_HANDLER) {
+ 181:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 182:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 183:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 184:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD3);
+ 185:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 186:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 187:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 188:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM3_SUPPRESS_ISR) */
+ 189:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM3 */
+ 190:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 191:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM4 || defined(__DOXYGEN__)
+ 192:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_SUPPRESS_ISR)
+ 193:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_HANDLER)
+ 194:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM4_HANDLER not defined"
+ 195:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 196:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 197:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM4 interrupt handler.
+ 198:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 199:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 200:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 201:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM4_HANDLER) {
+ 202:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 203:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 204:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 205:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD4);
+ 206:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 207:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 208:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 209:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM4_SUPPRESS_ISR) */
+ 210:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM4 */
+ 211:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 212:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM5 || defined(__DOXYGEN__)
+ 213:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM5_SUPPRESS_ISR)
+ 214:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM5_HANDLER)
+ 215:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM5_HANDLER not defined"
+ 216:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 217:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 218:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM5 interrupt handler.
+ 219:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 220:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 221:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 222:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM5_HANDLER) {
+ 223:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 224:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 225:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 226:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD5);
+ 227:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 228:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 229:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 230:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM5_SUPPRESS_ISR) */
+ 231:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM5 */
+ 232:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 233:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM8 || defined(__DOXYGEN__)
+ 234:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM8_SUPPRESS_ISR)
+ 235:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM8_UP_HANDLER)
+ 236:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM8_UP_HANDLER not defined"
+ 237:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 238:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 239:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM8 update interrupt handler.
+ 240:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    It is assumed that this interrupt is only activated if the callback
+ 241:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          pointer is not equal to @p NULL in order to not perform an extra
+ 242:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          check in a potentially critical interrupt handler.
+ 243:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 244:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 245:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 246:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM8_UP_HANDLER) {
+ 247:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 248:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 249:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 250:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD8);
+ 251:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 252:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 253:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 254:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 255:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM8_CC_HANDLER)
+ 256:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM8_CC_HANDLER not defined"
+ 257:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 258:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 259:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM8 compare interrupt handler.
+ 260:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    It is assumed that the various sources are only activated if the
+ 261:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          associated callback pointer is not equal to @p NULL in order to not
+ 262:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          perform an extra check in a potentially critical interrupt handler.
+ 263:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 264:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 265:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 266:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM8_CC_HANDLER) {
+ 267:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 268:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 269:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 270:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD8);
+ 271:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 272:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 273:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 274:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM8_SUPPRESS_ISR) */
+ 275:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM8 */
+ 276:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 277:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM9 || defined(__DOXYGEN__)
+ 278:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM9_SUPPRESS_ISR)
+ 279:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM9_HANDLER)
+ 280:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #error "STM32_TIM9_HANDLER not defined"
+ 281:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 282:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 283:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   TIM9 interrupt handler.
+ 284:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 285:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @isr
+ 286:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 287:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** OSAL_IRQ_HANDLER(STM32_TIM9_HANDLER) {
+ 288:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 289:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_PROLOGUE();
+ 290:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 291:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwm_lld_serve_interrupt(&PWMD9);
+ 292:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 293:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   OSAL_IRQ_EPILOGUE();
+ 294:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 295:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM9_SUPPRESS_ISR) */
+ 296:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_TIM9 */
+ 297:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 298:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+ 299:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /* Driver exported functions.                                                */
+ 300:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /*===========================================================================*/
+ 301:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 302:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 303:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Low level PWM driver initialization.
+ 304:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 305:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 306:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 307:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_init(void) {
+  26              		.loc 1 307 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 38B5     		push	{r3, r4, r5, lr}
+  31              		.cfi_def_cfa_offset 16
+  32              		.cfi_offset 3, -16
+  33              		.cfi_offset 4, -12
+  34              		.cfi_offset 5, -8
+  35              		.cfi_offset 14, -4
+ 308:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 309:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1
+ 310:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 311:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD1);
+ 312:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD1.channels = STM32_TIM1_CHANNELS;
+ 313:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD1.tim = STM32_TIM1;
+ 314:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 315:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 316:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM2
+ 317:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 318:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD2);
+ 319:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD2.channels = STM32_TIM2_CHANNELS;
+ 320:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD2.tim = STM32_TIM2;
+ 321:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 322:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 323:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM3
+ 324:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 325:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD3);
+  36              		.loc 1 325 0
+  37 0002 084C     		ldr	r4, .L2
+  38 0004 2046     		mov	r0, r4
+  39 0006 FFF7FEFF 		bl	pwmObjectInit
+  40              	.LVL0:
+ 326:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD3.channels = STM32_TIM3_CHANNELS;
+  41              		.loc 1 326 0
+  42 000a 0425     		movs	r5, #4
+ 327:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD3.tim = STM32_TIM3;
+  43              		.loc 1 327 0
+  44 000c 064B     		ldr	r3, .L2+4
+  45 000e A361     		str	r3, [r4, #24]
+ 326:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD3.channels = STM32_TIM3_CHANNELS;
+  46              		.loc 1 326 0
+  47 0010 2574     		strb	r5, [r4, #16]
+ 328:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 329:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 330:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM4
+ 331:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 332:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD4);
+  48              		.loc 1 332 0
+  49 0012 064C     		ldr	r4, .L2+8
+  50 0014 2046     		mov	r0, r4
+  51 0016 FFF7FEFF 		bl	pwmObjectInit
+  52              	.LVL1:
+ 333:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD4.channels = STM32_TIM4_CHANNELS;
+ 334:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD4.tim = STM32_TIM4;
+  53              		.loc 1 334 0
+  54 001a 054B     		ldr	r3, .L2+12
+ 333:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD4.channels = STM32_TIM4_CHANNELS;
+  55              		.loc 1 333 0
+  56 001c 2574     		strb	r5, [r4, #16]
+  57              		.loc 1 334 0
+  58 001e A361     		str	r3, [r4, #24]
+ 335:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 336:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 337:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM5
+ 338:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 339:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD5);
+ 340:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD5.channels = STM32_TIM5_CHANNELS;
+ 341:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD5.tim = STM32_TIM5;
+ 342:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 343:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 344:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM8
+ 345:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 346:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD8);
+ 347:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD8.channels = STM32_TIM8_CHANNELS;
+ 348:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD8.tim = STM32_TIM8;
+ 349:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 350:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 351:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM9
+ 352:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Driver initialization.*/
+ 353:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmObjectInit(&PWMD9);
+ 354:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD9.channels = STM32_TIM9_CHANNELS;
+ 355:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   PWMD9.tim = STM32_TIM9;
+ 356:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 357:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+  59              		.loc 1 357 0
+  60 0020 38BD     		pop	{r3, r4, r5, pc}
+  61              	.L3:
+  62 0022 00BF     		.align	2
+  63              	.L2:
+  64 0024 00000000 		.word	.LANCHOR0
+  65 0028 00040040 		.word	1073742848
+  66 002c 00000000 		.word	.LANCHOR1
+  67 0030 00080040 		.word	1073743872
+  68              		.cfi_endproc
+  69              	.LFE281:
+  71              		.section	.text.pwm_lld_start,"ax",%progbits
+  72              		.align	1
+  73              		.global	pwm_lld_start
+  74              		.syntax unified
+  75              		.thumb
+  76              		.thumb_func
+  77              		.fpu softvfp
+  79              	pwm_lld_start:
+  80              	.LFB282:
+ 358:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 359:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 360:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Configures and activates the PWM peripheral.
+ 361:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    Starting a driver that is already in the @p PWM_READY state
+ 362:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          disables all the active channels.
+ 363:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 364:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 365:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 366:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 367:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 368:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_start(PWMDriver *pwmp) {
+  81              		.loc 1 368 0
+  82              		.cfi_startproc
+  83              		@ args = 0, pretend = 0, frame = 0
+  84              		@ frame_needed = 0, uses_anonymous_args = 0
+  85              	.LVL2:
+ 369:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t psc;
+ 370:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t ccer;
+ 371:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 372:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (pwmp->state == PWM_STOP) {
+  86              		.loc 1 372 0
+  87 0000 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+  88 0002 012B     		cmp	r3, #1
+ 368:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t psc;
+  89              		.loc 1 368 0
+  90 0004 10B5     		push	{r4, lr}
+  91              		.cfi_def_cfa_offset 8
+  92              		.cfi_offset 4, -8
+  93              		.cfi_offset 14, -4
+ 368:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t psc;
+  94              		.loc 1 368 0
+  95 0006 0446     		mov	r4, r0
+  96              		.loc 1 372 0
+  97 0008 71D1     		bne	.L5
+ 373:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     /* Clock activation and timer reset.*/
+ 374:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1
+ 375:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD1 == pwmp) {
+ 376:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM1(FALSE);
+ 377:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM1();
+ 378:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM1_SUPPRESS_ISR)
+ 379:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM1_UP_NUMBER, STM32_PWM_TIM1_IRQ_PRIORITY);
+ 380:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM1_CC_NUMBER, STM32_PWM_TIM1_IRQ_PRIORITY);
+ 381:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 382:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM1CLK)
+ 383:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM1CLK;
+ 384:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 385:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK2;
+ 386:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 387:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 388:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 389:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 390:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM2
+ 391:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD2 == pwmp) {
+ 392:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM2(FALSE);
+ 393:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM2();
+ 394:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM2_SUPPRESS_ISR)
+ 395:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM2_NUMBER, STM32_PWM_TIM2_IRQ_PRIORITY);
+ 396:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 397:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM2CLK)
+ 398:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM2CLK;
+ 399:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 400:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK1;
+ 401:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 402:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 403:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 404:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 405:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM3
+ 406:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD3 == pwmp) {
+  98              		.loc 1 406 0
+  99 000a 424B     		ldr	r3, .L35
+ 100 000c 9842     		cmp	r0, r3
+ 101 000e 5DD1     		bne	.L6
+ 407:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM3(FALSE);
+ 102              		.loc 1 407 0
+ 103 0010 414B     		ldr	r3, .L35+4
+ 104 0012 DA69     		ldr	r2, [r3, #28]
+ 105 0014 42F00202 		orr	r2, r2, #2
+ 106 0018 DA61     		str	r2, [r3, #28]
+ 408:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM3();
+ 107              		.loc 1 408 0
+ 108 001a 1A69     		ldr	r2, [r3, #16]
+ 109 001c 42F00202 		orr	r2, r2, #2
+ 110 0020 1A61     		str	r2, [r3, #16]
+ 111 0022 0022     		movs	r2, #0
+ 112 0024 1A61     		str	r2, [r3, #16]
+ 409:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM3_SUPPRESS_ISR)
+ 410:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM3_NUMBER, STM32_PWM_TIM3_IRQ_PRIORITY);
+ 113              		.loc 1 410 0
+ 114 0026 0721     		movs	r1, #7
+ 115 0028 1D20     		movs	r0, #29
+ 116              	.LVL3:
+ 117              	.L34:
+ 411:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 412:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM3CLK)
+ 413:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM3CLK;
+ 414:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 415:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK1;
+ 416:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 417:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 418:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 419:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 420:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM4
+ 421:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD4 == pwmp) {
+ 422:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM4(FALSE);
+ 423:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM4();
+ 424:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_SUPPRESS_ISR)
+ 425:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM4_NUMBER, STM32_PWM_TIM4_IRQ_PRIORITY);
+ 118              		.loc 1 425 0
+ 119 002a FFF7FEFF 		bl	nvicEnableVector
+ 120              	.LVL4:
+ 426:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 427:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM4CLK)
+ 428:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM4CLK;
+ 429:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 430:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK1;
+ 121              		.loc 1 430 0
+ 122 002e 3B4B     		ldr	r3, .L35+8
+ 123 0030 6361     		str	r3, [r4, #20]
+ 124              	.L7:
+ 431:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 432:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 433:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 434:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 435:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM5
+ 436:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD5 == pwmp) {
+ 437:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM5(FALSE);
+ 438:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM5();
+ 439:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM5_SUPPRESS_ISR)
+ 440:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM5_NUMBER, STM32_PWM_TIM5_IRQ_PRIORITY);
+ 441:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 442:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM5CLK)
+ 443:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM5CLK;
+ 444:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 445:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK1;
+ 446:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 447:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 448:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 449:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 450:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM8
+ 451:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD8 == pwmp) {
+ 452:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM8(FALSE);
+ 453:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM8();
+ 454:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM8_SUPPRESS_ISR)
+ 455:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM8_UP_NUMBER, STM32_PWM_TIM8_IRQ_PRIORITY);
+ 456:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM8_CC_NUMBER, STM32_PWM_TIM8_IRQ_PRIORITY);
+ 457:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 458:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM8CLK)
+ 459:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM8CLK;
+ 460:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 461:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK2;
+ 462:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 463:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 464:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 465:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 466:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM9
+ 467:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD9 == pwmp) {
+ 468:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM9(FALSE);
+ 469:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM9();
+ 470:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM9_SUPPRESS_ISR)
+ 471:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicEnableVector(STM32_TIM9_NUMBER, STM32_PWM_TIM9_IRQ_PRIORITY);
+ 472:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 473:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if defined(STM32_TIM9CLK)
+ 474:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIM9CLK;
+ 475:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 476:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->clock = STM32_TIMCLK2;
+ 477:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 478:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 479:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 480:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 481:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     /* All channels configured in PWM1 mode with preload enabled and will
+ 482:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****        stay that way until the driver is stopped.*/
+ 483:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCMR1 = STM32_TIM_CCMR1_OC1M(6) | STM32_TIM_CCMR1_OC1PE |
+ 125              		.loc 1 483 0
+ 126 0032 A369     		ldr	r3, [r4, #24]
+ 127 0034 46F66802 		movw	r2, #26728
+ 128 0038 9A61     		str	r2, [r3, #24]
+ 484:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                        STM32_TIM_CCMR1_OC2M(6) | STM32_TIM_CCMR1_OC2PE;
+ 485:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCMR2 = STM32_TIM_CCMR2_OC3M(6) | STM32_TIM_CCMR2_OC3PE |
+ 129              		.loc 1 485 0
+ 130 003a DA61     		str	r2, [r3, #28]
+ 486:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                        STM32_TIM_CCMR2_OC4M(6) | STM32_TIM_CCMR2_OC4PE;
+ 487:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS > 4
+ 488:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCMR3 = STM32_TIM_CCMR3_OC5M(6) | STM32_TIM_CCMR3_OC5PE |
+ 131              		.loc 1 488 0
+ 132 003c 02F18072 		add	r2, r2, #16777216
+ 133 0040 02F58032 		add	r2, r2, #65536
+ 134 0044 5A65     		str	r2, [r3, #84]
+ 135              	.L8:
+ 489:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                        STM32_TIM_CCMR3_OC6M(6) | STM32_TIM_CCMR3_OC6PE;
+ 490:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 491:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 492:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   else {
+ 493:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     /* Driver re-configuration scenario, it must be stopped first.*/
+ 494:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CR1    = 0;                  /* Timer disabled.              */
+ 495:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[0] = 0;                  /* Comparator 1 disabled.       */
+ 496:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[1] = 0;                  /* Comparator 2 disabled.       */
+ 497:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[2] = 0;                  /* Comparator 3 disabled.       */
+ 498:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[3] = 0;                  /* Comparator 4 disabled.       */
+ 499:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS > 4
+ 500:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (pwmp->channels > 4) {
+ 501:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->tim->CCXR[0] = 0;               /* Comparator 5 disabled.       */
+ 502:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->tim->CCXR[1] = 0;               /* Comparator 6 disabled.       */
+ 503:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 504:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 505:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CNT  = 0;                    /* Counter reset to zero.       */
+ 506:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 507:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 508:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Timer configuration.*/
+ 509:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   psc = (pwmp->clock / pwmp->config->frequency) - 1;
+ 136              		.loc 1 509 0
+ 137 0046 6168     		ldr	r1, [r4, #4]
+ 138 0048 6369     		ldr	r3, [r4, #20]
+ 139 004a 0A68     		ldr	r2, [r1]
+ 140 004c B3FBF2F3 		udiv	r3, r3, r2
+ 510:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   osalDbgAssert((psc <= 0xFFFF) &&
+ 511:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                 ((psc + 1) * pwmp->config->frequency) == pwmp->clock,
+ 512:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                 "invalid frequency");
+ 513:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->PSC  = psc;
+ 141              		.loc 1 513 0
+ 142 0050 A269     		ldr	r2, [r4, #24]
+ 509:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   osalDbgAssert((psc <= 0xFFFF) &&
+ 143              		.loc 1 509 0
+ 144 0052 013B     		subs	r3, r3, #1
+ 145              	.LVL5:
+ 146              		.loc 1 513 0
+ 147 0054 9362     		str	r3, [r2, #40]
+ 514:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->ARR  = pwmp->period - 1;
+ 148              		.loc 1 514 0
+ 149 0056 A368     		ldr	r3, [r4, #8]
+ 150              	.LVL6:
+ 151 0058 013B     		subs	r3, r3, #1
+ 152 005a D362     		str	r3, [r2, #44]
+ 153              	.LVL7:
+ 515:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->CR2  = pwmp->config->cr2;
+ 154              		.loc 1 515 0
+ 155 005c CB6B     		ldr	r3, [r1, #60]
+ 156 005e 5360     		str	r3, [r2, #4]
+ 157              	.LVL8:
+ 516:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 517:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Output enables and polarities setup.*/
+ 518:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   ccer = 0;
+ 519:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   switch (pwmp->config->channels[0].mode & PWM_OUTPUT_MASK) {
+ 158              		.loc 1 519 0
+ 159 0060 CB68     		ldr	r3, [r1, #12]
+ 160 0062 03F00F03 		and	r3, r3, #15
+ 161 0066 012B     		cmp	r3, #1
+ 162 0068 4FD0     		beq	.L23
+ 163 006a 022B     		cmp	r3, #2
+ 164 006c 4FD1     		bne	.L33
+ 165              	.L11:
+ 166              	.LVL9:
+ 520:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_LOW:
+ 521:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC1P;
+ 522:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_HIGH:
+ 523:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC1E;
+ 167              		.loc 1 523 0
+ 168 006e 43F00103 		orr	r3, r3, #1
+ 169              	.LVL10:
+ 170              	.L10:
+ 524:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   default:
+ 525:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ;
+ 526:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 527:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   switch (pwmp->config->channels[1].mode & PWM_OUTPUT_MASK) {
+ 171              		.loc 1 527 0
+ 172 0072 4869     		ldr	r0, [r1, #20]
+ 173 0074 00F00F00 		and	r0, r0, #15
+ 174 0078 0128     		cmp	r0, #1
+ 175 007a 03D0     		beq	.L14
+ 176 007c 0228     		cmp	r0, #2
+ 177 007e 03D1     		bne	.L13
+ 528:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_LOW:
+ 529:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC2P;
+ 178              		.loc 1 529 0
+ 179 0080 43F02003 		orr	r3, r3, #32
+ 180              	.LVL11:
+ 181              	.L14:
+ 530:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_HIGH:
+ 531:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC2E;
+ 182              		.loc 1 531 0
+ 183 0084 43F01003 		orr	r3, r3, #16
+ 184              	.LVL12:
+ 185              	.L13:
+ 532:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   default:
+ 533:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ;
+ 534:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 535:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   switch (pwmp->config->channels[2].mode & PWM_OUTPUT_MASK) {
+ 186              		.loc 1 535 0
+ 187 0088 C869     		ldr	r0, [r1, #28]
+ 188 008a 00F00F00 		and	r0, r0, #15
+ 189 008e 0128     		cmp	r0, #1
+ 190 0090 03D0     		beq	.L17
+ 191 0092 0228     		cmp	r0, #2
+ 192 0094 03D1     		bne	.L16
+ 536:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_LOW:
+ 537:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC3P;
+ 193              		.loc 1 537 0
+ 194 0096 43F40073 		orr	r3, r3, #512
+ 195              	.LVL13:
+ 196              	.L17:
+ 538:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_HIGH:
+ 539:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC3E;
+ 197              		.loc 1 539 0
+ 198 009a 43F48073 		orr	r3, r3, #256
+ 199              	.LVL14:
+ 200              	.L16:
+ 540:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   default:
+ 541:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ;
+ 542:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 543:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   switch (pwmp->config->channels[3].mode & PWM_OUTPUT_MASK) {
+ 201              		.loc 1 543 0
+ 202 009e 486A     		ldr	r0, [r1, #36]
+ 203 00a0 00F00F00 		and	r0, r0, #15
+ 204 00a4 0128     		cmp	r0, #1
+ 205 00a6 03D0     		beq	.L20
+ 206 00a8 0228     		cmp	r0, #2
+ 207 00aa 03D1     		bne	.L19
+ 544:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_LOW:
+ 545:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC4P;
+ 208              		.loc 1 545 0
+ 209 00ac 43F40053 		orr	r3, r3, #8192
+ 210              	.LVL15:
+ 211              	.L20:
+ 546:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   case PWM_OUTPUT_ACTIVE_HIGH:
+ 547:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ccer |= STM32_TIM_CCER_CC4E;
+ 212              		.loc 1 547 0
+ 213 00b0 43F48053 		orr	r3, r3, #4096
+ 214              	.LVL16:
+ 215              	.L19:
+ 548:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   default:
+ 549:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     ;
+ 550:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 551:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_ADVANCED
+ 552:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 && !STM32_PWM_USE_TIM8
+ 553:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (&PWMD1 == pwmp) {
+ 554:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 555:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !STM32_PWM_USE_TIM1 && STM32_PWM_USE_TIM8
+ 556:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (&PWMD8 == pwmp) {
+ 557:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 558:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 && STM32_PWM_USE_TIM8
+ 559:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if ((&PWMD1 == pwmp) || (&PWMD8 == pwmp)) {
+ 560:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 561:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     switch (pwmp->config->channels[0].mode & PWM_COMPLEMENTARY_OUTPUT_MASK) {
+ 562:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW:
+ 563:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC1NP;
+ 564:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_HIGH:
+ 565:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC1NE;
+ 566:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     default:
+ 567:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ;
+ 568:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 569:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     switch (pwmp->config->channels[1].mode & PWM_COMPLEMENTARY_OUTPUT_MASK) {
+ 570:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW:
+ 571:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC2NP;
+ 572:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_HIGH:
+ 573:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC2NE;
+ 574:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     default:
+ 575:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ;
+ 576:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 577:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     switch (pwmp->config->channels[2].mode & PWM_COMPLEMENTARY_OUTPUT_MASK) {
+ 578:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW:
+ 579:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC3NP;
+ 580:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     case PWM_COMPLEMENTARY_OUTPUT_ACTIVE_HIGH:
+ 581:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ccer |= STM32_TIM_CCER_CC3NE;
+ 582:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     default:
+ 583:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       ;
+ 584:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 585:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 586:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* STM32_PWM_USE_ADVANCED*/
+ 587:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 588:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->CCER  = ccer;
+ 216              		.loc 1 588 0
+ 217 00b4 1362     		str	r3, [r2, #32]
+ 589:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->EGR   = STM32_TIM_EGR_UG;      /* Update event.                */
+ 218              		.loc 1 589 0
+ 219 00b6 0123     		movs	r3, #1
+ 220              	.LVL17:
+ 221 00b8 5361     		str	r3, [r2, #20]
+ 222              	.LVL18:
+ 590:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->SR    = 0;                     /* Clear pending IRQs.          */
+ 223              		.loc 1 590 0
+ 224 00ba 0023     		movs	r3, #0
+ 225 00bc 1361     		str	r3, [r2, #16]
+ 591:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->DIER  = pwmp->config->dier &   /* DMA-related DIER settings.   */
+ 226              		.loc 1 591 0
+ 227 00be 0B6C     		ldr	r3, [r1, #64]
+ 228 00c0 23F0FF03 		bic	r3, r3, #255
+ 229 00c4 D360     		str	r3, [r2, #12]
+ 592:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                      ~STM32_TIM_DIER_IRQ_MASK;
+ 593:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 || STM32_PWM_USE_TIM8
+ 594:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_ADVANCED
+ 595:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->BDTR  = pwmp->config->bdtr | STM32_TIM_BDTR_MOE;
+ 596:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 597:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->BDTR  = STM32_TIM_BDTR_MOE;
+ 598:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 599:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 600:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Timer configured and started.*/
+ 601:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->CR1   = STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS |
+ 230              		.loc 1 601 0
+ 231 00c6 8523     		movs	r3, #133
+ 232 00c8 1360     		str	r3, [r2]
+ 602:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                      STM32_TIM_CR1_CEN;
+ 603:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 233              		.loc 1 603 0
+ 234 00ca 10BD     		pop	{r4, pc}
+ 235              	.LVL19:
+ 236              	.L6:
+ 421:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccEnableTIM4(FALSE);
+ 237              		.loc 1 421 0
+ 238 00cc 144B     		ldr	r3, .L35+12
+ 239 00ce 9842     		cmp	r0, r3
+ 240 00d0 AFD1     		bne	.L7
+ 422:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccResetTIM4();
+ 241              		.loc 1 422 0
+ 242 00d2 114B     		ldr	r3, .L35+4
+ 243 00d4 DA69     		ldr	r2, [r3, #28]
+ 244 00d6 42F00402 		orr	r2, r2, #4
+ 245 00da DA61     		str	r2, [r3, #28]
+ 423:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_SUPPRESS_ISR)
+ 246              		.loc 1 423 0
+ 247 00dc 1A69     		ldr	r2, [r3, #16]
+ 248 00de 42F00402 		orr	r2, r2, #4
+ 249 00e2 1A61     		str	r2, [r3, #16]
+ 250 00e4 0022     		movs	r2, #0
+ 251 00e6 1A61     		str	r2, [r3, #16]
+ 425:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 252              		.loc 1 425 0
+ 253 00e8 0721     		movs	r1, #7
+ 254 00ea 1E20     		movs	r0, #30
+ 255              	.LVL20:
+ 256 00ec 9DE7     		b	.L34
+ 257              	.LVL21:
+ 258              	.L5:
+ 494:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[0] = 0;                  /* Comparator 1 disabled.       */
+ 259              		.loc 1 494 0
+ 260 00ee 8269     		ldr	r2, [r0, #24]
+ 261 00f0 0023     		movs	r3, #0
+ 262 00f2 1360     		str	r3, [r2]
+ 495:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[1] = 0;                  /* Comparator 2 disabled.       */
+ 263              		.loc 1 495 0
+ 264 00f4 5363     		str	r3, [r2, #52]
+ 496:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[2] = 0;                  /* Comparator 3 disabled.       */
+ 265              		.loc 1 496 0
+ 266 00f6 9363     		str	r3, [r2, #56]
+ 497:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[3] = 0;                  /* Comparator 4 disabled.       */
+ 267              		.loc 1 497 0
+ 268 00f8 D363     		str	r3, [r2, #60]
+ 498:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS > 4
+ 269              		.loc 1 498 0
+ 270 00fa 1364     		str	r3, [r2, #64]
+ 500:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->tim->CCXR[0] = 0;               /* Comparator 5 disabled.       */
+ 271              		.loc 1 500 0
+ 272 00fc 017C     		ldrb	r1, [r0, #16]	@ zero_extendqisi2
+ 273 00fe 0429     		cmp	r1, #4
+ 501:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       pwmp->tim->CCXR[1] = 0;               /* Comparator 6 disabled.       */
+ 274              		.loc 1 501 0
+ 275 0100 84BF     		itt	hi
+ 276 0102 9365     		strhi	r3, [r2, #88]
+ 502:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 277              		.loc 1 502 0
+ 278 0104 D365     		strhi	r3, [r2, #92]
+ 505:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 279              		.loc 1 505 0
+ 280 0106 5362     		str	r3, [r2, #36]
+ 281 0108 9DE7     		b	.L8
+ 282              	.LVL22:
+ 283              	.L23:
+ 518:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   switch (pwmp->config->channels[0].mode & PWM_OUTPUT_MASK) {
+ 284              		.loc 1 518 0
+ 285 010a 0023     		movs	r3, #0
+ 286 010c AFE7     		b	.L11
+ 287              	.L33:
+ 288 010e 0023     		movs	r3, #0
+ 289 0110 AFE7     		b	.L10
+ 290              	.L36:
+ 291 0112 00BF     		.align	2
+ 292              	.L35:
+ 293 0114 00000000 		.word	.LANCHOR0
+ 294 0118 00100240 		.word	1073876992
+ 295 011c 00A24A04 		.word	72000000
+ 296 0120 00000000 		.word	.LANCHOR1
+ 297              		.cfi_endproc
+ 298              	.LFE282:
+ 300              		.section	.text.pwm_lld_stop,"ax",%progbits
+ 301              		.align	1
+ 302              		.global	pwm_lld_stop
+ 303              		.syntax unified
+ 304              		.thumb
+ 305              		.thumb_func
+ 306              		.fpu softvfp
+ 308              	pwm_lld_stop:
+ 309              	.LFB283:
+ 604:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 605:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 606:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Deactivates the PWM peripheral.
+ 607:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 608:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 609:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 610:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 611:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 612:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_stop(PWMDriver *pwmp) {
+ 310              		.loc 1 612 0
+ 311              		.cfi_startproc
+ 312              		@ args = 0, pretend = 0, frame = 0
+ 313              		@ frame_needed = 0, uses_anonymous_args = 0
+ 314              	.LVL23:
+ 315 0000 08B5     		push	{r3, lr}
+ 316              		.cfi_def_cfa_offset 8
+ 317              		.cfi_offset 3, -8
+ 318              		.cfi_offset 14, -4
+ 613:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 614:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* If in ready state then disables the PWM clock.*/
+ 615:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (pwmp->state == PWM_READY) {
+ 319              		.loc 1 615 0
+ 320 0002 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 321 0004 022B     		cmp	r3, #2
+ 322 0006 0FD1     		bne	.L37
+ 616:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CR1  = 0;                    /* Timer disabled.              */
+ 323              		.loc 1 616 0
+ 324 0008 8369     		ldr	r3, [r0, #24]
+ 325 000a 0022     		movs	r2, #0
+ 326 000c 1A60     		str	r2, [r3]
+ 617:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->DIER = 0;                    /* All IRQs disabled.           */
+ 327              		.loc 1 617 0
+ 328 000e DA60     		str	r2, [r3, #12]
+ 618:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->SR   = 0;                    /* Clear eventual pending IRQs. */
+ 329              		.loc 1 618 0
+ 330 0010 1A61     		str	r2, [r3, #16]
+ 619:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1 || STM32_PWM_USE_TIM8
+ 620:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->BDTR  = 0;
+ 621:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 622:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 623:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM1
+ 624:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD1 == pwmp) {
+ 625:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM1_SUPPRESS_ISR)
+ 626:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM1_UP_NUMBER);
+ 627:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM1_CC_NUMBER);
+ 628:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 629:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM1(FALSE);
+ 630:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 631:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 632:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 633:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM2
+ 634:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD2 == pwmp) {
+ 635:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM2_SUPPRESS_ISR)
+ 636:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM2_NUMBER);
+ 637:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 638:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM2(FALSE);
+ 639:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 640:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 641:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 642:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM3
+ 643:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD3 == pwmp) {
+ 331              		.loc 1 643 0
+ 332 0012 0B4B     		ldr	r3, .L43
+ 333 0014 9842     		cmp	r0, r3
+ 334 0016 08D1     		bne	.L40
+ 644:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM3_SUPPRESS_ISR)
+ 645:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM3_NUMBER);
+ 335              		.loc 1 645 0
+ 336 0018 1D20     		movs	r0, #29
+ 337              	.LVL24:
+ 338 001a FFF7FEFF 		bl	nvicDisableVector
+ 339              	.LVL25:
+ 646:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 647:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM3(FALSE);
+ 340              		.loc 1 647 0
+ 341 001e 094A     		ldr	r2, .L43+4
+ 342 0020 D369     		ldr	r3, [r2, #28]
+ 343 0022 23F00203 		bic	r3, r3, #2
+ 344              	.L42:
+ 648:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 649:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 650:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 651:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM4
+ 652:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD4 == pwmp) {
+ 653:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_SUPPRESS_ISR)
+ 654:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM4_NUMBER);
+ 655:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 656:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM4(FALSE);
+ 345              		.loc 1 656 0
+ 346 0026 D361     		str	r3, [r2, #28]
+ 347              	.L37:
+ 657:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 658:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 659:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 660:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM5
+ 661:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD5 == pwmp) {
+ 662:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM5_SUPPRESS_ISR)
+ 663:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM5_NUMBER);
+ 664:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 665:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM5(FALSE);
+ 666:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 667:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 668:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 669:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM8
+ 670:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD8 == pwmp) {
+ 671:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM8_SUPPRESS_ISR)
+ 672:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM8_UP_NUMBER);
+ 673:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM8_CC_NUMBER);
+ 674:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 675:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM8(FALSE);
+ 676:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 677:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 678:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 679:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_PWM_USE_TIM9
+ 680:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     if (&PWMD9 == pwmp) {
+ 681:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM9_SUPPRESS_ISR)
+ 682:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       nvicDisableVector(STM32_TIM9_NUMBER);
+ 683:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 684:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       rccDisableTIM9(FALSE);
+ 685:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 686:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 687:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 688:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 348              		.loc 1 688 0
+ 349 0028 08BD     		pop	{r3, pc}
+ 350              	.LVL26:
+ 351              	.L40:
+ 652:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if !defined(STM32_TIM4_SUPPRESS_ISR)
+ 352              		.loc 1 652 0
+ 353 002a 074B     		ldr	r3, .L43+8
+ 354 002c 9842     		cmp	r0, r3
+ 355 002e FBD1     		bne	.L37
+ 654:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 356              		.loc 1 654 0
+ 357 0030 1E20     		movs	r0, #30
+ 358              	.LVL27:
+ 359 0032 FFF7FEFF 		bl	nvicDisableVector
+ 360              	.LVL28:
+ 656:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     }
+ 361              		.loc 1 656 0
+ 362 0036 034A     		ldr	r2, .L43+4
+ 363 0038 D369     		ldr	r3, [r2, #28]
+ 364 003a 23F00403 		bic	r3, r3, #4
+ 365 003e F2E7     		b	.L42
+ 366              	.L44:
+ 367              		.align	2
+ 368              	.L43:
+ 369 0040 00000000 		.word	.LANCHOR0
+ 370 0044 00100240 		.word	1073876992
+ 371 0048 00000000 		.word	.LANCHOR1
+ 372              		.cfi_endproc
+ 373              	.LFE283:
+ 375              		.section	.text.pwm_lld_enable_channel,"ax",%progbits
+ 376              		.align	1
+ 377              		.global	pwm_lld_enable_channel
+ 378              		.syntax unified
+ 379              		.thumb
+ 380              		.thumb_func
+ 381              		.fpu softvfp
+ 383              	pwm_lld_enable_channel:
+ 384              	.LFB284:
+ 689:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 690:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 691:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Enables a PWM channel.
+ 692:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 693:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @post    The channel is active using the specified configuration.
+ 694:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The function has effect at the next cycle start.
+ 695:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    Channel notification is not enabled.
+ 696:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 697:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 698:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 699:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] width     PWM pulse width as clock pulses number
+ 700:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 701:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 702:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 703:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_enable_channel(PWMDriver *pwmp,
+ 704:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                             pwmchannel_t channel,
+ 705:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                             pwmcnt_t width) {
+ 385              		.loc 1 705 0
+ 386              		.cfi_startproc
+ 387              		@ args = 0, pretend = 0, frame = 0
+ 388              		@ frame_needed = 0, uses_anonymous_args = 0
+ 389              		@ link register save eliminated.
+ 390              	.LVL29:
+ 706:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 707:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Changing channel duty cycle on the fly.*/
+ 708:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS <= 4
+ 709:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->CCR[channel] = width;
+ 710:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 711:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (channel < 4)
+ 391              		.loc 1 711 0
+ 392 0000 0329     		cmp	r1, #3
+ 393 0002 8369     		ldr	r3, [r0, #24]
+ 712:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[channel] = width;
+ 394              		.loc 1 712 0
+ 395 0004 9BBF     		ittet	ls
+ 396 0006 0C31     		addls	r1, r1, #12
+ 397              	.LVL30:
+ 398 0008 03EB8101 		addls	r1, r3, r1, lsl #2
+ 713:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   else
+ 714:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCXR[channel - 4] = width;
+ 399              		.loc 1 714 0
+ 400 000c 1231     		addhi	r1, r1, #18
+ 712:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[channel] = width;
+ 401              		.loc 1 712 0
+ 402 000e 4A60     		strls	r2, [r1, #4]
+ 403              		.loc 1 714 0
+ 404 0010 88BF     		it	hi
+ 405 0012 43F82120 		strhi	r2, [r3, r1, lsl #2]
+ 715:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 716:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 406              		.loc 1 716 0
+ 407 0016 7047     		bx	lr
+ 408              		.cfi_endproc
+ 409              	.LFE284:
+ 411              		.section	.text.pwm_lld_disable_channel,"ax",%progbits
+ 412              		.align	1
+ 413              		.global	pwm_lld_disable_channel
+ 414              		.syntax unified
+ 415              		.thumb
+ 416              		.thumb_func
+ 417              		.fpu softvfp
+ 419              	pwm_lld_disable_channel:
+ 420              	.LFB285:
+ 717:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 718:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 719:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Disables a PWM channel and its notification.
+ 720:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 721:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @post    The channel is disabled and its output line returned to the
+ 722:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          idle state.
+ 723:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    The function has effect at the next cycle start.
+ 724:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 725:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 726:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 727:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 728:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 729:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 730:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_disable_channel(PWMDriver *pwmp, pwmchannel_t channel) {
+ 421              		.loc 1 730 0
+ 422              		.cfi_startproc
+ 423              		@ args = 0, pretend = 0, frame = 0
+ 424              		@ frame_needed = 0, uses_anonymous_args = 0
+ 425              		@ link register save eliminated.
+ 426              	.LVL31:
+ 731:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 732:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS <= 4
+ 733:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->CCR[channel] = 0;
+ 734:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->DIER &= ~(2 << channel);
+ 735:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #else
+ 736:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (channel < 4) {
+ 427              		.loc 1 736 0
+ 428 0000 0329     		cmp	r1, #3
+ 429 0002 8369     		ldr	r3, [r0, #24]
+ 430 0004 4FF00000 		mov	r0, #0
+ 431              	.LVL32:
+ 432 0008 0CD8     		bhi	.L49
+ 737:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCR[channel] = 0;
+ 433              		.loc 1 737 0
+ 434 000a 01F10C02 		add	r2, r1, #12
+ 435 000e 03EB8202 		add	r2, r3, r2, lsl #2
+ 436 0012 5060     		str	r0, [r2, #4]
+ 738:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->DIER &= ~(2 << channel);
+ 437              		.loc 1 738 0
+ 438 0014 DA68     		ldr	r2, [r3, #12]
+ 439 0016 0220     		movs	r0, #2
+ 440 0018 00FA01F1 		lsl	r1, r0, r1
+ 441              	.LVL33:
+ 442 001c 22EA0101 		bic	r1, r2, r1
+ 443 0020 D960     		str	r1, [r3, #12]
+ 444 0022 7047     		bx	lr
+ 445              	.LVL34:
+ 446              	.L49:
+ 739:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 740:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   else
+ 741:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->CCXR[channel - 4] = 0;
+ 447              		.loc 1 741 0
+ 448 0024 1231     		adds	r1, r1, #18
+ 449              	.LVL35:
+ 450 0026 43F82100 		str	r0, [r3, r1, lsl #2]
+ 742:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 743:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 451              		.loc 1 743 0
+ 452 002a 7047     		bx	lr
+ 453              		.cfi_endproc
+ 454              	.LFE285:
+ 456              		.section	.text.pwm_lld_enable_periodic_notification,"ax",%progbits
+ 457              		.align	1
+ 458              		.global	pwm_lld_enable_periodic_notification
+ 459              		.syntax unified
+ 460              		.thumb
+ 461              		.thumb_func
+ 462              		.fpu softvfp
+ 464              	pwm_lld_enable_periodic_notification:
+ 465              	.LFB286:
+ 744:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 745:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 746:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Enables the periodic activation edge notification.
+ 747:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 748:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    If the notification is already enabled then the call has no effect.
+ 749:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 750:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 751:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 752:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 753:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 754:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_enable_periodic_notification(PWMDriver *pwmp) {
+ 466              		.loc 1 754 0
+ 467              		.cfi_startproc
+ 468              		@ args = 0, pretend = 0, frame = 0
+ 469              		@ frame_needed = 0, uses_anonymous_args = 0
+ 470              		@ link register save eliminated.
+ 471              	.LVL36:
+ 755:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t dier = pwmp->tim->DIER;
+ 472              		.loc 1 755 0
+ 473 0000 8369     		ldr	r3, [r0, #24]
+ 474 0002 DA68     		ldr	r2, [r3, #12]
+ 475              	.LVL37:
+ 756:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 757:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* If the IRQ is not already enabled care must be taken to clear it,
+ 758:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****      it is probably already pending because the timer is running.*/
+ 759:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if ((dier & STM32_TIM_DIER_UIE) == 0) {
+ 476              		.loc 1 759 0
+ 477 0004 D107     		lsls	r1, r2, #31
+ 478 0006 06D4     		bmi	.L51
+ 760:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->DIER = dier | STM32_TIM_DIER_UIE;
+ 479              		.loc 1 760 0
+ 480 0008 42F00102 		orr	r2, r2, #1
+ 481              	.LVL38:
+ 482 000c DA60     		str	r2, [r3, #12]
+ 761:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->SR &= STM32_TIM_SR_UIF;
+ 483              		.loc 1 761 0
+ 484 000e 1A69     		ldr	r2, [r3, #16]
+ 485 0010 02F00102 		and	r2, r2, #1
+ 486 0014 1A61     		str	r2, [r3, #16]
+ 487              	.L51:
+ 762:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 763:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 488              		.loc 1 763 0
+ 489 0016 7047     		bx	lr
+ 490              		.cfi_endproc
+ 491              	.LFE286:
+ 493              		.section	.text.pwm_lld_disable_periodic_notification,"ax",%progbits
+ 494              		.align	1
+ 495              		.global	pwm_lld_disable_periodic_notification
+ 496              		.syntax unified
+ 497              		.thumb
+ 498              		.thumb_func
+ 499              		.fpu softvfp
+ 501              	pwm_lld_disable_periodic_notification:
+ 502              	.LFB287:
+ 764:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 765:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 766:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Disables the periodic activation edge notification.
+ 767:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 768:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    If the notification is already disabled then the call has no effect.
+ 769:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 770:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 771:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 772:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 773:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 774:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_disable_periodic_notification(PWMDriver *pwmp) {
+ 503              		.loc 1 774 0
+ 504              		.cfi_startproc
+ 505              		@ args = 0, pretend = 0, frame = 0
+ 506              		@ frame_needed = 0, uses_anonymous_args = 0
+ 507              		@ link register save eliminated.
+ 508              	.LVL39:
+ 775:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 776:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->DIER &= ~STM32_TIM_DIER_UIE;
+ 509              		.loc 1 776 0
+ 510 0000 8269     		ldr	r2, [r0, #24]
+ 511 0002 D368     		ldr	r3, [r2, #12]
+ 512 0004 23F00103 		bic	r3, r3, #1
+ 513 0008 D360     		str	r3, [r2, #12]
+ 777:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 514              		.loc 1 777 0
+ 515 000a 7047     		bx	lr
+ 516              		.cfi_endproc
+ 517              	.LFE287:
+ 519              		.section	.text.pwm_lld_enable_channel_notification,"ax",%progbits
+ 520              		.align	1
+ 521              		.global	pwm_lld_enable_channel_notification
+ 522              		.syntax unified
+ 523              		.thumb
+ 524              		.thumb_func
+ 525              		.fpu softvfp
+ 527              	pwm_lld_enable_channel_notification:
+ 528              	.LFB288:
+ 778:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 779:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 780:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Enables a channel de-activation edge notification.
+ 781:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 782:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The channel must have been activated using @p pwmEnableChannel().
+ 783:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    If the notification is already enabled then the call has no effect.
+ 784:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 785:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 786:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 787:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 788:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 789:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 790:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_enable_channel_notification(PWMDriver *pwmp,
+ 791:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                                          pwmchannel_t channel) {
+ 529              		.loc 1 791 0
+ 530              		.cfi_startproc
+ 531              		@ args = 0, pretend = 0, frame = 0
+ 532              		@ frame_needed = 0, uses_anonymous_args = 0
+ 533              		@ link register save eliminated.
+ 534              	.LVL40:
+ 792:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t dier = pwmp->tim->DIER;
+ 535              		.loc 1 792 0
+ 536 0000 8069     		ldr	r0, [r0, #24]
+ 537              	.LVL41:
+ 793:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 794:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #if STM32_TIM_MAX_CHANNELS > 4
+ 795:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* Channels 4 and 5 do not support callbacks.*/
+ 796:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   osalDbgAssert(channel < 4, "callback not supported");
+ 797:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif
+ 798:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 799:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   /* If the IRQ is not already enabled care must be taken to clear it,
+ 800:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****      it is probably already pending because the timer is running.*/
+ 801:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if ((dier & (2 << channel)) == 0) {
+ 538              		.loc 1 801 0
+ 539 0002 0223     		movs	r3, #2
+ 792:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t dier = pwmp->tim->DIER;
+ 540              		.loc 1 792 0
+ 541 0004 C268     		ldr	r2, [r0, #12]
+ 542              	.LVL42:
+ 543              		.loc 1 801 0
+ 544 0006 03FA01F1 		lsl	r1, r3, r1
+ 545              	.LVL43:
+ 546 000a 1142     		tst	r1, r2
+ 802:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->DIER = dier | (2 << channel);
+ 547              		.loc 1 802 0
+ 548 000c 01BF     		itttt	eq
+ 549 000e 0A43     		orreq	r2, r2, r1
+ 550              	.LVL44:
+ 803:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->SR   = ~(2 << channel);
+ 551              		.loc 1 803 0
+ 552 0010 C943     		mvneq	r1, r1
+ 802:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->tim->DIER = dier | (2 << channel);
+ 553              		.loc 1 802 0
+ 554 0012 C260     		streq	r2, [r0, #12]
+ 555              		.loc 1 803 0
+ 556 0014 0161     		streq	r1, [r0, #16]
+ 804:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   }
+ 805:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 557              		.loc 1 805 0
+ 558 0016 7047     		bx	lr
+ 559              		.cfi_endproc
+ 560              	.LFE288:
+ 562              		.section	.text.pwm_lld_disable_channel_notification,"ax",%progbits
+ 563              		.align	1
+ 564              		.global	pwm_lld_disable_channel_notification
+ 565              		.syntax unified
+ 566              		.thumb
+ 567              		.thumb_func
+ 568              		.fpu softvfp
+ 570              	pwm_lld_disable_channel_notification:
+ 571              	.LFB289:
+ 806:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 807:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 808:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Disables a channel de-activation edge notification.
+ 809:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 810:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @pre     The channel must have been activated using @p pwmEnableChannel().
+ 811:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    If the notification is already disabled then the call has no effect.
+ 812:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 813:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 814:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 815:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 816:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 817:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 818:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_disable_channel_notification(PWMDriver *pwmp,
+ 819:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****                                           pwmchannel_t channel) {
+ 572              		.loc 1 819 0
+ 573              		.cfi_startproc
+ 574              		@ args = 0, pretend = 0, frame = 0
+ 575              		@ frame_needed = 0, uses_anonymous_args = 0
+ 576              		@ link register save eliminated.
+ 577              	.LVL45:
+ 820:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 821:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->DIER &= ~(2 << channel);
+ 578              		.loc 1 821 0
+ 579 0000 8069     		ldr	r0, [r0, #24]
+ 580              	.LVL46:
+ 581 0002 0222     		movs	r2, #2
+ 582 0004 C368     		ldr	r3, [r0, #12]
+ 583 0006 02FA01F1 		lsl	r1, r2, r1
+ 584              	.LVL47:
+ 585 000a 23EA0103 		bic	r3, r3, r1
+ 586 000e C360     		str	r3, [r0, #12]
+ 822:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 587              		.loc 1 822 0
+ 588 0010 7047     		bx	lr
+ 589              		.cfi_endproc
+ 590              	.LFE289:
+ 592              		.section	.text.pwm_lld_serve_interrupt,"ax",%progbits
+ 593              		.align	1
+ 594              		.global	pwm_lld_serve_interrupt
+ 595              		.syntax unified
+ 596              		.thumb
+ 597              		.thumb_func
+ 598              		.fpu softvfp
+ 600              	pwm_lld_serve_interrupt:
+ 601              	.LFB290:
+ 823:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 824:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** /**
+ 825:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @brief   Common TIM2...TIM5,TIM9 IRQ handler.
+ 826:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @note    It is assumed that the various sources are only activated if the
+ 827:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          associated callback pointer is not equal to @p NULL in order to not
+ 828:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *          perform an extra check in a potentially critical interrupt handler.
+ 829:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 830:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 831:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  *
+ 832:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  * @notapi
+ 833:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****  */
+ 834:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** void pwm_lld_serve_interrupt(PWMDriver *pwmp) {
+ 602              		.loc 1 834 0
+ 603              		.cfi_startproc
+ 604              		@ args = 0, pretend = 0, frame = 0
+ 605              		@ frame_needed = 0, uses_anonymous_args = 0
+ 606              	.LVL48:
+ 835:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t sr;
+ 836:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 837:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   sr  = pwmp->tim->SR;
+ 607              		.loc 1 837 0
+ 608 0000 8369     		ldr	r3, [r0, #24]
+ 834:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t sr;
+ 609              		.loc 1 834 0
+ 610 0002 70B5     		push	{r4, r5, r6, lr}
+ 611              		.cfi_def_cfa_offset 16
+ 612              		.cfi_offset 4, -16
+ 613              		.cfi_offset 5, -12
+ 614              		.cfi_offset 6, -8
+ 615              		.cfi_offset 14, -4
+ 616              		.loc 1 837 0
+ 617 0004 1A69     		ldr	r2, [r3, #16]
+ 618              	.LVL49:
+ 838:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   sr &= pwmp->tim->DIER & STM32_TIM_DIER_IRQ_MASK;
+ 619              		.loc 1 838 0
+ 620 0006 DD68     		ldr	r5, [r3, #12]
+ 621 0008 1540     		ands	r5, r5, r2
+ 622              	.LVL50:
+ 623 000a EAB2     		uxtb	r2, r5
+ 839:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->SR = ~sr;
+ 624              		.loc 1 839 0
+ 625 000c D243     		mvns	r2, r2
+ 840:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC1IF) != 0) &&
+ 626              		.loc 1 840 0
+ 627 000e AE07     		lsls	r6, r5, #30
+ 834:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   uint32_t sr;
+ 628              		.loc 1 834 0
+ 629 0010 0446     		mov	r4, r0
+ 839:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   pwmp->tim->SR = ~sr;
+ 630              		.loc 1 839 0
+ 631 0012 1A61     		str	r2, [r3, #16]
+ 632              		.loc 1 840 0
+ 633 0014 03D5     		bpl	.L58
+ 841:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       (pwmp->config->channels[0].callback != NULL))
+ 634              		.loc 1 841 0 discriminator 1
+ 635 0016 4368     		ldr	r3, [r0, #4]
+ 636 0018 1B69     		ldr	r3, [r3, #16]
+ 840:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC1IF) != 0) &&
+ 637              		.loc 1 840 0 discriminator 1
+ 638 001a 03B1     		cbz	r3, .L58
+ 842:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->channels[0].callback(pwmp);
+ 639              		.loc 1 842 0
+ 640 001c 9847     		blx	r3
+ 641              	.LVL51:
+ 642              	.L58:
+ 843:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC2IF) != 0) &&
+ 643              		.loc 1 843 0
+ 644 001e 6807     		lsls	r0, r5, #29
+ 645 0020 04D5     		bpl	.L59
+ 844:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       (pwmp->config->channels[1].callback != NULL))
+ 646              		.loc 1 844 0 discriminator 1
+ 647 0022 6368     		ldr	r3, [r4, #4]
+ 648 0024 9B69     		ldr	r3, [r3, #24]
+ 843:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC2IF) != 0) &&
+ 649              		.loc 1 843 0 discriminator 1
+ 650 0026 0BB1     		cbz	r3, .L59
+ 845:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->channels[1].callback(pwmp);
+ 651              		.loc 1 845 0
+ 652 0028 2046     		mov	r0, r4
+ 653 002a 9847     		blx	r3
+ 654              	.LVL52:
+ 655              	.L59:
+ 846:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC3IF) != 0) &&
+ 656              		.loc 1 846 0
+ 657 002c 2907     		lsls	r1, r5, #28
+ 658 002e 04D5     		bpl	.L60
+ 847:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       (pwmp->config->channels[2].callback != NULL))
+ 659              		.loc 1 847 0 discriminator 1
+ 660 0030 6368     		ldr	r3, [r4, #4]
+ 661 0032 1B6A     		ldr	r3, [r3, #32]
+ 846:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC3IF) != 0) &&
+ 662              		.loc 1 846 0 discriminator 1
+ 663 0034 0BB1     		cbz	r3, .L60
+ 848:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->channels[2].callback(pwmp);
+ 664              		.loc 1 848 0
+ 665 0036 2046     		mov	r0, r4
+ 666 0038 9847     		blx	r3
+ 667              	.LVL53:
+ 668              	.L60:
+ 849:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC4IF) != 0) &&
+ 669              		.loc 1 849 0
+ 670 003a EA06     		lsls	r2, r5, #27
+ 671 003c 04D5     		bpl	.L61
+ 850:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****       (pwmp->config->channels[3].callback != NULL))
+ 672              		.loc 1 850 0 discriminator 1
+ 673 003e 6368     		ldr	r3, [r4, #4]
+ 674 0040 9B6A     		ldr	r3, [r3, #40]
+ 849:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_CC4IF) != 0) &&
+ 675              		.loc 1 849 0 discriminator 1
+ 676 0042 0BB1     		cbz	r3, .L61
+ 851:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->channels[3].callback(pwmp);
+ 677              		.loc 1 851 0
+ 678 0044 2046     		mov	r0, r4
+ 679 0046 9847     		blx	r3
+ 680              	.LVL54:
+ 681              	.L61:
+ 852:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****   if (((sr & STM32_TIM_SR_UIF) != 0) && (pwmp->config->callback != NULL))
+ 682              		.loc 1 852 0
+ 683 0048 EB07     		lsls	r3, r5, #31
+ 684 004a 06D5     		bpl	.L57
+ 685              		.loc 1 852 0 is_stmt 0 discriminator 1
+ 686 004c 6368     		ldr	r3, [r4, #4]
+ 687 004e 9B68     		ldr	r3, [r3, #8]
+ 688 0050 1BB1     		cbz	r3, .L57
+ 853:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->callback(pwmp);
+ 689              		.loc 1 853 0 is_stmt 1
+ 690 0052 2046     		mov	r0, r4
+ 854:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 691              		.loc 1 854 0
+ 692 0054 BDE87040 		pop	{r4, r5, r6, lr}
+ 693              		.cfi_remember_state
+ 694              		.cfi_restore 14
+ 695              		.cfi_restore 6
+ 696              		.cfi_restore 5
+ 697              		.cfi_restore 4
+ 698              		.cfi_def_cfa_offset 0
+ 699              	.LVL55:
+ 853:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c ****     pwmp->config->callback(pwmp);
+ 700              		.loc 1 853 0
+ 701 0058 1847     		bx	r3	@ indirect register sibling call
+ 702              	.LVL56:
+ 703              	.L57:
+ 704              		.cfi_restore_state
+ 705              		.loc 1 854 0
+ 706 005a 70BD     		pop	{r4, r5, r6, pc}
+ 707              		.cfi_endproc
+ 708              	.LFE290:
+ 710              		.section	.text.VectorB4,"ax",%progbits
+ 711              		.align	1
+ 712              		.global	VectorB4
+ 713              		.syntax unified
+ 714              		.thumb
+ 715              		.thumb_func
+ 716              		.fpu softvfp
+ 718              	VectorB4:
+ 719              	.LFB279:
+ 180:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 720              		.loc 1 180 0
+ 721              		.cfi_startproc
+ 722              		@ args = 0, pretend = 0, frame = 0
+ 723              		@ frame_needed = 0, uses_anonymous_args = 0
+ 724 0000 08B5     		push	{r3, lr}
+ 725              		.cfi_def_cfa_offset 8
+ 726              		.cfi_offset 3, -8
+ 727              		.cfi_offset 14, -4
+ 184:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 728              		.loc 1 184 0
+ 729 0002 0348     		ldr	r0, .L94
+ 730 0004 FFF7FEFF 		bl	pwm_lld_serve_interrupt
+ 731              	.LVL57:
+ 187:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM3_SUPPRESS_ISR) */
+ 732              		.loc 1 187 0
+ 733 0008 BDE80840 		pop	{r3, lr}
+ 734              		.cfi_restore 14
+ 735              		.cfi_restore 3
+ 736              		.cfi_def_cfa_offset 0
+ 186:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 737              		.loc 1 186 0
+ 738 000c FFF7FEBF 		b	_port_irq_epilogue
+ 739              	.LVL58:
+ 740              	.L95:
+ 741              		.align	2
+ 742              	.L94:
+ 743 0010 00000000 		.word	.LANCHOR0
+ 744              		.cfi_endproc
+ 745              	.LFE279:
+ 747              		.section	.text.VectorB8,"ax",%progbits
+ 748              		.align	1
+ 749              		.global	VectorB8
+ 750              		.syntax unified
+ 751              		.thumb
+ 752              		.thumb_func
+ 753              		.fpu softvfp
+ 755              	VectorB8:
+ 756              	.LFB280:
+ 201:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 757              		.loc 1 201 0
+ 758              		.cfi_startproc
+ 759              		@ args = 0, pretend = 0, frame = 0
+ 760              		@ frame_needed = 0, uses_anonymous_args = 0
+ 761 0000 08B5     		push	{r3, lr}
+ 762              		.cfi_def_cfa_offset 8
+ 763              		.cfi_offset 3, -8
+ 764              		.cfi_offset 14, -4
+ 205:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** 
+ 765              		.loc 1 205 0
+ 766 0002 0348     		ldr	r0, .L97
+ 767 0004 FFF7FEFF 		bl	pwm_lld_serve_interrupt
+ 768              	.LVL59:
+ 208:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** #endif /* !defined(STM32_TIM4_SUPPRESS_ISR) */
+ 769              		.loc 1 208 0
+ 770 0008 BDE80840 		pop	{r3, lr}
+ 771              		.cfi_restore 14
+ 772              		.cfi_restore 3
+ 773              		.cfi_def_cfa_offset 0
+ 207:lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c **** }
+ 774              		.loc 1 207 0
+ 775 000c FFF7FEBF 		b	_port_irq_epilogue
+ 776              	.LVL60:
+ 777              	.L98:
+ 778              		.align	2
+ 779              	.L97:
+ 780 0010 00000000 		.word	.LANCHOR1
+ 781              		.cfi_endproc
+ 782              	.LFE280:
+ 784              		.global	PWMD4
+ 785              		.global	PWMD3
+ 786              		.section	.bss.PWMD3,"aw",%nobits
+ 787              		.align	2
+ 788              		.set	.LANCHOR0,. + 0
+ 791              	PWMD3:
+ 792 0000 00000000 		.space	28
+ 792      00000000 
+ 792      00000000 
+ 792      00000000 
+ 792      00000000 
+ 793              		.section	.bss.PWMD4,"aw",%nobits
+ 794              		.align	2
+ 795              		.set	.LANCHOR1,. + 0
+ 798              	PWMD4:
+ 799 0000 00000000 		.space	28
+ 799      00000000 
+ 799      00000000 
+ 799      00000000 
+ 799      00000000 
+ 800              		.text
+ 801              	.Letext0:
+ 802              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 803              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 804              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 805              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 806              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 807              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 808              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 809              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 810              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 811              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 812              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 813              		.file 13 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 814              		.file 14 "./lib/chibios/os/rt/include/chtm.h"
+ 815              		.file 15 "./lib/chibios/os/rt/include/chsem.h"
+ 816              		.file 16 "./lib/chibios/os/rt/include/chmtx.h"
+ 817              		.file 17 "./lib/chibios/os/rt/include/chsys.h"
+ 818              		.file 18 "./lib/chibios/os/rt/include/chregistry.h"
+ 819              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 820              		.file 20 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 821              		.file 21 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 822              		.file 22 "./lib/chibios/os/hal/include/hal_dac.h"
+ 823              		.file 23 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 824              		.file 24 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 825              		.file 25 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 826              		.file 26 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 827              		.file 27 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 828              		.file 28 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 829              		.file 29 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 830              		.file 30 "./lib/chibios/os/hal/include/hal_usb.h"
+ 831              		.file 31 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 832              		.file 32 "./lib/chibios/os/hal/ports/common/ARMCMx/nvic.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hal_pwm_lld.c
+/var/tmp//cc10BxSL.s:16     .text.pwm_lld_init:0000000000000000 $t
+/var/tmp//cc10BxSL.s:23     .text.pwm_lld_init:0000000000000000 pwm_lld_init
+/var/tmp//cc10BxSL.s:64     .text.pwm_lld_init:0000000000000024 $d
+/var/tmp//cc10BxSL.s:72     .text.pwm_lld_start:0000000000000000 $t
+/var/tmp//cc10BxSL.s:79     .text.pwm_lld_start:0000000000000000 pwm_lld_start
+/var/tmp//cc10BxSL.s:293    .text.pwm_lld_start:0000000000000114 $d
+/var/tmp//cc10BxSL.s:301    .text.pwm_lld_stop:0000000000000000 $t
+/var/tmp//cc10BxSL.s:308    .text.pwm_lld_stop:0000000000000000 pwm_lld_stop
+/var/tmp//cc10BxSL.s:369    .text.pwm_lld_stop:0000000000000040 $d
+/var/tmp//cc10BxSL.s:376    .text.pwm_lld_enable_channel:0000000000000000 $t
+/var/tmp//cc10BxSL.s:383    .text.pwm_lld_enable_channel:0000000000000000 pwm_lld_enable_channel
+/var/tmp//cc10BxSL.s:412    .text.pwm_lld_disable_channel:0000000000000000 $t
+/var/tmp//cc10BxSL.s:419    .text.pwm_lld_disable_channel:0000000000000000 pwm_lld_disable_channel
+/var/tmp//cc10BxSL.s:457    .text.pwm_lld_enable_periodic_notification:0000000000000000 $t
+/var/tmp//cc10BxSL.s:464    .text.pwm_lld_enable_periodic_notification:0000000000000000 pwm_lld_enable_periodic_notification
+/var/tmp//cc10BxSL.s:494    .text.pwm_lld_disable_periodic_notification:0000000000000000 $t
+/var/tmp//cc10BxSL.s:501    .text.pwm_lld_disable_periodic_notification:0000000000000000 pwm_lld_disable_periodic_notification
+/var/tmp//cc10BxSL.s:520    .text.pwm_lld_enable_channel_notification:0000000000000000 $t
+/var/tmp//cc10BxSL.s:527    .text.pwm_lld_enable_channel_notification:0000000000000000 pwm_lld_enable_channel_notification
+/var/tmp//cc10BxSL.s:563    .text.pwm_lld_disable_channel_notification:0000000000000000 $t
+/var/tmp//cc10BxSL.s:570    .text.pwm_lld_disable_channel_notification:0000000000000000 pwm_lld_disable_channel_notification
+/var/tmp//cc10BxSL.s:593    .text.pwm_lld_serve_interrupt:0000000000000000 $t
+/var/tmp//cc10BxSL.s:600    .text.pwm_lld_serve_interrupt:0000000000000000 pwm_lld_serve_interrupt
+/var/tmp//cc10BxSL.s:711    .text.VectorB4:0000000000000000 $t
+/var/tmp//cc10BxSL.s:718    .text.VectorB4:0000000000000000 VectorB4
+/var/tmp//cc10BxSL.s:743    .text.VectorB4:0000000000000010 $d
+/var/tmp//cc10BxSL.s:748    .text.VectorB8:0000000000000000 $t
+/var/tmp//cc10BxSL.s:755    .text.VectorB8:0000000000000000 VectorB8
+/var/tmp//cc10BxSL.s:780    .text.VectorB8:0000000000000010 $d
+/var/tmp//cc10BxSL.s:798    .bss.PWMD4:0000000000000000 PWMD4
+/var/tmp//cc10BxSL.s:791    .bss.PWMD3:0000000000000000 PWMD3
+/var/tmp//cc10BxSL.s:787    .bss.PWMD3:0000000000000000 $d
+/var/tmp//cc10BxSL.s:794    .bss.PWMD4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+pwmObjectInit
+nvicEnableVector
+nvicDisableVector
+_port_irq_epilogue

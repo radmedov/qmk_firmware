@@ -1,0 +1,804 @@
+   1              	# 1 "lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S"
+   1              	/*
+   0              	
+   0              	
+   1              	/* Address for jumping to bootloader on STM32 chips. */
+   1              	/*
+   2              	Copyright 2012 Jun Wako <wakojun@gmail.com>
+   3              	
+   4              	This program is free software: you can redistribute it and/or modify
+   5              	it under the terms of the GNU General Public License as published by
+   6              	the Free Software Foundation, either version 2 of the License, or
+   7              	(at your option) any later version.
+   8              	
+   9              	This program is distributed in the hope that it will be useful,
+  10              	but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11              	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12              	GNU General Public License for more details.
+  13              	
+  14              	You should have received a copy of the GNU General Public License
+  15              	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16              	*/
+  17              	
+  18              	#ifndef CONFIG_H
+  19              	#define CONFIG_H
+  20              	
+  21              	#include "config_common.h"
+   1              	/* Copyright 2015-2018 Jack Humbert
+   2              	 *
+   3              	 * This program is free software: you can redistribute it and/or modify
+   4              	 * it under the terms of the GNU General Public License as published by
+   5              	 * the Free Software Foundation, either version 2 of the License, or
+   6              	 * (at your option) any later version.
+   7              	 *
+   8              	 * This program is distributed in the hope that it will be useful,
+   9              	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  10              	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  11              	 * GNU General Public License for more details.
+  12              	 *
+  13              	 * You should have received a copy of the GNU General Public License
+  14              	 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  15              	 */
+  16              	
+  17              	#pragma once
+  18              	
+  19              	/* diode directions */
+  20              	#define COL2ROW 0
+  21              	#define ROW2COL 1
+  22              	#define CUSTOM_MATRIX 2 /* Disables built-in matrix scanning code */
+  23              	
+  24              	// useful for direct pin mapping
+  25              	#define NO_PIN (~0)
+  26              	
+  27              	#ifdef __AVR__
+  28              	#    ifndef __ASSEMBLER__
+  29              	#        include <avr/io.h>
+  30              	#    endif
+  31              	#    define PORT_SHIFTER 4  // this may be 4 for all AVR chips
+  32              	
+  33              	// If you want to add more to this list, reference the PINx definitions in these header
+  34              	// files: https://github.com/vancegroup-mirrors/avr-libc/tree/master/avr-libc/include/avr
+  35              	
+  36              	#    if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__)
+  37              	#        define ADDRESS_BASE 0x00
+  38              	#        define PINB_ADDRESS 0x3
+  39              	#        define PINC_ADDRESS 0x6
+  40              	#        define PIND_ADDRESS 0x9
+  41              	#        define PINE_ADDRESS 0xC
+  42              	#        define PINF_ADDRESS 0xF
+  43              	#    elif defined(__AVR_ATmega32U2__) || defined(__AVR_ATmega16U2__)
+  44              	#        define ADDRESS_BASE 0x00
+  45              	#        define PINB_ADDRESS 0x3
+  46              	#        define PINC_ADDRESS 0x6
+  47              	#        define PIND_ADDRESS 0x9
+  48              	#    elif defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB646__)
+  49              	#        define ADDRESS_BASE 0x00
+  50              	#        define PINA_ADDRESS 0x0
+  51              	#        define PINB_ADDRESS 0x3
+  52              	#        define PINC_ADDRESS 0x6
+  53              	#        define PIND_ADDRESS 0x9
+  54              	#        define PINE_ADDRESS 0xC
+  55              	#        define PINF_ADDRESS 0xF
+  56              	#    elif defined(__AVR_ATmega32A__)
+  57              	#        define ADDRESS_BASE 0x10
+  58              	#        define PIND_ADDRESS 0x0
+  59              	#        define PINC_ADDRESS 0x3
+  60              	#        define PINB_ADDRESS 0x6
+  61              	#        define PINA_ADDRESS 0x9
+  62              	#    elif defined(__AVR_ATmega328P__)
+  63              	#        define ADDRESS_BASE 0x00
+  64              	#        define PINB_ADDRESS 0x3
+  65              	#        define PINC_ADDRESS 0x6
+  66              	#        define PIND_ADDRESS 0x9
+  67              	#    else
+  68              	#        error "Pins are not defined"
+  69              	#    endif
+  70              	
+  71              	/* I/O pins */
+  72              	#    define PINDEF(port, pin) ((PIN##port##_ADDRESS << PORT_SHIFTER) | pin)
+  73              	
+  74              	#    ifdef PORTA
+  75              	#        define A0 PINDEF(A, 0)
+  76              	#        define A1 PINDEF(A, 1)
+  77              	#        define A2 PINDEF(A, 2)
+  78              	#        define A3 PINDEF(A, 3)
+  79              	#        define A4 PINDEF(A, 4)
+  80              	#        define A5 PINDEF(A, 5)
+  81              	#        define A6 PINDEF(A, 6)
+  82              	#        define A7 PINDEF(A, 7)
+  83              	#    endif
+  84              	#    ifdef PORTB
+  85              	#        define B0 PINDEF(B, 0)
+  86              	#        define B1 PINDEF(B, 1)
+  87              	#        define B2 PINDEF(B, 2)
+  88              	#        define B3 PINDEF(B, 3)
+  89              	#        define B4 PINDEF(B, 4)
+  90              	#        define B5 PINDEF(B, 5)
+  91              	#        define B6 PINDEF(B, 6)
+  92              	#        define B7 PINDEF(B, 7)
+  93              	#    endif
+  94              	#    ifdef PORTC
+  95              	#        define C0 PINDEF(C, 0)
+  96              	#        define C1 PINDEF(C, 1)
+  97              	#        define C2 PINDEF(C, 2)
+  98              	#        define C3 PINDEF(C, 3)
+  99              	#        define C4 PINDEF(C, 4)
+ 100              	#        define C5 PINDEF(C, 5)
+ 101              	#        define C6 PINDEF(C, 6)
+ 102              	#        define C7 PINDEF(C, 7)
+ 103              	#    endif
+ 104              	#    ifdef PORTD
+ 105              	#        define D0 PINDEF(D, 0)
+ 106              	#        define D1 PINDEF(D, 1)
+ 107              	#        define D2 PINDEF(D, 2)
+ 108              	#        define D3 PINDEF(D, 3)
+ 109              	#        define D4 PINDEF(D, 4)
+ 110              	#        define D5 PINDEF(D, 5)
+ 111              	#        define D6 PINDEF(D, 6)
+ 112              	#        define D7 PINDEF(D, 7)
+ 113              	#    endif
+ 114              	#    ifdef PORTE
+ 115              	#        define E0 PINDEF(E, 0)
+ 116              	#        define E1 PINDEF(E, 1)
+ 117              	#        define E2 PINDEF(E, 2)
+ 118              	#        define E3 PINDEF(E, 3)
+ 119              	#        define E4 PINDEF(E, 4)
+ 120              	#        define E5 PINDEF(E, 5)
+ 121              	#        define E6 PINDEF(E, 6)
+ 122              	#        define E7 PINDEF(E, 7)
+ 123              	#    endif
+ 124              	#    ifdef PORTF
+ 125              	#        define F0 PINDEF(F, 0)
+ 126              	#        define F1 PINDEF(F, 1)
+ 127              	#        define F2 PINDEF(F, 2)
+ 128              	#        define F3 PINDEF(F, 3)
+ 129              	#        define F4 PINDEF(F, 4)
+ 130              	#        define F5 PINDEF(F, 5)
+ 131              	#        define F6 PINDEF(F, 6)
+ 132              	#        define F7 PINDEF(F, 7)
+ 133              	#    endif
+ 134              	
+ 135              	#    ifndef __ASSEMBLER__
+ 136              	#        define _PIN_ADDRESS(p, offset) _SFR_IO8(ADDRESS_BASE + (p >> PORT_SHIFTER) + offset)
+ 137              	// Port X Input Pins Address
+ 138              	#        define PINx_ADDRESS(p) _PIN_ADDRESS(p, 0)
+ 139              	// Port X Data Direction Register,  0:input 1:output
+ 140              	#        define DDRx_ADDRESS(p) _PIN_ADDRESS(p, 1)
+ 141              	// Port X Data Register
+ 142              	#        define PORTx_ADDRESS(p) _PIN_ADDRESS(p, 2)
+ 143              	#    endif
+ 144              	
+ 145              	#elif defined(PROTOCOL_CHIBIOS)
+ 146              	// Defines mapping for Proton C replacement
+ 147              	#    ifdef CONVERT_TO_PROTON_C
+ 148              	// Left side (front)
+ 149              	#        define D3 PAL_LINE(GPIOA, 9)
+ 150              	#        define D2 PAL_LINE(GPIOA, 10)
+ 151              	//      GND
+ 152              	//      GND
+ 153              	#        define D1 PAL_LINE(GPIOB, 7)
+ 154              	#        define D0 PAL_LINE(GPIOB, 6)
+ 155              	#        define D4 PAL_LINE(GPIOB, 5)
+ 156              	#        define C6 PAL_LINE(GPIOB, 4)
+ 157              	#        define D7 PAL_LINE(GPIOB, 3)
+ 158              	#        define E6 PAL_LINE(GPIOB, 2)
+ 159              	#        define B4 PAL_LINE(GPIOB, 1)
+ 160              	#        define B5 PAL_LINE(GPIOB, 0)
+ 161              	
+ 162              	// Right side (front)
+ 163              	//      RAW
+ 164              	//      GND
+ 165              	//      RESET
+ 166              	//      VCC
+ 167              	#        define F4 PAL_LINE(GPIOA, 2)
+ 168              	#        define F5 PAL_LINE(GPIOA, 1)
+ 169              	#        define F6 PAL_LINE(GPIOA, 0)
+ 170              	#        define F7 PAL_LINE(GPIOB, 8)
+ 171              	#        define B1 PAL_LINE(GPIOB, 13)
+ 172              	#        define B3 PAL_LINE(GPIOB, 14)
+ 173              	#        define B2 PAL_LINE(GPIOB, 15)
+ 174              	#        define B6 PAL_LINE(GPIOB, 9)
+ 175              	
+ 176              	// LEDs (only D5/C13 uses an actual LED)
+ 177              	#        ifdef CONVERT_TO_PROTON_C_RXLED
+ 178              	#            define D5 PAL_LINE(GPIOC, 13)
+ 179              	#            define B0 PAL_LINE(GPIOC, 13)
+ 180              	#        else
+ 181              	#            define D5 PAL_LINE(GPIOC, 13)
+ 182              	#            define B0 PAL_LINE(GPIOC, 14)
+ 183              	#        endif
+ 184              	#    else
+ 185              	#        define A0 PAL_LINE(GPIOA, 0)
+ 186              	#        define A1 PAL_LINE(GPIOA, 1)
+ 187              	#        define A2 PAL_LINE(GPIOA, 2)
+ 188              	#        define A3 PAL_LINE(GPIOA, 3)
+ 189              	#        define A4 PAL_LINE(GPIOA, 4)
+ 190              	#        define A5 PAL_LINE(GPIOA, 5)
+ 191              	#        define A6 PAL_LINE(GPIOA, 6)
+ 192              	#        define A7 PAL_LINE(GPIOA, 7)
+ 193              	#        define A8 PAL_LINE(GPIOA, 8)
+ 194              	#        define A9 PAL_LINE(GPIOA, 9)
+ 195              	#        define A10 PAL_LINE(GPIOA, 10)
+ 196              	#        define A11 PAL_LINE(GPIOA, 11)
+ 197              	#        define A12 PAL_LINE(GPIOA, 12)
+ 198              	#        define A13 PAL_LINE(GPIOA, 13)
+ 199              	#        define A14 PAL_LINE(GPIOA, 14)
+ 200              	#        define A15 PAL_LINE(GPIOA, 15)
+ 201              	#        define B0 PAL_LINE(GPIOB, 0)
+ 202              	#        define B1 PAL_LINE(GPIOB, 1)
+ 203              	#        define B2 PAL_LINE(GPIOB, 2)
+ 204              	#        define B3 PAL_LINE(GPIOB, 3)
+ 205              	#        define B4 PAL_LINE(GPIOB, 4)
+ 206              	#        define B5 PAL_LINE(GPIOB, 5)
+ 207              	#        define B6 PAL_LINE(GPIOB, 6)
+ 208              	#        define B7 PAL_LINE(GPIOB, 7)
+ 209              	#        define B8 PAL_LINE(GPIOB, 8)
+ 210              	#        define B9 PAL_LINE(GPIOB, 9)
+ 211              	#        define B10 PAL_LINE(GPIOB, 10)
+ 212              	#        define B11 PAL_LINE(GPIOB, 11)
+ 213              	#        define B12 PAL_LINE(GPIOB, 12)
+ 214              	#        define B13 PAL_LINE(GPIOB, 13)
+ 215              	#        define B14 PAL_LINE(GPIOB, 14)
+ 216              	#        define B15 PAL_LINE(GPIOB, 15)
+ 217              	#        define B16 PAL_LINE(GPIOB, 16)
+ 218              	#        define B17 PAL_LINE(GPIOB, 17)
+ 219              	#        define C0 PAL_LINE(GPIOC, 0)
+ 220              	#        define C1 PAL_LINE(GPIOC, 1)
+ 221              	#        define C2 PAL_LINE(GPIOC, 2)
+ 222              	#        define C3 PAL_LINE(GPIOC, 3)
+ 223              	#        define C4 PAL_LINE(GPIOC, 4)
+ 224              	#        define C5 PAL_LINE(GPIOC, 5)
+ 225              	#        define C6 PAL_LINE(GPIOC, 6)
+ 226              	#        define C7 PAL_LINE(GPIOC, 7)
+ 227              	#        define C8 PAL_LINE(GPIOC, 8)
+ 228              	#        define C9 PAL_LINE(GPIOC, 9)
+ 229              	#        define C10 PAL_LINE(GPIOC, 10)
+ 230              	#        define C11 PAL_LINE(GPIOC, 11)
+ 231              	#        define C12 PAL_LINE(GPIOC, 12)
+ 232              	#        define C13 PAL_LINE(GPIOC, 13)
+ 233              	#        define C14 PAL_LINE(GPIOC, 14)
+ 234              	#        define C15 PAL_LINE(GPIOC, 15)
+ 235              	#        define D0 PAL_LINE(GPIOD, 0)
+ 236              	#        define D1 PAL_LINE(GPIOD, 1)
+ 237              	#        define D2 PAL_LINE(GPIOD, 2)
+ 238              	#        define D3 PAL_LINE(GPIOD, 3)
+ 239              	#        define D4 PAL_LINE(GPIOD, 4)
+ 240              	#        define D5 PAL_LINE(GPIOD, 5)
+ 241              	#        define D6 PAL_LINE(GPIOD, 6)
+ 242              	#        define D7 PAL_LINE(GPIOD, 7)
+ 243              	#        define D8 PAL_LINE(GPIOD, 8)
+ 244              	#        define D9 PAL_LINE(GPIOD, 9)
+ 245              	#        define D10 PAL_LINE(GPIOD, 10)
+ 246              	#        define D11 PAL_LINE(GPIOD, 11)
+ 247              	#        define D12 PAL_LINE(GPIOD, 12)
+ 248              	#        define D13 PAL_LINE(GPIOD, 13)
+ 249              	#        define D14 PAL_LINE(GPIOD, 14)
+ 250              	#        define D15 PAL_LINE(GPIOD, 15)
+ 251              	#        define E0 PAL_LINE(GPIOE, 0)
+ 252              	#        define E1 PAL_LINE(GPIOE, 1)
+ 253              	#        define E2 PAL_LINE(GPIOE, 2)
+ 254              	#        define E3 PAL_LINE(GPIOE, 3)
+ 255              	#        define E4 PAL_LINE(GPIOE, 4)
+ 256              	#        define E5 PAL_LINE(GPIOE, 5)
+ 257              	#        define E6 PAL_LINE(GPIOE, 6)
+ 258              	#        define E7 PAL_LINE(GPIOE, 7)
+ 259              	#        define E8 PAL_LINE(GPIOE, 8)
+ 260              	#        define E9 PAL_LINE(GPIOE, 9)
+ 261              	#        define E10 PAL_LINE(GPIOE, 10)
+ 262              	#        define E11 PAL_LINE(GPIOE, 11)
+ 263              	#        define E12 PAL_LINE(GPIOE, 12)
+ 264              	#        define E13 PAL_LINE(GPIOE, 13)
+ 265              	#        define E14 PAL_LINE(GPIOE, 14)
+ 266              	#        define E15 PAL_LINE(GPIOE, 15)
+ 267              	#        define F0 PAL_LINE(GPIOF, 0)
+ 268              	#        define F1 PAL_LINE(GPIOF, 1)
+ 269              	#        define F2 PAL_LINE(GPIOF, 2)
+ 270              	#        define F3 PAL_LINE(GPIOF, 3)
+ 271              	#        define F4 PAL_LINE(GPIOF, 4)
+ 272              	#        define F5 PAL_LINE(GPIOF, 5)
+ 273              	#        define F6 PAL_LINE(GPIOF, 6)
+ 274              	#        define F7 PAL_LINE(GPIOF, 7)
+ 275              	#        define F8 PAL_LINE(GPIOF, 8)
+ 276              	#        define F9 PAL_LINE(GPIOF, 9)
+ 277              	#        define F10 PAL_LINE(GPIOF, 10)
+ 278              	#        define F11 PAL_LINE(GPIOF, 11)
+ 279              	#        define F12 PAL_LINE(GPIOF, 12)
+ 280              	#        define F13 PAL_LINE(GPIOF, 13)
+ 281              	#        define F14 PAL_LINE(GPIOF, 14)
+ 282              	#        define F15 PAL_LINE(GPIOF, 15)
+ 283              	#    endif
+ 284              	#endif
+ 285              	
+ 286              	/* USART configuration */
+ 287              	#ifdef BLUETOOTH_ENABLE
+ 288              	#    ifdef __AVR_ATmega32U4__
+ 289              	#        define SERIAL_UART_BAUD 9600
+ 290              	#        define SERIAL_UART_DATA UDR1
+ 291              	#        define SERIAL_UART_UBRR (F_CPU / (16UL * SERIAL_UART_BAUD) - 1)
+ 292              	#        define SERIAL_UART_RXD_VECT USART1_RX_vect
+ 293              	#        define SERIAL_UART_TXD_READY (UCSR1A & _BV(UDRE1))
+ 294              	#        define SERIAL_UART_INIT()                  \
+ 295              	            do {                                    \
+ 296              	                /* baud rate */                     \
+ 297              	                UBRR1L = SERIAL_UART_UBRR;          \
+ 298              	                /* baud rate */                     \
+ 299              	                UBRR1H = SERIAL_UART_UBRR >> 8;     \
+ 300              	                /* enable TX */                     \
+ 301              	                UCSR1B = _BV(TXEN1);                \
+ 302              	                /* 8-bit data */                    \
+ 303              	                UCSR1C = _BV(UCSZ11) | _BV(UCSZ10); \
+ 304              	                sei();                              \
+ 305              	            } while (0)
+ 306              	#    else
+ 307              	#        error "USART configuration is needed."
+ 308              	#    endif
+ 309              	#endif
+ 310              	
+ 311              	#define API_SYSEX_MAX_SIZE 32
+ 312              	
+ 313              	#include "song_list.h"
+   1              	/* Any song or sound without a license explicitly stated is:
+   2              	 *
+   3              	 * Copyright 2016 Jack Humbert
+   4              	 * Copyright 2017 Zach White
+   5              	 *
+   6              	 * This program is free software: you can redistribute it and/or modify
+   7              	 * it under the terms of the GNU General Public License as published by
+   8              	 * the Free Software Foundation, either version 2 of the License, or
+   9              	 * (at your option) any later version.
+  10              	 *
+  11              	 * This program is distributed in the hope that it will be useful,
+  12              	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13              	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14              	 * GNU General Public License for more details.
+  15              	 *
+  16              	 * You should have received a copy of the GNU General Public License
+  17              	 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18              	 */
+  19              	#pragma once
+  20              	
+  21              	#include "musical_notes.h"
+   1              	/* Copyright 2016 Jack Humbert
+  22              	
+  22              	
+   1              	/*
+   2              	    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3              	
+   4              	    This file is part of ChibiOS.
+   5              	
+   6              	    ChibiOS is free software; you can redistribute it and/or modify
+   7              	    it under the terms of the GNU General Public License as published by
+   8              	    the Free Software Foundation; either version 3 of the License, or
+   9              	    (at your option) any later version.
+  10              	
+  11              	    ChibiOS is distributed in the hope that it will be useful,
+  12              	    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13              	    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14              	    GNU General Public License for more details.
+  15              	
+  16              	    You should have received a copy of the GNU General Public License
+  17              	    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18              	*/
+  19              	
+  20              	/**
+  21              	 * @file    compilers/GCC/chcoreasm_v7m.S
+  22              	 * @brief   ARMv7-M architecture port low level code.
+  23              	 *
+  24              	 * @addtogroup ARMCMx_GCC_CORE
+  25              	 * @{
+  26              	 */
+  27              	
+  28              	#if !defined(FALSE) || defined(__DOXYGEN__)
+  29              	#define FALSE   0
+  30              	#endif
+  31              	
+  32              	#if !defined(TRUE) || defined(__DOXYGEN__)
+  33              	#define TRUE    1
+  34              	#endif
+  35              	
+  36              	#define _FROM_ASM_
+  37              	#include "chlicense.h"
+   1              	/*
+   2              	    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3              	
+   4              	    This file is part of ChibiOS.
+   5              	
+   6              	    ChibiOS is free software; you can redistribute it and/or modify
+   7              	    it under the terms of the GNU General Public License as published by
+   8              	    the Free Software Foundation; either version 3 of the License, or
+   9              	    (at your option) any later version.
+  10              	
+  11              	    ChibiOS is distributed in the hope that it will be useful,
+  12              	    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13              	    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14              	    GNU General Public License for more details.
+  15              	
+  16              	    You should have received a copy of the GNU General Public License
+  17              	    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18              	*/
+  19              	
+  20              	/**
+  21              	 * @file    chlicense.h
+  22              	 * @brief   License Module macros and structures.
+  23              	 *
+  24              	 * @addtogroup license
+  25              	 * @{
+  26              	 */
+  27              	
+  28              	#ifndef CHLICENSE_H
+  29              	#define CHLICENSE_H
+  30              	
+  31              	/*===========================================================================*/
+  32              	/* Module constants.                                                         */
+  33              	/*===========================================================================*/
+  34              	
+  35              	/**
+  36              	 * @name   Allowed Features Levels
+  37              	 * @{
+  38              	 */
+  39              	#define CH_FEATURES_BASIC                   0
+  40              	#define CH_FEATURES_INTERMEDIATE            1
+  41              	#define CH_FEATURES_FULL                    2
+  42              	/** @} */
+  43              	
+  44              	/**
+  45              	 * @name    Deployment Options
+  46              	 */
+  47              	#define CH_DEPLOY_UNLIMITED                -1
+  48              	#define CH_DEPLOY_NONE                      0
+  49              	/** @} */
+  50              	
+  51              	/**
+  52              	 * @name    Licensing Options
+  53              	 * @{
+  54              	 */
+  55              	#define CH_LICENSE_GPL                      0
+  56              	#define CH_LICENSE_GPL_EXCEPTION            1
+  57              	#define CH_LICENSE_COMMERCIAL_FREE          2
+  58              	#define CH_LICENSE_COMMERCIAL_DEV_1000      3
+  59              	#define CH_LICENSE_COMMERCIAL_DEV_5000      4
+  60              	#define CH_LICENSE_COMMERCIAL_FULL          5
+  61              	#define CH_LICENSE_COMMERCIAL_RUNTIME       6
+  62              	#define CH_LICENSE_PARTNER                  7
+  63              	/** @} */
+  64              	
+  65              	#include "chcustomer.h"
+   1              	/*
+  66              	#if CH_LICENSE == CH_LICENSE_PARTNER
+  38              	#include "chconf.h"
+   1              	/*
+  39              	#include "chcore.h"
+   1              	/*
+   2              	    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3              	
+   4              	    This file is part of ChibiOS.
+   5              	
+   6              	    ChibiOS is free software; you can redistribute it and/or modify
+   7              	    it under the terms of the GNU General Public License as published by
+   8              	    the Free Software Foundation; either version 3 of the License, or
+   9              	    (at your option) any later version.
+  10              	
+  11              	    ChibiOS is distributed in the hope that it will be useful,
+  12              	    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13              	    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14              	    GNU General Public License for more details.
+  15              	
+  16              	    You should have received a copy of the GNU General Public License
+  17              	    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18              	*/
+  19              	
+  20              	/**
+  21              	 * @file    ARMCMx/chcore.h
+  22              	 * @brief   ARM Cortex-Mx port macros and structures.
+  23              	 *
+  24              	 * @addtogroup ARMCMx_CORE
+  25              	 * @{
+  26              	 */
+  27              	
+  28              	#ifndef CHCORE_H
+  29              	#define CHCORE_H
+  30              	
+  31              	/*===========================================================================*/
+  32              	/* Module constants.                                                         */
+  33              	/*===========================================================================*/
+  34              	
+  35              	/**
+  36              	 * @name    Architecture and Compiler
+  37              	 * @{
+  38              	 */
+  39              	/**
+  40              	 * @brief   Macro defining a generic ARM architecture.
+  41              	 */
+  42              	#define PORT_ARCHITECTURE_ARM
+  43              	
+  44              	/* The following code is not processed when the file is included from an
+  45              	   asm module because those intrinsic macros are not necessarily defined
+  46              	   by the assembler too.*/
+  47              	#if !defined(_FROM_ASM_)
+  48              	
+  49              	/**
+  50              	 * @brief   Compiler name and version.
+  51              	 */
+  52              	#if defined(__GNUC__) || defined(__DOXYGEN__)
+  53              	#define PORT_COMPILER_NAME              "GCC " __VERSION__
+  54              	
+  55              	#elif defined(__ICCARM__)
+  56              	#define PORT_COMPILER_NAME              "IAR"
+  57              	
+  58              	#elif defined(__CC_ARM)
+  59              	#define PORT_COMPILER_NAME              "RVCT"
+  60              	
+  61              	#else
+  62              	#error "unsupported compiler"
+  63              	#endif
+  64              	
+  65              	#endif /* !defined(_FROM_ASM_) */
+  66              	
+  67              	/** @} */
+  68              	
+  69              	/* Inclusion of the Cortex-Mx implementation specific parameters.*/
+  70              	#include "cmparams.h"
+   1              	/*
+  71              	
+  72              	/*===========================================================================*/
+  73              	/* Module pre-compile time settings.                                         */
+  74              	/*===========================================================================*/
+  75              	
+  76              	/**
+  77              	 * @brief   Enables an alternative timer implementation.
+  78              	 * @details Usually the port uses a timer interface defined in the file
+  79              	 *          @p chcore_timer.h, if this option is enabled then the file
+  80              	 *          @p chcore_timer_alt.h is included instead.
+  81              	 */
+  82              	#if !defined(PORT_USE_ALT_TIMER)
+  83              	#define PORT_USE_ALT_TIMER              FALSE
+  84              	#endif
+  85              	
+  86              	/*===========================================================================*/
+  87              	/* Derived constants and error checks.                                       */
+  88              	/*===========================================================================*/
+  89              	
+  90              	/*===========================================================================*/
+  91              	/* Module data structures and types.                                         */
+  92              	/*===========================================================================*/
+  93              	
+  94              	/* The following code is not processed when the file is included from an
+  95              	   asm module.*/
+  96              	#if !defined(_FROM_ASM_)
+  97              	
+  98              	/**
+  99              	 * @brief   Type of a generic ARM register.
+ 100              	 */
+ 101              	typedef void *regarm_t;
+ 102              	
+ 103              	/**
+ 104              	 * @brief   Type of stack and memory alignment enforcement.
+ 105              	 * @note    In this architecture the stack alignment is enforced to 64 bits,
+ 106              	 *          32 bits alignment is supported by hardware but deprecated by ARM,
+ 107              	 *          the implementation choice is to not offer the option.
+ 108              	 */
+ 109              	typedef uint64_t stkalign_t;
+ 110              	
+ 111              	/* The following declarations are there just for Doxygen documentation, the
+ 112              	   real declarations are inside the sub-headers being specific for the
+ 113              	   sub-architectures.*/
+ 114              	#if defined(__DOXYGEN__)
+ 115              	/**
+ 116              	 * @brief   Interrupt saved context.
+ 117              	 * @details This structure represents the stack frame saved during a
+ 118              	 *          preemption-capable interrupt handler.
+ 119              	 * @note    It is implemented to match the Cortex-Mx exception context.
+ 120              	 */
+ 121              	struct port_extctx {};
+ 122              	
+ 123              	/**
+ 124              	 * @brief   System saved context.
+ 125              	 * @details This structure represents the inner stack frame during a context
+ 126              	 *          switch.
+ 127              	 */
+ 128              	struct port_intctx {};
+ 129              	#endif /* defined(__DOXYGEN__) */
+ 130              	
+ 131              	/**
+ 132              	 * @brief   Platform dependent part of the @p thread_t structure.
+ 133              	 * @details In this port the structure just holds a pointer to the
+ 134              	 *          @p port_intctx structure representing the stack pointer
+ 135              	 *          at context switch time.
+ 136              	 */
+ 137              	struct port_context {
+ 138              	  struct port_intctx *sp;
+ 139              	};
+ 140              	
+ 141              	#endif /* !defined(_FROM_ASM_) */
+ 142              	
+ 143              	/*===========================================================================*/
+ 144              	/* Module macros.                                                            */
+ 145              	/*===========================================================================*/
+ 146              	
+ 147              	/**
+ 148              	 * @brief   Total priority levels.
+ 149              	 */
+ 150              	#define CORTEX_PRIORITY_LEVELS          (1U << CORTEX_PRIORITY_BITS)
+ 151              	
+ 152              	/**
+ 153              	 * @brief   Minimum priority level.
+ 154              	 * @details This minimum priority level is calculated from the number of
+ 155              	 *          priority bits supported by the specific Cortex-Mx implementation.
+ 156              	 */
+ 157              	#define CORTEX_MINIMUM_PRIORITY         (CORTEX_PRIORITY_LEVELS - 1)
+ 158              	
+ 159              	/**
+ 160              	 * @brief   Maximum priority level.
+ 161              	 * @details The maximum allowed priority level is always zero.
+ 162              	 */
+ 163              	#define CORTEX_MAXIMUM_PRIORITY         0U
+ 164              	
+ 165              	/**
+ 166              	 * @brief   Priority level to priority mask conversion macro.
+ 167              	 */
+ 168              	#define CORTEX_PRIO_MASK(n)                                                 \
+ 169              	  ((n) << (8U - (unsigned)CORTEX_PRIORITY_BITS))
+ 170              	
+ 171              	/**
+ 172              	 * @brief   Priority level verification macro.
+ 173              	 */
+ 174              	#define PORT_IRQ_IS_VALID_PRIORITY(n)                                       \
+ 175              	  (((n) >= 0U) && ((n) < CORTEX_PRIORITY_LEVELS))
+ 176              	
+ 177              	/**
+ 178              	 * @brief   Priority level verification macro.
+ 179              	 */
+ 180              	#define PORT_IRQ_IS_VALID_KERNEL_PRIORITY(n)                                \
+ 181              	  (((n) >= CORTEX_MAX_KERNEL_PRIORITY) && ((n) < CORTEX_PRIORITY_LEVELS))
+ 182              	
+ 183              	/*===========================================================================*/
+ 184              	/* External declarations.                                                    */
+ 185              	/*===========================================================================*/
+ 186              	
+ 187              	/*===========================================================================*/
+ 188              	/* Module inline functions.                                                  */
+ 189              	/*===========================================================================*/
+ 190              	
+ 191              	/* Includes the sub-architecture-specific part.*/
+ 192              	#if (CORTEX_MODEL == 0) || (CORTEX_MODEL == 1)
+ 193              	#include "chcore_v6m.h"
+ 194              	#elif (CORTEX_MODEL == 3) || (CORTEX_MODEL == 4) || (CORTEX_MODEL == 7)
+ 195              	#include "mpu.h"
+   1              	/*
+ 196              	#include "chcore_v7m.h"
+   1              	/*
+ 197              	#else
+  40              	
+  41              	#if !defined(__DOXYGEN__)
+  42              	
+  43              	/*
+  44              	 * RTOS-specific context offset.
+  45              	 */
+  46              	#if defined(_CHIBIOS_RT_CONF_)
+  47              	#define CONTEXT_OFFSET  12
+  48              	#elif defined(_CHIBIOS_NIL_CONF_)
+  49              	#define CONTEXT_OFFSET  0
+  50              	#else
+  51              	#error "invalid chconf.h"
+  52              	#endif
+  53              	
+  54              	                .set    SCB_ICSR, 0xE000ED04
+  55              	                .set    ICSR_PENDSVSET, 0x10000000
+  56              	
+  57              	                .syntax unified
+  58              	                .cpu    cortex-m4
+  59              	#if CORTEX_USE_FPU
+  60              	                .fpu    fpv4-sp-d16
+  61              	#else
+  62              	                .fpu    softvfp
+  63              	#endif
+  64              	
+  65              	                .thumb
+  66              	                .text
+  67              	
+  68              	/*--------------------------------------------------------------------------*
+  69              	 * Performs a context switch between two threads.
+  70              	 *--------------------------------------------------------------------------*/
+  71              	                .thumb_func
+  72              	                .globl  _port_switch
+  73              	_port_switch:
+  74:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}
+  75              	#if CORTEX_USE_FPU
+  76:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 vpush   {s16-s31}
+  77              	#endif
+  78              	
+  79:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 str     sp, [r1, #CONTEXT_OFFSET]
+  80              	#if (CORTEX_SIMPLIFIED_PRIORITY == FALSE) &&                                \
+  81              	    ((CORTEX_MODEL == 3) || (CORTEX_MODEL == 4))
+  82              	                /* Workaround for ARM errata 752419, only applied if
+  83              	                   condition exists for it to be triggered.*/
+  84:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 ldr     r3, [r0, #CONTEXT_OFFSET]
+  85:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 mov     sp, r3
+  86              	#else
+  87              	                ldr     sp, [r0, #CONTEXT_OFFSET]
+  88              	#endif
+  89              	
+  90              	#if CORTEX_USE_FPU
+  91:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 vpop    {s16-s31}
+  92              	#endif
+  93:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
+  94              	
+  95              	/*--------------------------------------------------------------------------*
+  96              	 * Start a thread by invoking its work function.
+  97              	 *
+  98              	 * Threads execution starts here, the code leaves the system critical zone
+  99              	 * and then jumps into the thread function passed in register R4. The
+ 100              	 * register R5 contains the thread parameter. The function chThdExit() is
+ 101              	 * called on thread function return.
+ 102              	 *--------------------------------------------------------------------------*/
+ 103              	                .thumb_func
+ 104              	                .globl  _port_thread_start
+ 105              	_port_thread_start:
+ 106              	#if CH_DBG_SYSTEM_STATE_CHECK
+ 107:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 bl      _dbg_check_unlock
+ 108:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** #endif
+ 109:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** #if CH_DBG_STATISTICS
+ 110:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 bl      _stats_stop_measure_crit_thd
+ 111:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** #endif
+ 112:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** #if CORTEX_SIMPLIFIED_PRIORITY
+ 113:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 cpsie   i
+ 114:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** #else
+ 115:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 movs    r3, #0              /* CORTEX_BASEPRI_DISABLED */
+ 116:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 msr     BASEPRI, r3
+ 117              	#endif
+ 118:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 mov     r0, r5
+ 119:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 blx     r4
+ 120              	#if defined(_CHIBIOS_RT_CONF_)
+ 121:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 movs    r0, #0              /* MSG_OK */
+ 122:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 bl      chThdExit
+ 123              	#endif
+ 124              	#if defined(_CHIBIOS_NIL_CONF_)
+ 125              	                mov     r3, #0
+ 126              	                bl      chSysHalt
+ 127              	#endif
+ 128              	
+ 129              	/*--------------------------------------------------------------------------*
+ 130              	 * Post-IRQ switch code.
+ 131              	 *
+ 132              	 * Exception handlers return here for context switching.
+ 133              	 *--------------------------------------------------------------------------*/
+ 134              	                .thumb_func
+ 135              	                .globl  _port_switch_from_isr
+ 136              	_port_switch_from_isr:
+ 137              	#if CH_DBG_STATISTICS
+ 138              	                bl      _stats_start_measure_crit_thd
+ 139              	#endif
+ 140              	#if CH_DBG_SYSTEM_STATE_CHECK
+ 141              	                bl      _dbg_check_lock
+ 142              	#endif
+ 143:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 bl      chSchDoReschedule
+ 144              	#if CH_DBG_SYSTEM_STATE_CHECK
+ 145              	                bl      _dbg_check_unlock
+ 146              	#endif
+ 147              	#if CH_DBG_STATISTICS
+ 148              	                bl      _stats_stop_measure_crit_thd
+ 149              	#endif
+ 150              	                .globl  _port_exit_from_isr
+ 151              	_port_exit_from_isr:
+ 152              	#if CORTEX_SIMPLIFIED_PRIORITY
+ 153              	                movw    r3, #:lower16:SCB_ICSR
+ 154              	                movt    r3, #:upper16:SCB_ICSR
+ 155              	                mov     r2, ICSR_PENDSVSET
+ 156              	                str     r2, [r3, #0]
+ 157              	                cpsie   i
+ 158              	#else /* !CORTEX_SIMPLIFIED_PRIORITY */
+ 159:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S ****                 svc     #0
+ 160              	#endif /* !CORTEX_SIMPLIFIED_PRIORITY */
+ 161:lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S **** .L1:            b       .L1
+DEFINED SYMBOLS
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:54     *ABS*:00000000e000ed04 SCB_ICSR
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:55     *ABS*:0000000010000000 ICSR_PENDSVSET
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:73     .text:0000000000000000 _port_switch
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:74     .text:0000000000000000 $t
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:105    .text:0000000000000018 _port_thread_start
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:136    .text:0000000000000028 _port_switch_from_isr
+lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chcoreasm_v7m.S:151    .text:000000000000002c _port_exit_from_isr
+
+UNDEFINED SYMBOLS
+chThdExit
+chSchDoReschedule

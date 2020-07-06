@@ -1,0 +1,4274 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"led_matrix.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.led_run_pattern,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	led_run_pattern:
+  25              	.LFB155:
+  26              		.file 1 "tmk_core/protocol/arm_atsam/led_matrix.c"
+   1:tmk_core/protocol/arm_atsam/led_matrix.c **** /*
+   2:tmk_core/protocol/arm_atsam/led_matrix.c **** Copyright 2018 Massdrop Inc.
+   3:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+   4:tmk_core/protocol/arm_atsam/led_matrix.c **** This program is free software: you can redistribute it and/or modify
+   5:tmk_core/protocol/arm_atsam/led_matrix.c **** it under the terms of the GNU General Public License as published by
+   6:tmk_core/protocol/arm_atsam/led_matrix.c **** the Free Software Foundation, either version 2 of the License, or
+   7:tmk_core/protocol/arm_atsam/led_matrix.c **** (at your option) any later version.
+   8:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+   9:tmk_core/protocol/arm_atsam/led_matrix.c **** This program is distributed in the hope that it will be useful,
+  10:tmk_core/protocol/arm_atsam/led_matrix.c **** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11:tmk_core/protocol/arm_atsam/led_matrix.c **** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12:tmk_core/protocol/arm_atsam/led_matrix.c **** GNU General Public License for more details.
+  13:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  14:tmk_core/protocol/arm_atsam/led_matrix.c **** You should have received a copy of the GNU General Public License
+  15:tmk_core/protocol/arm_atsam/led_matrix.c **** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16:tmk_core/protocol/arm_atsam/led_matrix.c **** */
+  17:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  18:tmk_core/protocol/arm_atsam/led_matrix.c **** #include "arm_atsam_protocol.h"
+  19:tmk_core/protocol/arm_atsam/led_matrix.c **** #include "tmk_core/common/led.h"
+  20:tmk_core/protocol/arm_atsam/led_matrix.c **** #include "rgb_matrix.h"
+  21:tmk_core/protocol/arm_atsam/led_matrix.c **** #include <string.h>
+  22:tmk_core/protocol/arm_atsam/led_matrix.c **** #include <math.h>
+  23:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  24:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+  25:tmk_core/protocol/arm_atsam/led_matrix.c **** __attribute__((weak)) led_instruction_t led_instructions[] = {{.end = 1}};
+  26:tmk_core/protocol/arm_atsam/led_matrix.c **** static void                             led_matrix_massdrop_config_override(int i);
+  27:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // USE_MASSDROP_CONFIGURATOR
+  28:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  29:tmk_core/protocol/arm_atsam/led_matrix.c **** void SERCOM1_0_Handler(void) {
+  30:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (SERCOM1->I2CM.INTFLAG.bit.ERROR) {
+  31:tmk_core/protocol/arm_atsam/led_matrix.c ****         SERCOM1->I2CM.INTFLAG.reg = SERCOM_I2CM_INTENCLR_ERROR;
+  32:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+  33:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+  34:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  35:tmk_core/protocol/arm_atsam/led_matrix.c **** void DMAC_0_Handler(void) {
+  36:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (DMAC->Channel[0].CHINTFLAG.bit.TCMPL) {
+  37:tmk_core/protocol/arm_atsam/led_matrix.c ****         DMAC->Channel[0].CHINTFLAG.reg = DMAC_CHINTENCLR_TCMPL;
+  38:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  39:tmk_core/protocol/arm_atsam/led_matrix.c ****         i2c1_stop();
+  40:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  41:tmk_core/protocol/arm_atsam/led_matrix.c ****         i2c_led_q_running = 0;
+  42:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  43:tmk_core/protocol/arm_atsam/led_matrix.c ****         i2c_led_q_run();
+  44:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  45:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+  46:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+  47:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  48:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (DMAC->Channel[0].CHINTFLAG.bit.TERR) {
+  49:tmk_core/protocol/arm_atsam/led_matrix.c ****         DMAC->Channel[0].CHINTFLAG.reg = DMAC_CHINTENCLR_TERR;
+  50:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+  51:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+  52:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  53:tmk_core/protocol/arm_atsam/led_matrix.c **** issi3733_driver_t issidrv[ISSI3733_DRIVER_COUNT];
+  54:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  55:tmk_core/protocol/arm_atsam/led_matrix.c **** issi3733_led_t led_map[ISSI3733_LED_COUNT] = ISSI3733_LED_MAP;
+  56:tmk_core/protocol/arm_atsam/led_matrix.c **** RGB            led_buffer[ISSI3733_LED_COUNT];
+  57:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  58:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t gcr_desired;
+  59:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t gcr_actual;
+  60:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t gcr_actual_last;
+  61:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+  62:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t gcr_breathe;
+  63:tmk_core/protocol/arm_atsam/led_matrix.c **** float   breathe_mult;
+  64:tmk_core/protocol/arm_atsam/led_matrix.c **** float   pomod;
+  65:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif
+  66:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  67:tmk_core/protocol/arm_atsam/led_matrix.c **** #define ACT_GCR_NONE 0
+  68:tmk_core/protocol/arm_atsam/led_matrix.c **** #define ACT_GCR_INC 1
+  69:tmk_core/protocol/arm_atsam/led_matrix.c **** #define ACT_GCR_DEC 2
+  70:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  71:tmk_core/protocol/arm_atsam/led_matrix.c **** #define LED_GCR_STEP_AUTO 2
+  72:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  73:tmk_core/protocol/arm_atsam/led_matrix.c **** static uint8_t gcr_min_counter;
+  74:tmk_core/protocol/arm_atsam/led_matrix.c **** static uint8_t v_5v_cat_hit;
+  75:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  76:tmk_core/protocol/arm_atsam/led_matrix.c **** // WARNING: Automatic GCR is in place to prevent USB shutdown and LED driver overloading
+  77:tmk_core/protocol/arm_atsam/led_matrix.c **** void gcr_compute(void) {
+  78:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t action  = ACT_GCR_NONE;
+  79:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t gcr_use = gcr_desired;
+  80:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  81:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+  82:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (led_animation_breathing) {
+  83:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_use = gcr_breathe;
+  84:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+  85:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif
+  86:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  87:tmk_core/protocol/arm_atsam/led_matrix.c ****     // If the 5v takes a catastrophic hit, disable the LED drivers briefly, assert auto gcr mode, m
+  88:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (v_5v < V5_CAT) {
+  89:tmk_core/protocol/arm_atsam/led_matrix.c ****         I2C3733_Control_Set(0);
+  90:tmk_core/protocol/arm_atsam/led_matrix.c ****         // CDC_print("USB: WARNING: 5V catastrophic level reached! Disabling LED drivers!\r\n"); //
+  91:tmk_core/protocol/arm_atsam/led_matrix.c ****         v_5v_cat_hit = 20;  //~100ms recover
+  92:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual   = 0;   // Minimize GCR
+  93:tmk_core/protocol/arm_atsam/led_matrix.c ****         usb_gcr_auto = 1;   // Force auto mode enabled
+  94:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+  95:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (v_5v_cat_hit > 1) {
+  96:tmk_core/protocol/arm_atsam/led_matrix.c ****         v_5v_cat_hit--;
+  97:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+  98:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (v_5v_cat_hit == 1) {
+  99:tmk_core/protocol/arm_atsam/led_matrix.c ****         I2C3733_Control_Set(1);
+ 100:tmk_core/protocol/arm_atsam/led_matrix.c ****         CDC_print("USB: WARNING: Re-enabling LED drivers\r\n");
+ 101:tmk_core/protocol/arm_atsam/led_matrix.c ****         v_5v_cat_hit = 0;
+ 102:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 103:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 104:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 105:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (usb_gcr_auto) {
+ 106:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (v_5v_avg < V5_LOW)
+ 107:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 108:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (v_5v_avg > V5_HIGH && gcr_actual < gcr_use)
+ 109:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_INC;
+ 110:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (gcr_actual > gcr_use)
+ 111:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 112:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else {
+ 113:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (gcr_actual < gcr_use)
+ 114:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_INC;
+ 115:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (gcr_actual > gcr_use)
+ 116:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 117:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 118:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 119:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (action == ACT_GCR_NONE) {
+ 120:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_min_counter = 0;
+ 121:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (action == ACT_GCR_INC) {
+ 122:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (LED_GCR_STEP_AUTO > LED_GCR_MAX - gcr_actual)
+ 123:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_actual = LED_GCR_MAX;  // Obey max and prevent wrapping
+ 124:tmk_core/protocol/arm_atsam/led_matrix.c ****         else
+ 125:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_actual += LED_GCR_STEP_AUTO;
+ 126:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_min_counter = 0;
+ 127:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (action == ACT_GCR_DEC) {
+ 128:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (LED_GCR_STEP_AUTO > gcr_actual)  // Prevent wrapping
+ 129:tmk_core/protocol/arm_atsam/led_matrix.c ****         {
+ 130:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_actual = 0;
+ 131:tmk_core/protocol/arm_atsam/led_matrix.c ****             // At this point, power can no longer be cut from the LED drivers, so focus on cutting 
+ 132:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (usb_extra_state != USB_EXTRA_STATE_DISABLED_UNTIL_REPLUG)  // If not in a wait for 
+ 133:tmk_core/protocol/arm_atsam/led_matrix.c ****             {
+ 134:tmk_core/protocol/arm_atsam/led_matrix.c ****                 if (usb_extra_state == USB_EXTRA_STATE_ENABLED)  // If extra usb is enabled
+ 135:tmk_core/protocol/arm_atsam/led_matrix.c ****                 {
+ 136:tmk_core/protocol/arm_atsam/led_matrix.c ****                     gcr_min_counter++;
+ 137:tmk_core/protocol/arm_atsam/led_matrix.c ****                     if (gcr_min_counter > 200)  // 5ms per check = 1s delay
+ 138:tmk_core/protocol/arm_atsam/led_matrix.c ****                     {
+ 139:tmk_core/protocol/arm_atsam/led_matrix.c ****                         USB_ExtraSetState(USB_EXTRA_STATE_DISABLED_UNTIL_REPLUG);
+ 140:tmk_core/protocol/arm_atsam/led_matrix.c ****                         usb_extra_manual = 0;  // Force disable manual mode of extra port
+ 141:tmk_core/protocol/arm_atsam/led_matrix.c ****                         if (usb_extra_manual)
+ 142:tmk_core/protocol/arm_atsam/led_matrix.c ****                             CDC_print("USB: Disabling extra port until replug and manual mode toggl
+ 143:tmk_core/protocol/arm_atsam/led_matrix.c ****                         else
+ 144:tmk_core/protocol/arm_atsam/led_matrix.c ****                             CDC_print("USB: Disabling extra port until replug!\r\n");
+ 145:tmk_core/protocol/arm_atsam/led_matrix.c ****                     }
+ 146:tmk_core/protocol/arm_atsam/led_matrix.c ****                 }
+ 147:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 148:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else {
+ 149:tmk_core/protocol/arm_atsam/led_matrix.c ****             // Power successfully cut back from LED drivers
+ 150:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_actual -= LED_GCR_STEP_AUTO;
+ 151:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_min_counter = 0;
+ 152:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 153:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 154:tmk_core/protocol/arm_atsam/led_matrix.c ****             // If breathe mode is active, the top end can fluctuate if the host can not supply enou
+ 155:tmk_core/protocol/arm_atsam/led_matrix.c ****             // So set the breathe GCR to where it becomes stable
+ 156:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (led_animation_breathing == 1) {
+ 157:tmk_core/protocol/arm_atsam/led_matrix.c ****                 gcr_breathe = gcr_actual;
+ 158:tmk_core/protocol/arm_atsam/led_matrix.c ****                 // PS: At this point, setting breathing to exhale makes a noticebly shorter cycle
+ 159:tmk_core/protocol/arm_atsam/led_matrix.c ****                 //    and the same would happen maybe one or two more times. Therefore I'm favoring
+ 160:tmk_core/protocol/arm_atsam/led_matrix.c ****                 //    powering through one full breathe and letting gcr settle completely
+ 161:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 162:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif
+ 163:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 164:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 165:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 166:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 167:tmk_core/protocol/arm_atsam/led_matrix.c **** void issi3733_prepare_arrays(void) {
+ 168:tmk_core/protocol/arm_atsam/led_matrix.c ****     memset(issidrv, 0, sizeof(issi3733_driver_t) * ISSI3733_DRIVER_COUNT);
+ 169:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 170:tmk_core/protocol/arm_atsam/led_matrix.c ****     int     i;
+ 171:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t addrs[ISSI3733_DRIVER_COUNT] = ISSI3773_DRIVER_ADDRESSES;
+ 172:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 173:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (i = 0; i < ISSI3733_DRIVER_COUNT; i++) {
+ 174:tmk_core/protocol/arm_atsam/led_matrix.c ****         issidrv[i].addr = addrs[i];
+ 175:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 176:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 177:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 178:tmk_core/protocol/arm_atsam/led_matrix.c ****         // BYTE: 1 + (SW-1)*16 + (CS-1)
+ 179:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.g = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swg - 1) * 16
+ 180:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.r = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swr - 1) * 16
+ 181:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.b = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swb - 1) * 16
+ 182:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 183:tmk_core/protocol/arm_atsam/led_matrix.c ****         // BYTE: 1 + (SW-1)*2 + (CS-1)/8
+ 184:tmk_core/protocol/arm_atsam/led_matrix.c ****         // BIT: (CS-1)%8
+ 185:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swg - 1) * 2 + (led_map[i].ad
+ 186:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swr - 1) * 2 + (led_map[i].ad
+ 187:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swb - 1) * 2 + (led_map[i].ad
+ 188:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 189:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 190:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 191:tmk_core/protocol/arm_atsam/led_matrix.c **** void led_matrix_prepare(void) {
+ 192:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 193:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.r = 0;
+ 194:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.g = 0;
+ 195:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.b = 0;
+ 196:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 197:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 198:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 199:tmk_core/protocol/arm_atsam/led_matrix.c **** void led_set_one(int i, uint8_t r, uint8_t g, uint8_t b) {
+ 200:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (i < ISSI3733_LED_COUNT) {
+ 201:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 202:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_matrix_massdrop_config_override(i);
+ 203:tmk_core/protocol/arm_atsam/led_matrix.c **** #else
+ 204:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_buffer[i].r = r;
+ 205:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_buffer[i].g = g;
+ 206:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_buffer[i].b = b;
+ 207:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif
+ 208:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 209:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 210:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 211:tmk_core/protocol/arm_atsam/led_matrix.c **** void led_set_all(uint8_t r, uint8_t g, uint8_t b) {
+ 212:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 213:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_set_one(i, r, g, b);
+ 214:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 215:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 216:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 217:tmk_core/protocol/arm_atsam/led_matrix.c **** void init(void) {
+ 218:tmk_core/protocol/arm_atsam/led_matrix.c ****     DBGC(DC_LED_MATRIX_INIT_BEGIN);
+ 219:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 220:tmk_core/protocol/arm_atsam/led_matrix.c ****     issi3733_prepare_arrays();
+ 221:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 222:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_matrix_prepare();
+ 223:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 224:tmk_core/protocol/arm_atsam/led_matrix.c ****     gcr_min_counter = 0;
+ 225:tmk_core/protocol/arm_atsam/led_matrix.c ****     v_5v_cat_hit    = 0;
+ 226:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 227:tmk_core/protocol/arm_atsam/led_matrix.c ****     DBGC(DC_LED_MATRIX_INIT_COMPLETE);
+ 228:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 229:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 230:tmk_core/protocol/arm_atsam/led_matrix.c **** void flush(void) {
+ 231:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 232:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (!led_enabled) {
+ 233:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 234:tmk_core/protocol/arm_atsam/led_matrix.c ****     }  // Prevent calculations and I2C traffic if LED drivers are not enabled
+ 235:tmk_core/protocol/arm_atsam/led_matrix.c **** #else
+ 236:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (!sr_exp_data.bit.SDB_N) {
+ 237:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 238:tmk_core/protocol/arm_atsam/led_matrix.c ****     }  // Prevent calculations and I2C traffic if LED drivers are not enabled
+ 239:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif
+ 240:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 241:tmk_core/protocol/arm_atsam/led_matrix.c ****     // Wait for previous transfer to complete
+ 242:tmk_core/protocol/arm_atsam/led_matrix.c ****     while (i2c_led_q_running) {
+ 243:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 244:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 245:tmk_core/protocol/arm_atsam/led_matrix.c ****     // Copy buffer to live DMA region
+ 246:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 247:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.r = led_buffer[i].r;
+ 248:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.g = led_buffer[i].g;
+ 249:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.b = led_buffer[i].b;
+ 250:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 251:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 252:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 253:tmk_core/protocol/arm_atsam/led_matrix.c ****     breathe_mult = 1;
+ 254:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 255:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (led_animation_breathing) {
+ 256:tmk_core/protocol/arm_atsam/led_matrix.c ****         //+60us 119 LED
+ 257:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_animation_breathe_cur += BREATHE_STEP * breathe_dir;
+ 258:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 259:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (led_animation_breathe_cur >= BREATHE_MAX_STEP)
+ 260:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_dir = -1;
+ 261:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (led_animation_breathe_cur <= BREATHE_MIN_STEP)
+ 262:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_dir = 1;
+ 263:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 264:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Brightness curve created for 256 steps, 0 - ~98%
+ 265:tmk_core/protocol/arm_atsam/led_matrix.c ****         breathe_mult = 0.000015 * led_animation_breathe_cur * led_animation_breathe_cur;
+ 266:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (breathe_mult > 1)
+ 267:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_mult = 1;
+ 268:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (breathe_mult < 0)
+ 269:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_mult = 0;
+ 270:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 271:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 272:tmk_core/protocol/arm_atsam/led_matrix.c ****     // This should only be performed once per frame
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod = (float)((g_rgb_counters.tick / 10) % (uint32_t)(1000.0f / led_animation_speed)) / 10.0f
+ 274:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 275:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod = (uint32_t)pomod % 10000;
+ 276:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod /= 100.0f;
+ 277:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 278:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // USE_MASSDROP_CONFIGURATOR
+ 279:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 280:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t drvid;
+ 281:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 282:tmk_core/protocol/arm_atsam/led_matrix.c ****     // NOTE: GCR does not need to be timed with LED processing, but there is really no harm
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (gcr_actual != gcr_actual_last) {
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 285:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 286:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 287:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 288:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_PWM(drvid);  // Queue data
+ 289:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 290:tmk_core/protocol/arm_atsam/led_matrix.c ****     i2c_led_q_run();
+ 291:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 292:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 293:tmk_core/protocol/arm_atsam/led_matrix.c **** void led_matrix_indicators(void) {
+ 294:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t kbled = keyboard_leds();
+ 295:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (kbled && rgb_matrix_config.enable) {
+ 296:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 297:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (
+ 298:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_NUM_LOCK_SCANCODE != 255
+ 299:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (led_map[i].scan == USB_LED_NUM_LOCK_SCANCODE && (kbled & (1 << USB_LED_NUM_LOCK)))
+ 300:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // NUM LOCK
+ 301:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_CAPS_LOCK_SCANCODE != 255
+ 302:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (led_map[i].scan == USB_LED_CAPS_LOCK_SCANCODE && (kbled & (1 << USB_LED_CAPS_LOCK)
+ 303:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // CAPS LOCK
+ 304:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_SCROLL_LOCK_SCANCODE != 255
+ 305:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (led_map[i].scan == USB_LED_SCROLL_LOCK_SCANCODE && (kbled & (1 << USB_LED_SCROLL_L
+ 306:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // SCROLL LOCK
+ 307:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_COMPOSE_SCANCODE != 255
+ 308:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (led_map[i].scan == USB_LED_COMPOSE_SCANCODE && (kbled & (1 << USB_LED_COMPOSE))) |
+ 309:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // COMPOSE
+ 310:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_KANA_SCANCODE != 255
+ 311:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (led_map[i].scan == USB_LED_KANA_SCANCODE && (kbled & (1 << USB_LED_KANA))) ||
+ 312:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // KANA
+ 313:tmk_core/protocol/arm_atsam/led_matrix.c ****                 (0)) {
+ 314:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_buffer[i].r = 255 - led_buffer[i].r;
+ 315:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_buffer[i].g = 255 - led_buffer[i].g;
+ 316:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_buffer[i].b = 255 - led_buffer[i].b;
+ 317:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 318:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 319:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 320:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 321:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 322:tmk_core/protocol/arm_atsam/led_matrix.c **** const rgb_matrix_driver_t rgb_matrix_driver = {.init = init, .flush = flush, .set_color = led_set_o
+ 323:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 324:tmk_core/protocol/arm_atsam/led_matrix.c **** /*==============================================================================
+ 325:tmk_core/protocol/arm_atsam/led_matrix.c **** =                           Legacy Lighting Support                            =
+ 326:tmk_core/protocol/arm_atsam/led_matrix.c **** ==============================================================================*/
+ 327:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 328:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 329:tmk_core/protocol/arm_atsam/led_matrix.c **** // Ported from Massdrop QMK Github Repo
+ 330:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 331:tmk_core/protocol/arm_atsam/led_matrix.c **** // TODO?: wire these up to keymap.c
+ 332:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_animation_orientation = 0;
+ 333:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_animation_direction   = 0;
+ 334:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_animation_breathing   = 0;
+ 335:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_animation_id          = 0;
+ 336:tmk_core/protocol/arm_atsam/led_matrix.c **** float   led_animation_speed       = 4.0f;
+ 337:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_lighting_mode         = LED_MODE_NORMAL;
+ 338:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_enabled               = 1;
+ 339:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t led_animation_breathe_cur = BREATHE_MIN_STEP;
+ 340:tmk_core/protocol/arm_atsam/led_matrix.c **** uint8_t breathe_dir               = 1;
+ 341:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 342:tmk_core/protocol/arm_atsam/led_matrix.c **** static void led_run_pattern(led_setup_t* f, float* ro, float* go, float* bo, float pos) {
+  27              		.loc 1 342 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  32 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  33              		.cfi_def_cfa_offset 20
+  34              		.cfi_offset 4, -20
+  35              		.cfi_offset 5, -16
+  36              		.cfi_offset 6, -12
+  37              		.cfi_offset 7, -8
+  38              		.cfi_offset 14, -4
+ 343:tmk_core/protocol/arm_atsam/led_matrix.c ****     float po;
+ 344:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 345:tmk_core/protocol/arm_atsam/led_matrix.c ****     while (f->end != 1) {
+ 346:tmk_core/protocol/arm_atsam/led_matrix.c ****         po = pos;  // Reset po for new frame
+ 347:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 348:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Add in any moving effects
+ 349:tmk_core/protocol/arm_atsam/led_matrix.c ****         if ((!led_animation_direction && f->ef & EF_SCR_R) || (led_animation_direction && (f->ef & 
+ 350:tmk_core/protocol/arm_atsam/led_matrix.c ****             po -= pomod;
+ 351:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 352:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (po > 100)
+ 353:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po -= 100;
+ 354:tmk_core/protocol/arm_atsam/led_matrix.c ****             else if (po < 0)
+ 355:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po += 100;
+ 356:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else if ((!led_animation_direction && f->ef & EF_SCR_L) || (led_animation_direction && (f
+ 357:tmk_core/protocol/arm_atsam/led_matrix.c ****             po += pomod;
+ 358:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 359:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (po > 100)
+  39              		.loc 1 359 0
+  40 0002 DFED706A 		vldr.32	s13, .L38
+ 349:tmk_core/protocol/arm_atsam/led_matrix.c ****             po -= pomod;
+  41              		.loc 1 349 0
+  42 0006 704F     		ldr	r7, .L38+4
+ 357:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  43              		.loc 1 357 0
+  44 0008 704E     		ldr	r6, .L38+8
+  45 000a 1830     		adds	r0, r0, #24
+  46              	.LVL1:
+  47              	.L2:
+ 345:tmk_core/protocol/arm_atsam/led_matrix.c ****         po = pos;  // Reset po for new frame
+  48              		.loc 1 345 0
+  49 000c 10F8044C 		ldrb	r4, [r0, #-4]	@ zero_extendqisi2
+  50 0010 012C     		cmp	r4, #1
+  51 0012 00D1     		bne	.L20
+ 360:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po -= 100;
+ 361:tmk_core/protocol/arm_atsam/led_matrix.c ****             else if (po < 0)
+ 362:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po += 100;
+ 363:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 364:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 365:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Check if LED's po is in current frame
+ 366:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (po < f->hs) {
+ 367:tmk_core/protocol/arm_atsam/led_matrix.c ****             f++;
+ 368:tmk_core/protocol/arm_atsam/led_matrix.c ****             continue;
+ 369:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 370:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (po > f->he) {
+ 371:tmk_core/protocol/arm_atsam/led_matrix.c ****             f++;
+ 372:tmk_core/protocol/arm_atsam/led_matrix.c ****             continue;
+ 373:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 374:tmk_core/protocol/arm_atsam/led_matrix.c ****         // note: < 0 or > 100 continue
+ 375:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 376:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Calculate the po within the start-stop percentage for color blending
+ 377:tmk_core/protocol/arm_atsam/led_matrix.c ****         po = (po - f->hs) / (f->he - f->hs);
+ 378:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 379:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Add in any color effects
+ 380:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (f->ef & EF_OVER) {
+ 381:tmk_core/protocol/arm_atsam/led_matrix.c ****             *ro = (po * (f->re - f->rs)) + f->rs;  // + 0.5;
+ 382:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go = (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 383:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo = (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 384:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else if (f->ef & EF_SUBTRACT) {
+ 385:tmk_core/protocol/arm_atsam/led_matrix.c ****             *ro -= (po * (f->re - f->rs)) + f->rs;  // + 0.5;
+ 386:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go -= (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 387:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo -= (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 388:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else {
+ 389:tmk_core/protocol/arm_atsam/led_matrix.c ****             *ro += (po * (f->re - f->rs)) + f->rs;  // + 0.5;
+ 390:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go += (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 391:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo += (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 392:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 393:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 394:tmk_core/protocol/arm_atsam/led_matrix.c ****         f++;
+ 395:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 396:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+  52              		.loc 1 396 0
+  53 0014 F0BD     		pop	{r4, r5, r6, r7, pc}
+  54              	.L20:
+ 349:tmk_core/protocol/arm_atsam/led_matrix.c ****             po -= pomod;
+  55              		.loc 1 349 0
+  56 0016 3D78     		ldrb	r5, [r7]	@ zero_extendqisi2
+  57 0018 50F8084C 		ldr	r4, [r0, #-8]
+  58 001c 4DB9     		cbnz	r5, .L3
+ 349:tmk_core/protocol/arm_atsam/led_matrix.c ****             po -= pomod;
+  59              		.loc 1 349 0 is_stmt 0 discriminator 1
+  60 001e 6507     		lsls	r5, r4, #29
+  61 0020 09D4     		bmi	.L4
+ 356:tmk_core/protocol/arm_atsam/led_matrix.c ****             po += pomod;
+  62              		.loc 1 356 0 is_stmt 1 discriminator 1
+  63 0022 14F0020F 		tst	r4, #2
+  64              	.L35:
+ 356:tmk_core/protocol/arm_atsam/led_matrix.c ****             po += pomod;
+  65              		.loc 1 356 0 is_stmt 0 discriminator 4
+  66 0026 25D0     		beq	.L21
+ 357:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  67              		.loc 1 357 0 is_stmt 1
+  68 0028 D6ED007A 		vldr.32	s15, [r6]
+  69 002c 70EE277A 		vadd.f32	s15, s0, s15
+  70 0030 05E0     		b	.L37
+  71              	.L3:
+ 349:tmk_core/protocol/arm_atsam/led_matrix.c ****             po -= pomod;
+  72              		.loc 1 349 0 discriminator 4
+  73 0032 A507     		lsls	r5, r4, #30
+  74 0034 13D5     		bpl	.L6
+  75              	.L4:
+ 350:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+  76              		.loc 1 350 0
+  77 0036 D6ED007A 		vldr.32	s15, [r6]
+  78 003a 70EE677A 		vsub.f32	s15, s0, s15
+  79              	.LVL2:
+  80              	.L37:
+ 359:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po -= 100;
+  81              		.loc 1 359 0
+  82 003e F4EEE67A 		vcmpe.f32	s15, s13
+  83 0042 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  84 0046 0DDD     		ble	.L28
+ 360:tmk_core/protocol/arm_atsam/led_matrix.c ****             else if (po < 0)
+  85              		.loc 1 360 0
+  86 0048 77EEE67A 		vsub.f32	s15, s15, s13
+  87              	.LVL3:
+  88              	.L9:
+ 366:tmk_core/protocol/arm_atsam/led_matrix.c ****             f++;
+  89              		.loc 1 366 0
+  90 004c 10ED066A 		vldr.32	s12, [r0, #-24]
+  91 0050 B4EEE76A 		vcmpe.f32	s12, s15
+  92 0054 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  93 0058 0FDD     		ble	.L29
+  94              	.LVL4:
+  95              	.L17:
+  96 005a 1830     		adds	r0, r0, #24
+  97              	.LVL5:
+  98 005c D6E7     		b	.L2
+  99              	.L6:
+ 356:tmk_core/protocol/arm_atsam/led_matrix.c ****             po += pomod;
+ 100              		.loc 1 356 0 discriminator 4
+ 101 005e 14F0040F 		tst	r4, #4
+ 102 0062 E0E7     		b	.L35
+ 103              	.LVL6:
+ 104              	.L28:
+ 361:tmk_core/protocol/arm_atsam/led_matrix.c ****                 po += 100;
+ 105              		.loc 1 361 0
+ 106 0064 F5EEC07A 		vcmpe.f32	s15, #0
+ 107 0068 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 108 006c EED5     		bpl	.L9
+ 362:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 109              		.loc 1 362 0
+ 110 006e 77EEA67A 		vadd.f32	s15, s15, s13
+ 111              	.LVL7:
+ 112 0072 EBE7     		b	.L9
+ 113              	.LVL8:
+ 114              	.L21:
+ 346:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 115              		.loc 1 346 0
+ 116 0074 F0EE407A 		vmov.f32	s15, s0
+ 117 0078 E8E7     		b	.L9
+ 118              	.LVL9:
+ 119              	.L29:
+ 370:tmk_core/protocol/arm_atsam/led_matrix.c ****             f++;
+ 120              		.loc 1 370 0
+ 121 007a 10ED057A 		vldr.32	s14, [r0, #-20]
+ 122 007e B4EEE77A 		vcmpe.f32	s14, s15
+ 123 0082 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 124 0086 E8D4     		bmi	.L17
+ 377:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 125              		.loc 1 377 0
+ 126 0088 77EEC67A 		vsub.f32	s15, s15, s12
+ 127              	.LVL10:
+ 128 008c 37EE466A 		vsub.f32	s12, s14, s12
+ 129 0090 10F810CC 		ldrb	ip, [r0, #-16]	@ zero_extendqisi2
+ 130 0094 10F80F5C 		ldrb	r5, [r0, #-15]	@ zero_extendqisi2
+ 131 0098 87EE867A 		vdiv.f32	s14, s15, s12
+ 132              	.LVL11:
+ 133 009c A5EB0C05 		sub	r5, r5, ip
+ 134 00a0 06EE105A 		vmov	s12, r5	@ int
+ 135 00a4 07EE90CA 		vmov	s15, ip	@ int
+ 136 00a8 B8EEC66A 		vcvt.f32.s32	s12, s12
+ 137 00ac F8EEE77A 		vcvt.f32.s32	s15, s15
+ 380:tmk_core/protocol/arm_atsam/led_matrix.c ****             *ro = (po * (f->re - f->rs)) + f->rs;  // + 0.5;
+ 138              		.loc 1 380 0
+ 139 00b0 E507     		lsls	r5, r4, #31
+ 140 00b2 E7EE067A 		vfma.f32	s15, s14, s12
+ 141 00b6 B0EE676A 		vmov.f32	s12, s15
+ 142 00ba 24D5     		bpl	.L18
+ 381:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go = (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 143              		.loc 1 381 0
+ 144 00bc C1ED007A 		vstr.32	s15, [r1]
+ 382:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo = (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 145              		.loc 1 382 0
+ 146 00c0 10F80E4C 		ldrb	r4, [r0, #-14]	@ zero_extendqisi2
+ 147 00c4 10F80D5C 		ldrb	r5, [r0, #-13]	@ zero_extendqisi2
+ 148 00c8 2D1B     		subs	r5, r5, r4
+ 149 00ca 07EE905A 		vmov	s15, r5	@ int
+ 150 00ce B8EEE76A 		vcvt.f32.s32	s12, s15
+ 151 00d2 07EE904A 		vmov	s15, r4	@ int
+ 152 00d6 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 153 00da E6EE077A 		vfma.f32	s15, s12, s14
+ 154 00de C2ED007A 		vstr.32	s15, [r2]
+ 383:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else if (f->ef & EF_SUBTRACT) {
+ 155              		.loc 1 383 0
+ 156 00e2 10F80C4C 		ldrb	r4, [r0, #-12]	@ zero_extendqisi2
+ 157 00e6 10F80B5C 		ldrb	r5, [r0, #-11]	@ zero_extendqisi2
+ 158 00ea 2D1B     		subs	r5, r5, r4
+ 159 00ec 07EE905A 		vmov	s15, r5	@ int
+ 160 00f0 B8EEE76A 		vcvt.f32.s32	s12, s15
+ 161 00f4 07EE904A 		vmov	s15, r4	@ int
+ 162 00f8 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 163 00fc E6EE077A 		vfma.f32	s15, s12, s14
+ 164              	.LVL12:
+ 165              	.L32:
+ 391:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 166              		.loc 1 391 0
+ 167 0100 C3ED007A 		vstr.32	s15, [r3]
+ 168 0104 A9E7     		b	.L17
+ 169              	.LVL13:
+ 170              	.L18:
+ 384:tmk_core/protocol/arm_atsam/led_matrix.c ****             *ro -= (po * (f->re - f->rs)) + f->rs;  // + 0.5;
+ 171              		.loc 1 384 0
+ 172 0106 2407     		lsls	r4, r4, #28
+ 173 0108 D1ED007A 		vldr.32	s15, [r1]
+ 174 010c 2CD5     		bpl	.L19
+ 385:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go -= (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 175              		.loc 1 385 0
+ 176 010e 77EEC67A 		vsub.f32	s15, s15, s12
+ 177 0112 C1ED007A 		vstr.32	s15, [r1]
+ 386:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo -= (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 178              		.loc 1 386 0
+ 179 0116 10F80E4C 		ldrb	r4, [r0, #-14]	@ zero_extendqisi2
+ 180 011a 10F80D5C 		ldrb	r5, [r0, #-13]	@ zero_extendqisi2
+ 181 011e 2D1B     		subs	r5, r5, r4
+ 182 0120 07EE905A 		vmov	s15, r5	@ int
+ 183 0124 B8EEE76A 		vcvt.f32.s32	s12, s15
+ 184 0128 07EE904A 		vmov	s15, r4	@ int
+ 185 012c F8EEE77A 		vcvt.f32.s32	s15, s15
+ 186 0130 E6EE077A 		vfma.f32	s15, s12, s14
+ 187 0134 92ED006A 		vldr.32	s12, [r2]
+ 188 0138 76EE677A 		vsub.f32	s15, s12, s15
+ 189 013c C2ED007A 		vstr.32	s15, [r2]
+ 387:tmk_core/protocol/arm_atsam/led_matrix.c ****         } else {
+ 190              		.loc 1 387 0
+ 191 0140 10F80C4C 		ldrb	r4, [r0, #-12]	@ zero_extendqisi2
+ 192 0144 10F80B5C 		ldrb	r5, [r0, #-11]	@ zero_extendqisi2
+ 193 0148 2D1B     		subs	r5, r5, r4
+ 194 014a 07EE905A 		vmov	s15, r5	@ int
+ 195 014e B8EEE76A 		vcvt.f32.s32	s12, s15
+ 196 0152 07EE904A 		vmov	s15, r4	@ int
+ 197 0156 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 198 015a E6EE077A 		vfma.f32	s15, s12, s14
+ 199 015e 93ED007A 		vldr.32	s14, [r3]
+ 200              	.LVL14:
+ 201 0162 77EE677A 		vsub.f32	s15, s14, s15
+ 202 0166 CBE7     		b	.L32
+ 203              	.LVL15:
+ 204              	.L19:
+ 389:tmk_core/protocol/arm_atsam/led_matrix.c ****             *go += (po * (f->ge - f->gs)) + f->gs;  // + 0.5;
+ 205              		.loc 1 389 0
+ 206 0168 77EE867A 		vadd.f32	s15, s15, s12
+ 207 016c C1ED007A 		vstr.32	s15, [r1]
+ 390:tmk_core/protocol/arm_atsam/led_matrix.c ****             *bo += (po * (f->be - f->bs)) + f->bs;  // + 0.5;
+ 208              		.loc 1 390 0
+ 209 0170 10F80E4C 		ldrb	r4, [r0, #-14]	@ zero_extendqisi2
+ 210 0174 10F80D5C 		ldrb	r5, [r0, #-13]	@ zero_extendqisi2
+ 211 0178 2D1B     		subs	r5, r5, r4
+ 212 017a 07EE905A 		vmov	s15, r5	@ int
+ 213 017e B8EEE76A 		vcvt.f32.s32	s12, s15
+ 214 0182 07EE904A 		vmov	s15, r4	@ int
+ 215 0186 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 216 018a E6EE077A 		vfma.f32	s15, s12, s14
+ 217 018e 92ED006A 		vldr.32	s12, [r2]
+ 218 0192 76EE277A 		vadd.f32	s15, s12, s15
+ 219 0196 C2ED007A 		vstr.32	s15, [r2]
+ 391:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 220              		.loc 1 391 0
+ 221 019a 10F80C4C 		ldrb	r4, [r0, #-12]	@ zero_extendqisi2
+ 222 019e 10F80B5C 		ldrb	r5, [r0, #-11]	@ zero_extendqisi2
+ 223 01a2 2D1B     		subs	r5, r5, r4
+ 224 01a4 07EE905A 		vmov	s15, r5	@ int
+ 225 01a8 B8EEE76A 		vcvt.f32.s32	s12, s15
+ 226 01ac 07EE904A 		vmov	s15, r4	@ int
+ 227 01b0 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 228 01b4 E6EE077A 		vfma.f32	s15, s12, s14
+ 229 01b8 93ED007A 		vldr.32	s14, [r3]
+ 230              	.LVL16:
+ 231 01bc 77EE277A 		vadd.f32	s15, s14, s15
+ 232 01c0 9EE7     		b	.L32
+ 233              	.L39:
+ 234 01c2 00BF     		.align	2
+ 235              	.L38:
+ 236 01c4 0000C842 		.word	1120403456
+ 237 01c8 00000000 		.word	.LANCHOR0
+ 238 01cc 00000000 		.word	pomod
+ 239              		.cfi_endproc
+ 240              	.LFE155:
+ 242              		.section	.text.led_set_one,"ax",%progbits
+ 243              		.align	1
+ 244              		.global	led_set_one
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 248              		.fpu fpv4-sp-d16
+ 250              	led_set_one:
+ 251              	.LFB150:
+ 199:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (i < ISSI3733_LED_COUNT) {
+ 252              		.loc 1 199 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 16
+ 255              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256              	.LVL17:
+ 257 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 258              		.cfi_def_cfa_offset 36
+ 259              		.cfi_offset 4, -36
+ 260              		.cfi_offset 5, -32
+ 261              		.cfi_offset 6, -28
+ 262              		.cfi_offset 7, -24
+ 263              		.cfi_offset 8, -20
+ 264              		.cfi_offset 9, -16
+ 265              		.cfi_offset 10, -12
+ 266              		.cfi_offset 11, -8
+ 267              		.cfi_offset 14, -4
+ 268 0004 2DED028B 		vpush.64	{d8}
+ 269              		.cfi_def_cfa_offset 44
+ 270              		.cfi_offset 80, -44
+ 271              		.cfi_offset 81, -40
+ 200:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 272              		.loc 1 200 0
+ 273 0008 6828     		cmp	r0, #104
+ 199:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (i < ISSI3733_LED_COUNT) {
+ 274              		.loc 1 199 0
+ 275 000a 85B0     		sub	sp, sp, #20
+ 276              		.cfi_def_cfa_offset 64
+ 199:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (i < ISSI3733_LED_COUNT) {
+ 277              		.loc 1 199 0
+ 278 000c 0446     		mov	r4, r0
+ 200:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 279              		.loc 1 200 0
+ 280 000e 3BDC     		bgt	.L40
+ 281              	.LVL18:
+ 282              	.LBB6:
+ 283              	.LBB7:
+ 397:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 398:tmk_core/protocol/arm_atsam/led_matrix.c **** static void led_matrix_massdrop_config_override(int i) {
+ 399:tmk_core/protocol/arm_atsam/led_matrix.c ****     float ro = 0;
+ 400:tmk_core/protocol/arm_atsam/led_matrix.c ****     float go = 0;
+ 401:tmk_core/protocol/arm_atsam/led_matrix.c ****     float bo = 0;
+ 402:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 403:tmk_core/protocol/arm_atsam/led_matrix.c ****     float po = (led_animation_orientation) ? (float)g_led_config.point[i].y / 64.f * 100 : (float)g
+ 284              		.loc 1 403 0
+ 285 0010 7C4E     		ldr	r6, .L100
+ 286 0012 7D4D     		ldr	r5, .L100+4
+ 287 0014 7278     		ldrb	r2, [r6, #1]	@ zero_extendqisi2
+ 288              	.LVL19:
+ 289 0016 DFED7D7A 		vldr.32	s15, .L100+8
+ 399:tmk_core/protocol/arm_atsam/led_matrix.c ****     float go = 0;
+ 290              		.loc 1 399 0
+ 291 001a 0023     		movs	r3, #0
+ 292              	.LVL20:
+ 293 001c 0193     		str	r3, [sp, #4]	@ float
+ 400:tmk_core/protocol/arm_atsam/led_matrix.c ****     float bo = 0;
+ 294              		.loc 1 400 0
+ 295 001e 0293     		str	r3, [sp, #8]	@ float
+ 401:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 296              		.loc 1 401 0
+ 297 0020 0393     		str	r3, [sp, #12]	@ float
+ 298 0022 9B46     		mov	fp, r3	@ float
+ 299 0024 00F12403 		add	r3, r0, #36
+ 300              		.loc 1 403 0
+ 301 0028 05EB4303 		add	r3, r5, r3, lsl #1
+ 302 002c 8AB3     		cbz	r2, .L42
+ 303 002e 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 304 0030 08EE103A 		vmov	s16, r3	@ int
+ 305 0034 BBEECD8A 		vcvt.f32.u32	s16, s16, #6
+ 306              	.L98:
+ 404:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 405:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t highest_active_layer = biton32(layer_state);
+ 307              		.loc 1 405 0
+ 308 0038 754B     		ldr	r3, .L100+12
+ 309 003a 1868     		ldr	r0, [r3]
+ 310              	.LVL21:
+ 403:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 311              		.loc 1 403 0
+ 312 003c 28EE278A 		vmul.f32	s16, s16, s15
+ 313              	.LVL22:
+ 314              		.loc 1 405 0
+ 315 0040 FFF7FEFF 		bl	biton32
+ 316              	.LVL23:
+ 406:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 407:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (led_lighting_mode == LED_MODE_KEYS_ONLY && HAS_FLAGS(g_led_config.flags[i], LED_FLAG_UNDERG
+ 317              		.loc 1 407 0
+ 318 0044 B378     		ldrb	r3, [r6, #2]	@ zero_extendqisi2
+ 319 0046 012B     		cmp	r3, #1
+ 405:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 320              		.loc 1 405 0
+ 321 0048 0746     		mov	r7, r0
+ 322              	.LVL24:
+ 323              		.loc 1 407 0
+ 324 004a 2CD1     		bne	.L44
+ 325 004c 2544     		add	r5, r5, r4
+ 326 004e 95F81D31 		ldrb	r3, [r5, #285]	@ zero_extendqisi2
+ 327 0052 9807     		lsls	r0, r3, #30
+ 328 0054 2ED5     		bpl	.L45
+ 329              	.L46:
+ 408:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Do not act on this LED
+ 409:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (led_lighting_mode == LED_MODE_NON_KEYS_ONLY && !HAS_FLAGS(g_led_config.flags[i], LED
+ 410:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Do not act on this LED
+ 411:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (led_lighting_mode == LED_MODE_INDICATORS_ONLY) {
+ 412:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Do not act on this LED (Only show indicators)
+ 413:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else {
+ 414:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_instruction_t* led_cur_instruction = led_instructions;
+ 415:tmk_core/protocol/arm_atsam/led_matrix.c ****         while (!led_cur_instruction->end) {
+ 416:tmk_core/protocol/arm_atsam/led_matrix.c ****             // Check if this applies to current layer
+ 417:tmk_core/protocol/arm_atsam/led_matrix.c ****             if ((led_cur_instruction->flags & LED_FLAG_MATCH_LAYER) && (led_cur_instruction->layer 
+ 418:tmk_core/protocol/arm_atsam/led_matrix.c ****                 goto next_iter;
+ 419:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 420:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 421:tmk_core/protocol/arm_atsam/led_matrix.c ****             // Check if this applies to current index
+ 422:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (led_cur_instruction->flags & LED_FLAG_MATCH_ID) {
+ 423:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint8_t   modid    = i / 32;                             // Calculate which id# con
+ 424:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint32_t  modidbit = 1 << (i % 32);                      // Calculate the bit withi
+ 425:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint32_t* bitfield = &led_cur_instruction->id0 + modid;  // Add modid as offset to 
+ 426:tmk_core/protocol/arm_atsam/led_matrix.c ****                 if (~(*bitfield) & modidbit) {                           // Check if led bit is not
+ 427:tmk_core/protocol/arm_atsam/led_matrix.c ****                     goto next_iter;
+ 428:tmk_core/protocol/arm_atsam/led_matrix.c ****                 }
+ 429:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 430:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 431:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (led_cur_instruction->flags & LED_FLAG_USE_RGB) {
+ 432:tmk_core/protocol/arm_atsam/led_matrix.c ****                 ro = led_cur_instruction->r;
+ 433:tmk_core/protocol/arm_atsam/led_matrix.c ****                 go = led_cur_instruction->g;
+ 434:tmk_core/protocol/arm_atsam/led_matrix.c ****                 bo = led_cur_instruction->b;
+ 435:tmk_core/protocol/arm_atsam/led_matrix.c ****             } else if (led_cur_instruction->flags & LED_FLAG_USE_PATTERN) {
+ 436:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_run_pattern(led_setups[led_cur_instruction->pattern_id], &ro, &go, &bo, po);
+ 437:tmk_core/protocol/arm_atsam/led_matrix.c ****             } else if (led_cur_instruction->flags & LED_FLAG_USE_ROTATE_PATTERN) {
+ 438:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_run_pattern(led_setups[led_animation_id], &ro, &go, &bo, po);
+ 439:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 440:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 441:tmk_core/protocol/arm_atsam/led_matrix.c ****         next_iter:
+ 442:tmk_core/protocol/arm_atsam/led_matrix.c ****             led_cur_instruction++;
+ 443:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 444:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 445:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (ro > 255)
+ 446:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro = 255;
+ 447:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (ro < 0)
+ 448:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro = 0;
+ 449:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (go > 255)
+ 450:tmk_core/protocol/arm_atsam/led_matrix.c ****             go = 255;
+ 451:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (go < 0)
+ 452:tmk_core/protocol/arm_atsam/led_matrix.c ****             go = 0;
+ 453:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (bo > 255)
+ 454:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo = 255;
+ 455:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (bo < 0)
+ 456:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo = 0;
+ 457:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 458:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (led_animation_breathing) {
+ 459:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro *= breathe_mult;
+ 460:tmk_core/protocol/arm_atsam/led_matrix.c ****             go *= breathe_mult;
+ 461:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo *= breathe_mult;
+ 462:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 463:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 464:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 465:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].r = (uint8_t)ro;
+ 330              		.loc 1 465 0
+ 331 0056 DDED017A 		vldr.32	s15, [sp, #4]
+ 332 005a 6E49     		ldr	r1, .L100+16
+ 333 005c FCEEE77A 		vcvt.u32.f32	s15, s15
+ 334 0060 04EB4404 		add	r4, r4, r4, lsl #1
+ 335              	.LVL25:
+ 336 0064 17EE903A 		vmov	r3, s15	@ int
+ 466:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].g = (uint8_t)go;
+ 337              		.loc 1 466 0
+ 338 0068 DDED027A 		vldr.32	s15, [sp, #8]
+ 465:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].g = (uint8_t)go;
+ 339              		.loc 1 465 0
+ 340 006c 0A19     		adds	r2, r1, r4
+ 341              		.loc 1 466 0
+ 342 006e FCEEE77A 		vcvt.u32.f32	s15, s15
+ 465:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].g = (uint8_t)go;
+ 343              		.loc 1 465 0
+ 344 0072 5370     		strb	r3, [r2, #1]
+ 345              		.loc 1 466 0
+ 346 0074 17EE903A 		vmov	r3, s15	@ int
+ 467:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].b = (uint8_t)bo;
+ 347              		.loc 1 467 0
+ 348 0078 DDED037A 		vldr.32	s15, [sp, #12]
+ 466:tmk_core/protocol/arm_atsam/led_matrix.c ****     led_buffer[i].g = (uint8_t)go;
+ 349              		.loc 1 466 0
+ 350 007c 0B55     		strb	r3, [r1, r4]
+ 351              		.loc 1 467 0
+ 352 007e FCEEE77A 		vcvt.u32.f32	s15, s15
+ 353 0082 17EE903A 		vmov	r3, s15	@ int
+ 354 0086 9370     		strb	r3, [r2, #2]
+ 355              	.LVL26:
+ 356              	.L40:
+ 357              	.LBE7:
+ 358              	.LBE6:
+ 209:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 359              		.loc 1 209 0
+ 360 0088 05B0     		add	sp, sp, #20
+ 361              		.cfi_remember_state
+ 362              		.cfi_def_cfa_offset 44
+ 363              		@ sp needed
+ 364 008a BDEC028B 		vldm	sp!, {d8}
+ 365              		.cfi_restore 80
+ 366              		.cfi_restore 81
+ 367              		.cfi_def_cfa_offset 36
+ 368 008e BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 369              	.LVL27:
+ 370              	.L42:
+ 371              		.cfi_restore_state
+ 372              	.LBB14:
+ 373              	.LBB13:
+ 403:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 374              		.loc 1 403 0
+ 375 0092 DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+ 376 0094 DFED606A 		vldr.32	s13, .L100+20
+ 377 0098 07EE103A 		vmov	s14, r3	@ int
+ 378 009c B8EE477A 		vcvt.f32.u32	s14, s14
+ 379 00a0 87EE268A 		vdiv.f32	s16, s14, s13
+ 380 00a4 C8E7     		b	.L98
+ 381              	.LVL28:
+ 382              	.L44:
+ 409:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Do not act on this LED
+ 383              		.loc 1 409 0
+ 384 00a6 022B     		cmp	r3, #2
+ 385 00a8 51D1     		bne	.L47
+ 386 00aa 2544     		add	r5, r5, r4
+ 387 00ac 95F81D31 		ldrb	r3, [r5, #285]	@ zero_extendqisi2
+ 388 00b0 9907     		lsls	r1, r3, #30
+ 389 00b2 D0D5     		bpl	.L46
+ 390              	.L45:
+ 391              	.LBB8:
+ 392              	.LBB9:
+ 424:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint32_t* bitfield = &led_cur_instruction->id0 + modid;  // Add modid as offset to 
+ 393              		.loc 1 424 0
+ 394 00b4 6242     		rsbs	r2, r4, #0
+ 395 00b6 02F01F02 		and	r2, r2, #31
+ 396 00ba 04F01F03 		and	r3, r4, #31
+ 397 00be 4FF00108 		mov	r8, #1
+ 398 00c2 58BF     		it	pl
+ 399 00c4 5342     		rsbpl	r3, r2, #0
+ 400 00c6 08FA03F8 		lsl	r8, r8, r3
+ 401 00ca 544D     		ldr	r5, .L100+24
+ 402              	.LBE9:
+ 438:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 403              		.loc 1 438 0
+ 404 00cc DFF858A1 		ldr	r10, .L100+36
+ 405              	.LBB10:
+ 423:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint32_t  modidbit = 1 << (i % 32);                      // Calculate the bit withi
+ 406              		.loc 1 423 0
+ 407 00d0 2023     		movs	r3, #32
+ 408 00d2 94FBF3F3 		sdiv	r3, r4, r3
+ 425:tmk_core/protocol/arm_atsam/led_matrix.c ****                 if (~(*bitfield) & modidbit) {                           // Check if led bit is not
+ 409              		.loc 1 425 0
+ 410 00d6 DBB2     		uxtb	r3, r3
+ 411 00d8 4FEA8309 		lsl	r9, r3, #2
+ 412              	.L49:
+ 413              	.LVL29:
+ 414              	.LBE10:
+ 415:tmk_core/protocol/arm_atsam/led_matrix.c ****             // Check if this applies to current layer
+ 415              		.loc 1 415 0
+ 416 00dc 15F8033C 		ldrb	r3, [r5, #-3]	@ zero_extendqisi2
+ 417 00e0 C3B3     		cbz	r3, .L55
+ 445:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro = 255;
+ 418              		.loc 1 445 0
+ 419 00e2 9DED017A 		vldr.32	s14, [sp, #4]
+ 420 00e6 DFED4E7A 		vldr.32	s15, .L100+28
+ 421 00ea B4EEE77A 		vcmpe.f32	s14, s15
+ 422 00ee F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 423 00f2 6EDD     		ble	.L95
+ 446:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (ro < 0)
+ 424              		.loc 1 446 0
+ 425 00f4 CDED017A 		vstr.32	s15, [sp, #4]
+ 426              	.L58:
+ 449:tmk_core/protocol/arm_atsam/led_matrix.c ****             go = 255;
+ 427              		.loc 1 449 0
+ 428 00f8 9DED027A 		vldr.32	s14, [sp, #8]
+ 429 00fc B4EEE77A 		vcmpe.f32	s14, s15
+ 430 0100 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 431 0104 6DDD     		ble	.L96
+ 450:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (go < 0)
+ 432              		.loc 1 450 0
+ 433 0106 CDED027A 		vstr.32	s15, [sp, #8]
+ 434              	.L62:
+ 453:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo = 255;
+ 435              		.loc 1 453 0
+ 436 010a 9DED037A 		vldr.32	s14, [sp, #12]
+ 437 010e B4EEE77A 		vcmpe.f32	s14, s15
+ 438 0112 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 439 0116 6CDD     		ble	.L97
+ 454:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (bo < 0)
+ 440              		.loc 1 454 0
+ 441 0118 CDED037A 		vstr.32	s15, [sp, #12]
+ 442              	.L66:
+ 458:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro *= breathe_mult;
+ 443              		.loc 1 458 0
+ 444 011c 3379     		ldrb	r3, [r6, #4]	@ zero_extendqisi2
+ 445 011e 002B     		cmp	r3, #0
+ 446 0120 99D0     		beq	.L46
+ 459:tmk_core/protocol/arm_atsam/led_matrix.c ****             go *= breathe_mult;
+ 447              		.loc 1 459 0
+ 448 0122 404B     		ldr	r3, .L100+32
+ 449 0124 9DED017A 		vldr.32	s14, [sp, #4]
+ 450 0128 D3ED007A 		vldr.32	s15, [r3]
+ 451 012c 27EE277A 		vmul.f32	s14, s14, s15
+ 452 0130 8DED017A 		vstr.32	s14, [sp, #4]
+ 460:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo *= breathe_mult;
+ 453              		.loc 1 460 0
+ 454 0134 9DED027A 		vldr.32	s14, [sp, #8]
+ 455 0138 27EE877A 		vmul.f32	s14, s15, s14
+ 456 013c 8DED027A 		vstr.32	s14, [sp, #8]
+ 461:tmk_core/protocol/arm_atsam/led_matrix.c ****         }
+ 457              		.loc 1 461 0
+ 458 0140 9DED037A 		vldr.32	s14, [sp, #12]
+ 459 0144 67EE877A 		vmul.f32	s15, s15, s14
+ 460 0148 CDED037A 		vstr.32	s15, [sp, #12]
+ 461 014c 83E7     		b	.L46
+ 462              	.LVL30:
+ 463              	.L47:
+ 464              	.LBE8:
+ 411:tmk_core/protocol/arm_atsam/led_matrix.c ****         // Do not act on this LED (Only show indicators)
+ 465              		.loc 1 411 0
+ 466 014e 032B     		cmp	r3, #3
+ 467 0150 81D0     		beq	.L46
+ 468 0152 AFE7     		b	.L45
+ 469              	.LVL31:
+ 470              	.L55:
+ 471              	.LBB12:
+ 417:tmk_core/protocol/arm_atsam/led_matrix.c ****                 goto next_iter;
+ 472              		.loc 1 417 0
+ 473 0154 35F81C3C 		ldrh	r3, [r5, #-28]
+ 474 0158 9A07     		lsls	r2, r3, #30
+ 475 015a 03D5     		bpl	.L50
+ 476 015c 15F8082C 		ldrb	r2, [r5, #-8]	@ zero_extendqisi2
+ 477 0160 BA42     		cmp	r2, r7
+ 478 0162 22D1     		bne	.L51
+ 479              	.L50:
+ 422:tmk_core/protocol/arm_atsam/led_matrix.c ****                 uint8_t   modid    = i / 32;                             // Calculate which id# con
+ 480              		.loc 1 422 0
+ 481 0164 D807     		lsls	r0, r3, #31
+ 482 0166 06D5     		bpl	.L52
+ 483              	.LVL32:
+ 484              	.LBB11:
+ 426:tmk_core/protocol/arm_atsam/led_matrix.c ****                     goto next_iter;
+ 485              		.loc 1 426 0
+ 486 0168 09EB0502 		add	r2, r9, r5
+ 487 016c 52F8182C 		ldr	r2, [r2, #-24]
+ 488 0170 38EA0202 		bics	r2, r8, r2
+ 489 0174 19D1     		bne	.L51
+ 490              	.LVL33:
+ 491              	.L52:
+ 492              	.LBE11:
+ 431:tmk_core/protocol/arm_atsam/led_matrix.c ****                 ro = led_cur_instruction->r;
+ 493              		.loc 1 431 0
+ 494 0176 D906     		lsls	r1, r3, #27
+ 495 0178 19D5     		bpl	.L53
+ 432:tmk_core/protocol/arm_atsam/led_matrix.c ****                 go = led_cur_instruction->g;
+ 496              		.loc 1 432 0
+ 497 017a 15F8073C 		ldrb	r3, [r5, #-7]	@ zero_extendqisi2
+ 498 017e 07EE903A 		vmov	s15, r3	@ int
+ 433:tmk_core/protocol/arm_atsam/led_matrix.c ****                 bo = led_cur_instruction->b;
+ 499              		.loc 1 433 0
+ 500 0182 15F8063C 		ldrb	r3, [r5, #-6]	@ zero_extendqisi2
+ 432:tmk_core/protocol/arm_atsam/led_matrix.c ****                 go = led_cur_instruction->g;
+ 501              		.loc 1 432 0
+ 502 0186 F8EE677A 		vcvt.f32.u32	s15, s15
+ 503 018a CDED017A 		vstr.32	s15, [sp, #4]
+ 433:tmk_core/protocol/arm_atsam/led_matrix.c ****                 bo = led_cur_instruction->b;
+ 504              		.loc 1 433 0
+ 505 018e 07EE903A 		vmov	s15, r3	@ int
+ 434:tmk_core/protocol/arm_atsam/led_matrix.c ****             } else if (led_cur_instruction->flags & LED_FLAG_USE_PATTERN) {
+ 506              		.loc 1 434 0
+ 507 0192 15F8053C 		ldrb	r3, [r5, #-5]	@ zero_extendqisi2
+ 433:tmk_core/protocol/arm_atsam/led_matrix.c ****                 bo = led_cur_instruction->b;
+ 508              		.loc 1 433 0
+ 509 0196 F8EE677A 		vcvt.f32.u32	s15, s15
+ 510 019a CDED027A 		vstr.32	s15, [sp, #8]
+ 434:tmk_core/protocol/arm_atsam/led_matrix.c ****             } else if (led_cur_instruction->flags & LED_FLAG_USE_PATTERN) {
+ 511              		.loc 1 434 0
+ 512 019e 07EE903A 		vmov	s15, r3	@ int
+ 513 01a2 F8EE677A 		vcvt.f32.u32	s15, s15
+ 514 01a6 CDED037A 		vstr.32	s15, [sp, #12]
+ 515              	.L51:
+ 516              	.LVL34:
+ 517 01aa 1C35     		adds	r5, r5, #28
+ 518              	.LVL35:
+ 519 01ac 96E7     		b	.L49
+ 520              	.L53:
+ 435:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_run_pattern(led_setups[led_cur_instruction->pattern_id], &ro, &go, &bo, po);
+ 521              		.loc 1 435 0
+ 522 01ae 9A06     		lsls	r2, r3, #26
+ 523 01b0 0BD5     		bpl	.L54
+ 436:tmk_core/protocol/arm_atsam/led_matrix.c ****             } else if (led_cur_instruction->flags & LED_FLAG_USE_ROTATE_PATTERN) {
+ 524              		.loc 1 436 0
+ 525 01b2 15F8040C 		ldrb	r0, [r5, #-4]	@ zero_extendqisi2
+ 526              	.L99:
+ 438:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 527              		.loc 1 438 0
+ 528 01b6 5AF82000 		ldr	r0, [r10, r0, lsl #2]
+ 529 01ba B0EE480A 		vmov.f32	s0, s16
+ 530 01be 03AB     		add	r3, sp, #12
+ 531 01c0 02AA     		add	r2, sp, #8
+ 532 01c2 01A9     		add	r1, sp, #4
+ 533 01c4 FFF7FEFF 		bl	led_run_pattern
+ 534              	.LVL36:
+ 535 01c8 EFE7     		b	.L51
+ 536              	.L54:
+ 437:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_run_pattern(led_setups[led_animation_id], &ro, &go, &bo, po);
+ 537              		.loc 1 437 0
+ 538 01ca 5B06     		lsls	r3, r3, #25
+ 539 01cc EDD5     		bpl	.L51
+ 438:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 540              		.loc 1 438 0
+ 541 01ce F078     		ldrb	r0, [r6, #3]	@ zero_extendqisi2
+ 542 01d0 F1E7     		b	.L99
+ 543              	.L95:
+ 447:tmk_core/protocol/arm_atsam/led_matrix.c ****             ro = 0;
+ 544              		.loc 1 447 0
+ 545 01d2 B5EEC07A 		vcmpe.f32	s14, #0
+ 546 01d6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 448:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (go > 255)
+ 547              		.loc 1 448 0
+ 548 01da 48BF     		it	mi
+ 549 01dc CDF804B0 		strmi	fp, [sp, #4]	@ float
+ 550 01e0 8AE7     		b	.L58
+ 551              	.L96:
+ 451:tmk_core/protocol/arm_atsam/led_matrix.c ****             go = 0;
+ 552              		.loc 1 451 0
+ 553 01e2 B5EEC07A 		vcmpe.f32	s14, #0
+ 554 01e6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 452:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (bo > 255)
+ 555              		.loc 1 452 0
+ 556 01ea 48BF     		it	mi
+ 557 01ec CDF808B0 		strmi	fp, [sp, #8]	@ float
+ 558 01f0 8BE7     		b	.L62
+ 559              	.L97:
+ 455:tmk_core/protocol/arm_atsam/led_matrix.c ****             bo = 0;
+ 560              		.loc 1 455 0
+ 561 01f2 B5EEC07A 		vcmpe.f32	s14, #0
+ 562 01f6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 456:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 563              		.loc 1 456 0
+ 564 01fa 48BF     		it	mi
+ 565 01fc CDF80CB0 		strmi	fp, [sp, #12]	@ float
+ 566 0200 8CE7     		b	.L66
+ 567              	.L101:
+ 568 0202 00BF     		.align	2
+ 569              	.L100:
+ 570 0204 00000000 		.word	.LANCHOR0
+ 571 0208 00000000 		.word	g_led_config
+ 572 020c 0000C842 		.word	1120403456
+ 573 0210 00000000 		.word	layer_state
+ 574 0214 00000000 		.word	led_buffer
+ 575 0218 00006043 		.word	1130364928
+ 576 021c 1C000000 		.word	led_instructions+28
+ 577 0220 00007F43 		.word	1132396544
+ 578 0224 00000000 		.word	breathe_mult
+ 579 0228 00000000 		.word	led_setups
+ 580              	.LBE12:
+ 581              	.LBE13:
+ 582              	.LBE14:
+ 583              		.cfi_endproc
+ 584              	.LFE150:
+ 586              		.section	.text.led_set_all,"ax",%progbits
+ 587              		.align	1
+ 588              		.global	led_set_all
+ 589              		.syntax unified
+ 590              		.thumb
+ 591              		.thumb_func
+ 592              		.fpu fpv4-sp-d16
+ 594              	led_set_all:
+ 595              	.LFB151:
+ 211:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 596              		.loc 1 211 0
+ 597              		.cfi_startproc
+ 598              		@ args = 0, pretend = 0, frame = 0
+ 599              		@ frame_needed = 0, uses_anonymous_args = 0
+ 600              	.LVL37:
+ 601 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 602              		.cfi_def_cfa_offset 24
+ 603              		.cfi_offset 3, -24
+ 604              		.cfi_offset 4, -20
+ 605              		.cfi_offset 5, -16
+ 606              		.cfi_offset 6, -12
+ 607              		.cfi_offset 7, -8
+ 608              		.cfi_offset 14, -4
+ 211:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 609              		.loc 1 211 0
+ 610 0002 0546     		mov	r5, r0
+ 611 0004 0E46     		mov	r6, r1
+ 612 0006 1746     		mov	r7, r2
+ 613 0008 0024     		movs	r4, #0
+ 614              	.LVL38:
+ 615              	.L103:
+ 616              	.LBB15:
+ 213:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 617              		.loc 1 213 0 discriminator 3
+ 618 000a 2046     		mov	r0, r4
+ 619 000c 3B46     		mov	r3, r7
+ 620 000e 3246     		mov	r2, r6
+ 621 0010 2946     		mov	r1, r5
+ 622 0012 0134     		adds	r4, r4, #1
+ 623              	.LVL39:
+ 624 0014 FFF7FEFF 		bl	led_set_one
+ 625              	.LVL40:
+ 212:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_set_one(i, r, g, b);
+ 626              		.loc 1 212 0 discriminator 3
+ 627 0018 692C     		cmp	r4, #105
+ 628 001a F6D1     		bne	.L103
+ 629              	.LBE15:
+ 215:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 630              		.loc 1 215 0
+ 631 001c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 632              		.cfi_endproc
+ 633              	.LFE151:
+ 635              		.global	__aeabi_i2d
+ 636              		.global	__aeabi_dmul
+ 637              		.global	__aeabi_d2f
+ 638              		.section	.text.flush,"ax",%progbits
+ 639              		.align	1
+ 640              		.global	flush
+ 641              		.syntax unified
+ 642              		.thumb
+ 643              		.thumb_func
+ 644              		.fpu fpv4-sp-d16
+ 646              	flush:
+ 647              	.LFB153:
+ 230:tmk_core/protocol/arm_atsam/led_matrix.c **** #ifdef USE_MASSDROP_CONFIGURATOR
+ 648              		.loc 1 230 0
+ 649              		.cfi_startproc
+ 650              		@ args = 0, pretend = 0, frame = 0
+ 651              		@ frame_needed = 0, uses_anonymous_args = 0
+ 652 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 653              		.cfi_def_cfa_offset 24
+ 654              		.cfi_offset 3, -24
+ 655              		.cfi_offset 4, -20
+ 656              		.cfi_offset 5, -16
+ 657              		.cfi_offset 6, -12
+ 658              		.cfi_offset 7, -8
+ 659              		.cfi_offset 14, -4
+ 660 0002 2DED028B 		vpush.64	{d8}
+ 661              		.cfi_def_cfa_offset 32
+ 662              		.cfi_offset 80, -32
+ 663              		.cfi_offset 81, -28
+ 232:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 664              		.loc 1 232 0
+ 665 0006 6C4C     		ldr	r4, .L134+8
+ 666 0008 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 667 000a 002B     		cmp	r3, #0
+ 668 000c 00F0CC80 		beq	.L105
+ 242:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 669              		.loc 1 242 0
+ 670 0010 6A4A     		ldr	r2, .L134+12
+ 671              	.L107:
+ 242:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 672              		.loc 1 242 0 is_stmt 0 discriminator 1
+ 673 0012 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 674 0014 002B     		cmp	r3, #0
+ 675 0016 FCD1     		bne	.L107
+ 676 0018 694B     		ldr	r3, .L134+16
+ 677 001a 6A4A     		ldr	r2, .L134+20
+ 678 001c 6A49     		ldr	r1, .L134+24
+ 679              	.L108:
+ 680              	.LBB16:
+ 247:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.g = led_buffer[i].g;
+ 681              		.loc 1 247 0 is_stmt 1 discriminator 3
+ 682 001e 5868     		ldr	r0, [r3, #4]
+ 683 0020 5578     		ldrb	r5, [r2, #1]	@ zero_extendqisi2
+ 684 0022 0570     		strb	r5, [r0]
+ 248:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.b = led_buffer[i].b;
+ 685              		.loc 1 248 0 discriminator 3
+ 686 0024 9868     		ldr	r0, [r3, #8]
+ 687 0026 1578     		ldrb	r5, [r2]	@ zero_extendqisi2
+ 688 0028 0570     		strb	r5, [r0]
+ 249:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 689              		.loc 1 249 0 discriminator 3
+ 690 002a D868     		ldr	r0, [r3, #12]
+ 691 002c 9578     		ldrb	r5, [r2, #2]	@ zero_extendqisi2
+ 692 002e 0570     		strb	r5, [r0]
+ 693              	.LVL41:
+ 694 0030 2C33     		adds	r3, r3, #44
+ 246:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.r = led_buffer[i].r;
+ 695              		.loc 1 246 0 discriminator 3
+ 696 0032 8B42     		cmp	r3, r1
+ 697 0034 02F10302 		add	r2, r2, #3
+ 698 0038 F1D1     		bne	.L108
+ 699              	.LBE16:
+ 255:tmk_core/protocol/arm_atsam/led_matrix.c ****         //+60us 119 LED
+ 700              		.loc 1 255 0
+ 701 003a 644B     		ldr	r3, .L134+28
+ 253:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 702              		.loc 1 253 0
+ 703 003c 644D     		ldr	r5, .L134+32
+ 255:tmk_core/protocol/arm_atsam/led_matrix.c ****         //+60us 119 LED
+ 704              		.loc 1 255 0
+ 705 003e 1A79     		ldrb	r2, [r3, #4]	@ zero_extendqisi2
+ 253:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 706              		.loc 1 253 0
+ 707 0040 B7EE008A 		vmov.f32	s16, #1.0e+0
+ 708 0044 85ED008A 		vstr.32	s16, [r5]
+ 255:tmk_core/protocol/arm_atsam/led_matrix.c ****         //+60us 119 LED
+ 709              		.loc 1 255 0
+ 710 0048 02B3     		cbz	r2, .L110
+ 257:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 711              		.loc 1 257 0
+ 712 004a 5879     		ldrb	r0, [r3, #5]	@ zero_extendqisi2
+ 713 004c 6278     		ldrb	r2, [r4, #1]	@ zero_extendqisi2
+ 714 004e 1044     		add	r0, r0, r2
+ 715 0050 C0B2     		uxtb	r0, r0
+ 259:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_dir = -1;
+ 716              		.loc 1 259 0
+ 717 0052 FF28     		cmp	r0, #255
+ 257:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 718              		.loc 1 257 0
+ 719 0054 5871     		strb	r0, [r3, #5]
+ 259:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_dir = -1;
+ 720              		.loc 1 259 0
+ 721 0056 40F09180 		bne	.L111
+ 260:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (led_animation_breathe_cur <= BREATHE_MIN_STEP)
+ 722              		.loc 1 260 0
+ 723 005a 6070     		strb	r0, [r4, #1]
+ 724              	.L112:
+ 265:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (breathe_mult > 1)
+ 725              		.loc 1 265 0
+ 726 005c FFF7FEFF 		bl	__aeabi_i2d
+ 727              	.LVL42:
+ 728 0060 53A3     		adr	r3, .L134
+ 729 0062 D3E90023 		ldrd	r2, [r3]
+ 730 0066 0646     		mov	r6, r0
+ 731 0068 0F46     		mov	r7, r1
+ 732 006a FFF7FEFF 		bl	__aeabi_dmul
+ 733              	.LVL43:
+ 734 006e 3246     		mov	r2, r6
+ 735 0070 3B46     		mov	r3, r7
+ 736 0072 FFF7FEFF 		bl	__aeabi_dmul
+ 737              	.LVL44:
+ 738 0076 FFF7FEFF 		bl	__aeabi_d2f
+ 739              	.LVL45:
+ 740 007a 07EE100A 		vmov	s14, r0
+ 266:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_mult = 1;
+ 741              		.loc 1 266 0
+ 742 007e B4EEC87A 		vcmpe.f32	s14, s16
+ 743 0082 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 744 0086 7FDD     		ble	.L133
+ 267:tmk_core/protocol/arm_atsam/led_matrix.c ****         else if (breathe_mult < 0)
+ 745              		.loc 1 267 0
+ 746 0088 85ED008A 		vstr.32	s16, [r5]
+ 747              	.L110:
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 748              		.loc 1 273 0
+ 749 008c D4ED016A 		vldr.32	s13, [r4, #4]
+ 750 0090 DFED507A 		vldr.32	s15, .L134+36
+ 751 0094 504B     		ldr	r3, .L134+40
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 752              		.loc 1 283 0
+ 753 0096 514E     		ldr	r6, .L134+44
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 754              		.loc 1 273 0
+ 755 0098 1B68     		ldr	r3, [r3]	@ unaligned
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 756              		.loc 1 283 0
+ 757 009a 514D     		ldr	r5, .L134+48
+ 758 009c 3078     		ldrb	r0, [r6]	@ zero_extendqisi2
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 759              		.loc 1 273 0
+ 760 009e 87EEA67A 		vdiv.f32	s14, s15, s13
+ 761 00a2 0A21     		movs	r1, #10
+ 762 00a4 B3FBF1F1 		udiv	r1, r3, r1
+ 763 00a8 B2EE046A 		vmov.f32	s12, #1.0e+1
+ 764 00ac FCEEC77A 		vcvt.u32.f32	s15, s14
+ 765 00b0 17EE902A 		vmov	r2, s15	@ int
+ 766 00b4 B1FBF2F3 		udiv	r3, r1, r2
+ 767 00b8 02FB1313 		mls	r3, r2, r3, r1
+ 768 00bc 07EE903A 		vmov	s15, r3	@ int
+ 769 00c0 B8EEE77A 		vcvt.f32.s32	s14, s15
+ 275:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod /= 100.0f;
+ 770              		.loc 1 275 0
+ 771 00c4 42F21071 		movw	r1, #10000
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 772              		.loc 1 273 0
+ 773 00c8 C7EE067A 		vdiv.f32	s15, s14, s12
+ 274:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod = (uint32_t)pomod % 10000;
+ 774              		.loc 1 274 0
+ 775 00cc 9FED457A 		vldr.32	s14, .L134+52
+ 273:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod *= 100.0f;
+ 776              		.loc 1 273 0
+ 777 00d0 67EEA67A 		vmul.f32	s15, s15, s13
+ 274:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod = (uint32_t)pomod % 10000;
+ 778              		.loc 1 274 0
+ 779 00d4 67EE877A 		vmul.f32	s15, s15, s14
+ 275:tmk_core/protocol/arm_atsam/led_matrix.c ****     pomod /= 100.0f;
+ 780              		.loc 1 275 0
+ 781 00d8 FCEEE77A 		vcvt.u32.f32	s15, s15
+ 782 00dc 17EE903A 		vmov	r3, s15	@ int
+ 783 00e0 B3FBF1F2 		udiv	r2, r3, r1
+ 784 00e4 01FB1233 		mls	r3, r1, r2, r3
+ 785 00e8 07EE903A 		vmov	s15, r3	@ int
+ 786 00ec F8EEE77A 		vcvt.f32.s32	s15, s15
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 787              		.loc 1 283 0
+ 788 00f0 2978     		ldrb	r1, [r5]	@ zero_extendqisi2
+ 276:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 789              		.loc 1 276 0
+ 790 00f2 3D4B     		ldr	r3, .L134+56
+ 791 00f4 C7EE876A 		vdiv.f32	s13, s15, s14
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 792              		.loc 1 283 0
+ 793 00f8 8842     		cmp	r0, r1
+ 276:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 794              		.loc 1 276 0
+ 795 00fa C3ED006A 		vstr.32	s13, [r3]
+ 283:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (drvid = 0; drvid < ISSI3733_DRIVER_COUNT; drvid++) I2C_LED_Q_GCR(drvid);  // Queue dat
+ 796              		.loc 1 283 0
+ 797 00fe 1CD0     		beq	.L117
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 798              		.loc 1 284 0
+ 799 0100 0024     		movs	r4, #0
+ 800              	.L119:
+ 801              	.LVL46:
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 802              		.loc 1 284 0 is_stmt 0 discriminator 6
+ 803 0102 0720     		movs	r0, #7
+ 804 0104 FFF7FEFF 		bl	i2c_led_q_request_room
+ 805              	.LVL47:
+ 806 0108 A0B1     		cbz	r0, .L118
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 807              		.loc 1 284 0 discriminator 2
+ 808 010a 6520     		movs	r0, #101
+ 809 010c FFF7FEFF 		bl	i2c_led_q_add
+ 810              	.LVL48:
+ 811 0110 2046     		mov	r0, r4
+ 812 0112 FFF7FEFF 		bl	i2c_led_q_add
+ 813              	.LVL49:
+ 814 0116 6620     		movs	r0, #102
+ 815 0118 FFF7FEFF 		bl	i2c_led_q_add
+ 816              	.LVL50:
+ 817 011c 2046     		mov	r0, r4
+ 818 011e FFF7FEFF 		bl	i2c_led_q_add
+ 819              	.LVL51:
+ 820 0122 0320     		movs	r0, #3
+ 821 0124 FFF7FEFF 		bl	i2c_led_q_add
+ 822              	.LVL52:
+ 823 0128 6820     		movs	r0, #104
+ 824 012a FFF7FEFF 		bl	i2c_led_q_add
+ 825              	.LVL53:
+ 826 012e 2046     		mov	r0, r4
+ 827 0130 FFF7FEFF 		bl	i2c_led_q_add
+ 828              	.LVL54:
+ 829              	.L118:
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 830              		.loc 1 284 0 discriminator 4
+ 831 0134 A4B3     		cbz	r4, .L122
+ 285:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 832              		.loc 1 285 0 is_stmt 1
+ 833 0136 3378     		ldrb	r3, [r6]	@ zero_extendqisi2
+ 834 0138 2B70     		strb	r3, [r5]
+ 835              	.LVL55:
+ 836              	.L117:
+ 284:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual_last = gcr_actual;
+ 837              		.loc 1 284 0 discriminator 6
+ 838 013a 0024     		movs	r4, #0
+ 839              	.L121:
+ 840              	.LVL56:
+ 288:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 841              		.loc 1 288 0 discriminator 6
+ 842 013c 0720     		movs	r0, #7
+ 843 013e FFF7FEFF 		bl	i2c_led_q_request_room
+ 844              	.LVL57:
+ 845 0142 A0B1     		cbz	r0, .L120
+ 288:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 846              		.loc 1 288 0 is_stmt 0 discriminator 2
+ 847 0144 6520     		movs	r0, #101
+ 848 0146 FFF7FEFF 		bl	i2c_led_q_add
+ 849              	.LVL58:
+ 850 014a 2046     		mov	r0, r4
+ 851 014c FFF7FEFF 		bl	i2c_led_q_add
+ 852              	.LVL59:
+ 853 0150 6620     		movs	r0, #102
+ 854 0152 FFF7FEFF 		bl	i2c_led_q_add
+ 855              	.LVL60:
+ 856 0156 2046     		mov	r0, r4
+ 857 0158 FFF7FEFF 		bl	i2c_led_q_add
+ 858              	.LVL61:
+ 859 015c 0120     		movs	r0, #1
+ 860 015e FFF7FEFF 		bl	i2c_led_q_add
+ 861              	.LVL62:
+ 862 0162 6720     		movs	r0, #103
+ 863 0164 FFF7FEFF 		bl	i2c_led_q_add
+ 864              	.LVL63:
+ 865 0168 2046     		mov	r0, r4
+ 866 016a FFF7FEFF 		bl	i2c_led_q_add
+ 867              	.LVL64:
+ 868              	.L120:
+ 288:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 869              		.loc 1 288 0 discriminator 4
+ 870 016e CCB1     		cbz	r4, .L123
+ 291:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 871              		.loc 1 291 0 is_stmt 1
+ 872 0170 BDEC028B 		vldm	sp!, {d8}
+ 873              		.cfi_remember_state
+ 874              		.cfi_restore 80
+ 875              		.cfi_restore 81
+ 876              		.cfi_def_cfa_offset 24
+ 877 0174 BDE8F840 		pop	{r3, r4, r5, r6, r7, lr}
+ 878              		.cfi_restore 14
+ 879              		.cfi_restore 7
+ 880              		.cfi_restore 6
+ 881              		.cfi_restore 5
+ 882              		.cfi_restore 4
+ 883              		.cfi_restore 3
+ 884              		.cfi_def_cfa_offset 0
+ 885              	.LVL65:
+ 290:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 886              		.loc 1 290 0
+ 887 0178 FFF7FEBF 		b	i2c_led_q_run
+ 888              	.LVL66:
+ 889              	.L111:
+ 890              		.cfi_restore_state
+ 261:tmk_core/protocol/arm_atsam/led_matrix.c ****             breathe_dir = 1;
+ 891              		.loc 1 261 0
+ 892 017c 0028     		cmp	r0, #0
+ 893 017e 7FF46DAF 		bne	.L112
+ 262:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 894              		.loc 1 262 0
+ 895 0182 0123     		movs	r3, #1
+ 896 0184 6370     		strb	r3, [r4, #1]
+ 897 0186 69E7     		b	.L112
+ 898              	.L133:
+ 265:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (breathe_mult > 1)
+ 899              		.loc 1 265 0
+ 900 0188 B5EEC07A 		vcmpe.f32	s14, #0
+ 901 018c DFED177A 		vldr.32	s15, .L134+60
+ 902 0190 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 903 0194 58BF     		it	pl
+ 904 0196 F0EE477A 		vmovpl.f32	s15, s14
+ 905 019a C5ED007A 		vstr.32	s15, [r5]
+ 906 019e 75E7     		b	.L110
+ 907              	.LVL67:
+ 908              	.L122:
+ 909 01a0 0124     		movs	r4, #1
+ 910              	.LVL68:
+ 911 01a2 AEE7     		b	.L119
+ 912              	.LVL69:
+ 913              	.L123:
+ 914 01a4 0124     		movs	r4, #1
+ 915              	.LVL70:
+ 916 01a6 C9E7     		b	.L121
+ 917              	.L105:
+ 291:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 918              		.loc 1 291 0
+ 919 01a8 BDEC028B 		vldm	sp!, {d8}
+ 920              		.cfi_restore 80
+ 921              		.cfi_restore 81
+ 922              		.cfi_def_cfa_offset 24
+ 923 01ac F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 924              	.L135:
+ 925 01ae 00BF     		.align	3
+ 926              	.L134:
+ 927 01b0 691D554D 		.word	1297423721
+ 928 01b4 1075EF3E 		.word	1055880464
+ 929 01b8 00000000 		.word	.LANCHOR1
+ 930 01bc 00000000 		.word	i2c_led_q_running
+ 931 01c0 00000000 		.word	led_map
+ 932 01c4 00000000 		.word	led_buffer
+ 933 01c8 0C120000 		.word	led_map+4620
+ 934 01cc 00000000 		.word	.LANCHOR0
+ 935 01d0 00000000 		.word	breathe_mult
+ 936 01d4 00007A44 		.word	1148846080
+ 937 01d8 00000000 		.word	g_rgb_counters
+ 938 01dc 00000000 		.word	gcr_actual
+ 939 01e0 00000000 		.word	gcr_actual_last
+ 940 01e4 0000C842 		.word	1120403456
+ 941 01e8 00000000 		.word	pomod
+ 942 01ec 00000000 		.word	0
+ 943              		.cfi_endproc
+ 944              	.LFE153:
+ 946              		.section	.text.SERCOM1_0_Handler,"ax",%progbits
+ 947              		.align	1
+ 948              		.global	SERCOM1_0_Handler
+ 949              		.syntax unified
+ 950              		.thumb
+ 951              		.thumb_func
+ 952              		.fpu fpv4-sp-d16
+ 954              	SERCOM1_0_Handler:
+ 955              	.LFB145:
+  29:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (SERCOM1->I2CM.INTFLAG.bit.ERROR) {
+ 956              		.loc 1 29 0
+ 957              		.cfi_startproc
+ 958              		@ args = 0, pretend = 0, frame = 0
+ 959              		@ frame_needed = 0, uses_anonymous_args = 0
+ 960              		@ link register save eliminated.
+  30:tmk_core/protocol/arm_atsam/led_matrix.c ****         SERCOM1->I2CM.INTFLAG.reg = SERCOM_I2CM_INTENCLR_ERROR;
+ 961              		.loc 1 30 0
+ 962 0000 034B     		ldr	r3, .L141
+ 963 0002 1A7E     		ldrb	r2, [r3, #24]	@ zero_extendqisi2
+ 964 0004 D209     		lsrs	r2, r2, #7
+  31:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 965              		.loc 1 31 0
+ 966 0006 1CBF     		itt	ne
+ 967 0008 8022     		movne	r2, #128
+ 968 000a 1A76     		strbne	r2, [r3, #24]
+  33:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 969              		.loc 1 33 0
+ 970 000c 7047     		bx	lr
+ 971              	.L142:
+ 972 000e 00BF     		.align	2
+ 973              	.L141:
+ 974 0010 00340040 		.word	1073755136
+ 975              		.cfi_endproc
+ 976              	.LFE145:
+ 978              		.section	.text.DMAC_0_Handler,"ax",%progbits
+ 979              		.align	1
+ 980              		.global	DMAC_0_Handler
+ 981              		.syntax unified
+ 982              		.thumb
+ 983              		.thumb_func
+ 984              		.fpu fpv4-sp-d16
+ 986              	DMAC_0_Handler:
+ 987              	.LFB146:
+  35:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (DMAC->Channel[0].CHINTFLAG.bit.TCMPL) {
+ 988              		.loc 1 35 0
+ 989              		.cfi_startproc
+ 990              		@ args = 0, pretend = 0, frame = 0
+ 991              		@ frame_needed = 0, uses_anonymous_args = 0
+ 992 0000 08B5     		push	{r3, lr}
+ 993              		.cfi_def_cfa_offset 8
+ 994              		.cfi_offset 3, -8
+ 995              		.cfi_offset 14, -4
+  36:tmk_core/protocol/arm_atsam/led_matrix.c ****         DMAC->Channel[0].CHINTFLAG.reg = DMAC_CHINTENCLR_TCMPL;
+ 996              		.loc 1 36 0
+ 997 0002 0C4B     		ldr	r3, .L149
+ 998 0004 93F84E20 		ldrb	r2, [r3, #78]	@ zero_extendqisi2
+ 999 0008 9107     		lsls	r1, r2, #30
+ 1000 000a 0BD5     		bpl	.L144
+  37:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1001              		.loc 1 37 0
+ 1002 000c 0222     		movs	r2, #2
+ 1003 000e 83F84E20 		strb	r2, [r3, #78]
+  39:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1004              		.loc 1 39 0
+ 1005 0012 FFF7FEFF 		bl	i2c1_stop
+ 1006              	.LVL71:
+  41:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1007              		.loc 1 41 0
+ 1008 0016 084B     		ldr	r3, .L149+4
+ 1009 0018 0022     		movs	r2, #0
+ 1010 001a 1A70     		strb	r2, [r3]
+  51:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1011              		.loc 1 51 0
+ 1012 001c BDE80840 		pop	{r3, lr}
+ 1013              		.cfi_remember_state
+ 1014              		.cfi_restore 14
+ 1015              		.cfi_restore 3
+ 1016              		.cfi_def_cfa_offset 0
+  43:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1017              		.loc 1 43 0
+ 1018 0020 FFF7FEBF 		b	i2c_led_q_run
+ 1019              	.LVL72:
+ 1020              	.L144:
+ 1021              		.cfi_restore_state
+  48:tmk_core/protocol/arm_atsam/led_matrix.c ****         DMAC->Channel[0].CHINTFLAG.reg = DMAC_CHINTENCLR_TERR;
+ 1022              		.loc 1 48 0
+ 1023 0024 93F84E20 		ldrb	r2, [r3, #78]	@ zero_extendqisi2
+ 1024 0028 D207     		lsls	r2, r2, #31
+  49:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1025              		.loc 1 49 0
+ 1026 002a 44BF     		itt	mi
+ 1027 002c 0122     		movmi	r2, #1
+ 1028 002e 83F84E20 		strbmi	r2, [r3, #78]
+  51:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1029              		.loc 1 51 0
+ 1030 0032 08BD     		pop	{r3, pc}
+ 1031              	.L150:
+ 1032              		.align	2
+ 1033              	.L149:
+ 1034 0034 00A00041 		.word	1090560000
+ 1035 0038 00000000 		.word	i2c_led_q_running
+ 1036              		.cfi_endproc
+ 1037              	.LFE146:
+ 1039              		.section	.text.gcr_compute,"ax",%progbits
+ 1040              		.align	1
+ 1041              		.global	gcr_compute
+ 1042              		.syntax unified
+ 1043              		.thumb
+ 1044              		.thumb_func
+ 1045              		.fpu fpv4-sp-d16
+ 1047              	gcr_compute:
+ 1048              	.LFB147:
+  77:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t action  = ACT_GCR_NONE;
+ 1049              		.loc 1 77 0
+ 1050              		.cfi_startproc
+ 1051              		@ args = 0, pretend = 0, frame = 0
+ 1052              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1053              	.LVL73:
+ 1054 0000 70B5     		push	{r4, r5, r6, lr}
+ 1055              		.cfi_def_cfa_offset 16
+ 1056              		.cfi_offset 4, -16
+ 1057              		.cfi_offset 5, -12
+ 1058              		.cfi_offset 6, -8
+ 1059              		.cfi_offset 14, -4
+  82:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_use = gcr_breathe;
+ 1060              		.loc 1 82 0
+ 1061 0002 354C     		ldr	r4, .L172
+  79:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1062              		.loc 1 79 0
+ 1063 0004 354B     		ldr	r3, .L172+4
+  82:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_use = gcr_breathe;
+ 1064              		.loc 1 82 0
+ 1065 0006 2579     		ldrb	r5, [r4, #4]	@ zero_extendqisi2
+  79:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1066              		.loc 1 79 0
+ 1067 0008 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 1068              	.LVL74:
+  82:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_use = gcr_breathe;
+ 1069              		.loc 1 82 0
+ 1070 000a 0DB1     		cbz	r5, .L152
+  83:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1071              		.loc 1 83 0
+ 1072 000c 344B     		ldr	r3, .L172+8
+ 1073 000e 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 1074              	.LVL75:
+ 1075              	.L152:
+  88:tmk_core/protocol/arm_atsam/led_matrix.c ****         I2C3733_Control_Set(0);
+ 1076              		.loc 1 88 0
+ 1077 0010 344B     		ldr	r3, .L172+12
+ 1078 0012 1A88     		ldrh	r2, [r3]
+ 1079 0014 40F69703 		movw	r3, #2199
+ 1080 0018 9A42     		cmp	r2, r3
+ 1081 001a 0BD8     		bhi	.L153
+  89:tmk_core/protocol/arm_atsam/led_matrix.c ****         // CDC_print("USB: WARNING: 5V catastrophic level reached! Disabling LED drivers!\r\n"); //
+ 1082              		.loc 1 89 0
+ 1083 001c 0020     		movs	r0, #0
+ 1084 001e FFF7FEFF 		bl	I2C3733_Control_Set
+ 1085              	.LVL76:
+  91:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_actual   = 0;   // Minimize GCR
+ 1086              		.loc 1 91 0
+ 1087 0022 1423     		movs	r3, #20
+ 1088 0024 A371     		strb	r3, [r4, #6]
+  92:tmk_core/protocol/arm_atsam/led_matrix.c ****         usb_gcr_auto = 1;   // Force auto mode enabled
+ 1089              		.loc 1 92 0
+ 1090 0026 304B     		ldr	r3, .L172+16
+ 1091 0028 0022     		movs	r2, #0
+ 1092 002a 1A70     		strb	r2, [r3]
+  93:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 1093              		.loc 1 93 0
+ 1094 002c 2F4B     		ldr	r3, .L172+20
+ 1095 002e 0122     		movs	r2, #1
+ 1096 0030 1A70     		strb	r2, [r3]
+ 1097              	.L151:
+ 165:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1098              		.loc 1 165 0
+ 1099 0032 70BD     		pop	{r4, r5, r6, pc}
+ 1100              	.LVL77:
+ 1101              	.L153:
+  95:tmk_core/protocol/arm_atsam/led_matrix.c ****         v_5v_cat_hit--;
+ 1102              		.loc 1 95 0
+ 1103 0034 A079     		ldrb	r0, [r4, #6]	@ zero_extendqisi2
+ 1104 0036 0128     		cmp	r0, #1
+ 1105 0038 02D9     		bls	.L155
+  96:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 1106              		.loc 1 96 0
+ 1107 003a 0138     		subs	r0, r0, #1
+ 1108 003c A071     		strb	r0, [r4, #6]
+  97:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (v_5v_cat_hit == 1) {
+ 1109              		.loc 1 97 0
+ 1110 003e F8E7     		b	.L151
+ 1111              	.L155:
+  98:tmk_core/protocol/arm_atsam/led_matrix.c ****         I2C3733_Control_Set(1);
+ 1112              		.loc 1 98 0
+ 1113 0040 07D1     		bne	.L156
+  99:tmk_core/protocol/arm_atsam/led_matrix.c ****         CDC_print("USB: WARNING: Re-enabling LED drivers\r\n");
+ 1114              		.loc 1 99 0
+ 1115 0042 FFF7FEFF 		bl	I2C3733_Control_Set
+ 1116              	.LVL78:
+ 100:tmk_core/protocol/arm_atsam/led_matrix.c ****         v_5v_cat_hit = 0;
+ 1117              		.loc 1 100 0
+ 1118 0046 2A48     		ldr	r0, .L172+24
+ 1119 0048 FFF7FEFF 		bl	CDC_print
+ 1120              	.LVL79:
+ 101:tmk_core/protocol/arm_atsam/led_matrix.c ****         return;
+ 1121              		.loc 1 101 0
+ 1122 004c 0023     		movs	r3, #0
+ 1123 004e A371     		strb	r3, [r4, #6]
+ 102:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1124              		.loc 1 102 0
+ 1125 0050 EFE7     		b	.L151
+ 1126              	.LVL80:
+ 1127              	.L156:
+ 105:tmk_core/protocol/arm_atsam/led_matrix.c ****         if (v_5v_avg < V5_LOW)
+ 1128              		.loc 1 105 0
+ 1129 0052 2648     		ldr	r0, .L172+20
+ 1130 0054 244A     		ldr	r2, .L172+16
+ 1131 0056 0078     		ldrb	r0, [r0]	@ zero_extendqisi2
+ 1132 0058 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1133 005a 78B1     		cbz	r0, .L157
+ 106:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 1134              		.loc 1 106 0
+ 1135 005c 2548     		ldr	r0, .L172+28
+ 1136 005e 0088     		ldrh	r0, [r0]
+ 1137 0060 B0F51B6F 		cmp	r0, #2480
+ 1138 0064 14D3     		bcc	.L158
+ 108:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_INC;
+ 1139              		.loc 1 108 0
+ 1140 0066 40F6EC16 		movw	r6, #2540
+ 1141 006a B042     		cmp	r0, r6
+ 1142 006c 01D9     		bls	.L159
+ 108:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_INC;
+ 1143              		.loc 1 108 0 is_stmt 0 discriminator 1
+ 1144 006e 9942     		cmp	r1, r3
+ 1145 0070 06D8     		bhi	.L160
+ 1146              	.L159:
+ 110:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 1147              		.loc 1 110 0 is_stmt 1
+ 1148 0072 9942     		cmp	r1, r3
+ 1149              	.L170:
+ 115:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_DEC;
+ 1150              		.loc 1 115 0
+ 1151 0074 0CD3     		bcc	.L158
+ 1152              	.LVL81:
+ 1153              	.L161:
+ 120:tmk_core/protocol/arm_atsam/led_matrix.c ****     } else if (action == ACT_GCR_INC) {
+ 1154              		.loc 1 120 0
+ 1155 0076 0023     		movs	r3, #0
+ 1156 0078 E371     		strb	r3, [r4, #7]
+ 1157 007a DAE7     		b	.L151
+ 1158              	.LVL82:
+ 1159              	.L157:
+ 113:tmk_core/protocol/arm_atsam/led_matrix.c ****             action = ACT_GCR_INC;
+ 1160              		.loc 1 113 0
+ 1161 007c 9942     		cmp	r1, r3
+ 1162 007e F9D9     		bls	.L170
+ 1163              	.L160:
+ 122:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_actual = LED_GCR_MAX;  // Obey max and prevent wrapping
+ 1164              		.loc 1 122 0
+ 1165 0080 C3F1A501 		rsb	r1, r3, #165
+ 1166              	.LVL83:
+ 1167 0084 0129     		cmp	r1, #1
+ 123:tmk_core/protocol/arm_atsam/led_matrix.c ****         else
+ 1168              		.loc 1 123 0
+ 1169 0086 D4BF     		ite	le
+ 1170 0088 A523     		movle	r3, #165
+ 125:tmk_core/protocol/arm_atsam/led_matrix.c ****         gcr_min_counter = 0;
+ 1171              		.loc 1 125 0
+ 1172 008a 0233     		addgt	r3, r3, #2
+ 1173 008c 1370     		strb	r3, [r2]
+ 1174 008e F2E7     		b	.L161
+ 1175              	.LVL84:
+ 1176              	.L158:
+ 128:tmk_core/protocol/arm_atsam/led_matrix.c ****         {
+ 1177              		.loc 1 128 0
+ 1178 0090 012B     		cmp	r3, #1
+ 1179 0092 15D8     		bhi	.L163
+ 132:tmk_core/protocol/arm_atsam/led_matrix.c ****             {
+ 1180              		.loc 1 132 0
+ 1181 0094 184B     		ldr	r3, .L172+32
+ 134:tmk_core/protocol/arm_atsam/led_matrix.c ****                 {
+ 1182              		.loc 1 134 0
+ 1183 0096 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 130:tmk_core/protocol/arm_atsam/led_matrix.c ****             // At this point, power can no longer be cut from the LED drivers, so focus on cutting 
+ 1184              		.loc 1 130 0
+ 1185 0098 0025     		movs	r5, #0
+ 134:tmk_core/protocol/arm_atsam/led_matrix.c ****                 {
+ 1186              		.loc 1 134 0
+ 1187 009a 012B     		cmp	r3, #1
+ 130:tmk_core/protocol/arm_atsam/led_matrix.c ****             // At this point, power can no longer be cut from the LED drivers, so focus on cutting 
+ 1188              		.loc 1 130 0
+ 1189 009c 1570     		strb	r5, [r2]
+ 134:tmk_core/protocol/arm_atsam/led_matrix.c ****                 {
+ 1190              		.loc 1 134 0
+ 1191 009e C8D1     		bne	.L151
+ 136:tmk_core/protocol/arm_atsam/led_matrix.c ****                     if (gcr_min_counter > 200)  // 5ms per check = 1s delay
+ 1192              		.loc 1 136 0
+ 1193 00a0 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 1194 00a2 0133     		adds	r3, r3, #1
+ 1195 00a4 DBB2     		uxtb	r3, r3
+ 137:tmk_core/protocol/arm_atsam/led_matrix.c ****                     {
+ 1196              		.loc 1 137 0
+ 1197 00a6 C82B     		cmp	r3, #200
+ 136:tmk_core/protocol/arm_atsam/led_matrix.c ****                     if (gcr_min_counter > 200)  // 5ms per check = 1s delay
+ 1198              		.loc 1 136 0
+ 1199 00a8 E371     		strb	r3, [r4, #7]
+ 137:tmk_core/protocol/arm_atsam/led_matrix.c ****                     {
+ 1200              		.loc 1 137 0
+ 1201 00aa C2D9     		bls	.L151
+ 139:tmk_core/protocol/arm_atsam/led_matrix.c ****                         usb_extra_manual = 0;  // Force disable manual mode of extra port
+ 1202              		.loc 1 139 0
+ 1203 00ac 0320     		movs	r0, #3
+ 1204 00ae FFF7FEFF 		bl	USB_ExtraSetState
+ 1205              	.LVL85:
+ 140:tmk_core/protocol/arm_atsam/led_matrix.c ****                         if (usb_extra_manual)
+ 1206              		.loc 1 140 0
+ 1207 00b2 124B     		ldr	r3, .L172+36
+ 144:tmk_core/protocol/arm_atsam/led_matrix.c ****                     }
+ 1208              		.loc 1 144 0
+ 1209 00b4 1248     		ldr	r0, .L172+40
+ 140:tmk_core/protocol/arm_atsam/led_matrix.c ****                         if (usb_extra_manual)
+ 1210              		.loc 1 140 0
+ 1211 00b6 1D70     		strb	r5, [r3]
+ 165:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1212              		.loc 1 165 0
+ 1213 00b8 BDE87040 		pop	{r4, r5, r6, lr}
+ 1214              		.cfi_remember_state
+ 1215              		.cfi_restore 14
+ 1216              		.cfi_restore 6
+ 1217              		.cfi_restore 5
+ 1218              		.cfi_restore 4
+ 1219              		.cfi_def_cfa_offset 0
+ 144:tmk_core/protocol/arm_atsam/led_matrix.c ****                     }
+ 1220              		.loc 1 144 0
+ 1221 00bc FFF7FEBF 		b	CDC_print
+ 1222              	.LVL86:
+ 1223              	.L163:
+ 1224              		.cfi_restore_state
+ 150:tmk_core/protocol/arm_atsam/led_matrix.c ****             gcr_min_counter = 0;
+ 1225              		.loc 1 150 0
+ 1226 00c0 023B     		subs	r3, r3, #2
+ 1227 00c2 DBB2     		uxtb	r3, r3
+ 1228 00c4 1370     		strb	r3, [r2]
+ 156:tmk_core/protocol/arm_atsam/led_matrix.c ****                 gcr_breathe = gcr_actual;
+ 1229              		.loc 1 156 0
+ 1230 00c6 012D     		cmp	r5, #1
+ 151:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1231              		.loc 1 151 0
+ 1232 00c8 4FF00002 		mov	r2, #0
+ 1233 00cc E271     		strb	r2, [r4, #7]
+ 157:tmk_core/protocol/arm_atsam/led_matrix.c ****                 // PS: At this point, setting breathing to exhale makes a noticebly shorter cycle
+ 1234              		.loc 1 157 0
+ 1235 00ce 04BF     		itt	eq
+ 1236 00d0 034A     		ldreq	r2, .L172+8
+ 1237 00d2 1370     		strbeq	r3, [r2]
+ 1238 00d4 ADE7     		b	.L151
+ 1239              	.L173:
+ 1240 00d6 00BF     		.align	2
+ 1241              	.L172:
+ 1242 00d8 00000000 		.word	.LANCHOR0
+ 1243 00dc 00000000 		.word	gcr_desired
+ 1244 00e0 00000000 		.word	gcr_breathe
+ 1245 00e4 00000000 		.word	v_5v
+ 1246 00e8 00000000 		.word	gcr_actual
+ 1247 00ec 00000000 		.word	usb_gcr_auto
+ 1248 00f0 00000000 		.word	.LC1
+ 1249 00f4 00000000 		.word	v_5v_avg
+ 1250 00f8 00000000 		.word	usb_extra_state
+ 1251 00fc 00000000 		.word	usb_extra_manual
+ 1252 0100 28000000 		.word	.LC2
+ 1253              		.cfi_endproc
+ 1254              	.LFE147:
+ 1256              		.section	.text.issi3733_prepare_arrays,"ax",%progbits
+ 1257              		.align	1
+ 1258              		.global	issi3733_prepare_arrays
+ 1259              		.syntax unified
+ 1260              		.thumb
+ 1261              		.thumb_func
+ 1262              		.fpu fpv4-sp-d16
+ 1264              	issi3733_prepare_arrays:
+ 1265              	.LFB148:
+ 167:tmk_core/protocol/arm_atsam/led_matrix.c ****     memset(issidrv, 0, sizeof(issi3733_driver_t) * ISSI3733_DRIVER_COUNT);
+ 1266              		.loc 1 167 0
+ 1267              		.cfi_startproc
+ 1268              		@ args = 0, pretend = 0, frame = 0
+ 1269              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1270 0000 2DE9F84F 		push	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 1271              		.cfi_def_cfa_offset 40
+ 1272              		.cfi_offset 3, -40
+ 1273              		.cfi_offset 4, -36
+ 1274              		.cfi_offset 5, -32
+ 1275              		.cfi_offset 6, -28
+ 1276              		.cfi_offset 7, -24
+ 1277              		.cfi_offset 8, -20
+ 1278              		.cfi_offset 9, -16
+ 1279              		.cfi_offset 10, -12
+ 1280              		.cfi_offset 11, -8
+ 1281              		.cfi_offset 14, -4
+ 168:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1282              		.loc 1 168 0
+ 1283 0004 2F4B     		ldr	r3, .L177
+ 1284 0006 40F2C232 		movw	r2, #962
+ 1285 000a 0021     		movs	r1, #0
+ 1286 000c 1846     		mov	r0, r3
+ 1287 000e FFF7FEFF 		bl	memset
+ 1288              	.LVL87:
+ 174:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1289              		.loc 1 174 0
+ 1290 0012 A022     		movs	r2, #160
+ 1291 0014 0270     		strb	r2, [r0]
+ 1292              	.LVL88:
+ 1293 0016 2C49     		ldr	r1, .L177+4
+ 1294 0018 DFF8B0C0 		ldr	ip, .L177+8
+ 1295 001c BE22     		movs	r2, #190
+ 1296 001e 80F8E121 		strb	r2, [r0, #481]
+ 1297              	.LVL89:
+ 1298 0022 40F2E119 		movw	r9, #481
+ 1299              	.LBB17:
+ 185:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swr - 1) * 2 + (led_map[i].ad
+ 1300              		.loc 1 185 0
+ 1301 0026 4FF00808 		mov	r8, #8
+ 1302 002a 4FF0010E 		mov	lr, #1
+ 1303              	.LVL90:
+ 1304              	.L175:
+ 179:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.r = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swr - 1) * 16
+ 1305              		.loc 1 179 0 discriminator 3
+ 1306 002e 0A7C     		ldrb	r2, [r1, #16]	@ zero_extendqisi2
+ 1307 0030 CD7C     		ldrb	r5, [r1, #19]	@ zero_extendqisi2
+ 1308 0032 91F811B0 		ldrb	fp, [r1, #17]	@ zero_extendqisi2
+ 180:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.b = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swb - 1) * 16
+ 1309              		.loc 1 180 0 discriminator 3
+ 1310 0036 8C7C     		ldrb	r4, [r1, #18]	@ zero_extendqisi2
+ 181:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1311              		.loc 1 181 0 discriminator 3
+ 1312 0038 0F7D     		ldrb	r7, [r1, #20]	@ zero_extendqisi2
+ 179:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.r = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swr - 1) * 16
+ 1313              		.loc 1 179 0 discriminator 3
+ 1314 003a 013A     		subs	r2, r2, #1
+ 1315 003c 09FB02F2 		mul	r2, r9, r2
+ 1316 0040 02F14C0A 		add	r10, r2, #76
+ 1317 0044 013D     		subs	r5, r5, #1
+ 1318 0046 8244     		add	r10, r10, r0
+ 1319 0048 0BEB0513 		add	r3, fp, r5, lsl #4
+ 1320 004c 5344     		add	r3, r3, r10
+ 180:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.b = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swb - 1) * 16
+ 1321              		.loc 1 180 0 discriminator 3
+ 1322 004e 013C     		subs	r4, r4, #1
+ 179:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.r = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swr - 1) * 16
+ 1323              		.loc 1 179 0 discriminator 3
+ 1324 0050 8B60     		str	r3, [r1, #8]
+ 180:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.b = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swb - 1) * 16
+ 1325              		.loc 1 180 0 discriminator 3
+ 1326 0052 0BEB0413 		add	r3, fp, r4, lsl #4
+ 1327 0056 5344     		add	r3, r3, r10
+ 181:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1328              		.loc 1 181 0 discriminator 3
+ 1329 0058 013F     		subs	r7, r7, #1
+ 180:tmk_core/protocol/arm_atsam/led_matrix.c ****         led_map[i].rgb.b = issidrv[led_map[i].adr.drv - 1].pwm + 1 + ((led_map[i].adr.swb - 1) * 16
+ 1330              		.loc 1 180 0 discriminator 3
+ 1331 005a 4B60     		str	r3, [r1, #4]
+ 181:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1332              		.loc 1 181 0 discriminator 3
+ 1333 005c 0BF1FF33 		add	r3, fp, #-1
+ 1334 0060 0BEB071B 		add	fp, fp, r7, lsl #4
+ 1335 0064 0AEB0B06 		add	r6, r10, fp
+ 1336 0068 CE60     		str	r6, [r1, #12]
+ 185:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swr - 1) * 2 + (led_map[i].ad
+ 1337              		.loc 1 185 0 discriminator 3
+ 1338 006a D3F1000A 		rsbs	r10, r3, #0
+ 1339 006e 93FBF8F6 		sdiv	r6, r3, r8
+ 1340 0072 02F10102 		add	r2, r2, #1
+ 1341 0076 06EB4505 		add	r5, r6, r5, lsl #1
+ 1342 007a 0244     		add	r2, r2, r0
+ 1343 007c 05F10105 		add	r5, r5, #1
+ 1344 0080 0AF0070A 		and	r10, r10, #7
+ 1345 0084 03F00703 		and	r3, r3, #7
+ 1346 0088 58BF     		it	pl
+ 1347 008a CAF10003 		rsbpl	r3, r10, #0
+ 1348 008e 0EFA03F3 		lsl	r3, lr, r3
+ 1349 0092 12F805A0 		ldrb	r10, [r2, r5]	@ zero_extendqisi2
+ 1350 0096 5BB2     		sxtb	r3, r3
+ 1351 0098 43EA0A0A 		orr	r10, r3, r10
+ 186:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swb - 1) * 2 + (led_map[i].ad
+ 1352              		.loc 1 186 0 discriminator 3
+ 1353 009c 06EB4404 		add	r4, r6, r4, lsl #1
+ 185:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swr - 1) * 2 + (led_map[i].ad
+ 1354              		.loc 1 185 0 discriminator 3
+ 1355 00a0 02F805A0 		strb	r10, [r2, r5]
+ 186:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swb - 1) * 2 + (led_map[i].ad
+ 1356              		.loc 1 186 0 discriminator 3
+ 1357 00a4 0134     		adds	r4, r4, #1
+ 187:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1358              		.loc 1 187 0 discriminator 3
+ 1359 00a6 06EB4706 		add	r6, r6, r7, lsl #1
+ 186:tmk_core/protocol/arm_atsam/led_matrix.c ****         *(issidrv[led_map[i].adr.drv - 1].onoff + 1 + (led_map[i].adr.swb - 1) * 2 + (led_map[i].ad
+ 1360              		.loc 1 186 0 discriminator 3
+ 1361 00aa 155D     		ldrb	r5, [r2, r4]	@ zero_extendqisi2
+ 1362 00ac 1D43     		orrs	r5, r5, r3
+ 1363 00ae 1555     		strb	r5, [r2, r4]
+ 187:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1364              		.loc 1 187 0 discriminator 3
+ 1365 00b0 0136     		adds	r6, r6, #1
+ 1366 00b2 2C31     		adds	r1, r1, #44
+ 1367 00b4 945D     		ldrb	r4, [r2, r6]	@ zero_extendqisi2
+ 177:tmk_core/protocol/arm_atsam/led_matrix.c ****         // BYTE: 1 + (SW-1)*16 + (CS-1)
+ 1368              		.loc 1 177 0 discriminator 3
+ 1369 00b6 8C45     		cmp	ip, r1
+ 187:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1370              		.loc 1 187 0 discriminator 3
+ 1371 00b8 43EA0403 		orr	r3, r3, r4
+ 1372 00bc 9355     		strb	r3, [r2, r6]
+ 177:tmk_core/protocol/arm_atsam/led_matrix.c ****         // BYTE: 1 + (SW-1)*16 + (CS-1)
+ 1373              		.loc 1 177 0 discriminator 3
+ 1374 00be B6D1     		bne	.L175
+ 1375              	.LBE17:
+ 189:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1376              		.loc 1 189 0
+ 1377 00c0 BDE8F88F 		pop	{r3, r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1378              	.L178:
+ 1379              		.align	2
+ 1380              	.L177:
+ 1381 00c4 00000000 		.word	issidrv
+ 1382 00c8 00000000 		.word	led_map
+ 1383 00cc 0C120000 		.word	led_map+4620
+ 1384              		.cfi_endproc
+ 1385              	.LFE148:
+ 1387              		.section	.text.led_matrix_prepare,"ax",%progbits
+ 1388              		.align	1
+ 1389              		.global	led_matrix_prepare
+ 1390              		.syntax unified
+ 1391              		.thumb
+ 1392              		.thumb_func
+ 1393              		.fpu fpv4-sp-d16
+ 1395              	led_matrix_prepare:
+ 1396              	.LFB149:
+ 191:tmk_core/protocol/arm_atsam/led_matrix.c ****     for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 1397              		.loc 1 191 0
+ 1398              		.cfi_startproc
+ 1399              		@ args = 0, pretend = 0, frame = 0
+ 1400              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1401              		@ link register save eliminated.
+ 1402              	.LVL91:
+ 1403 0000 064B     		ldr	r3, .L182
+ 1404 0002 0749     		ldr	r1, .L182+4
+ 1405              	.LBB18:
+ 193:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.g = 0;
+ 1406              		.loc 1 193 0
+ 1407 0004 0022     		movs	r2, #0
+ 1408              	.LVL92:
+ 1409              	.L180:
+ 193:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.g = 0;
+ 1410              		.loc 1 193 0 is_stmt 0 discriminator 3
+ 1411 0006 5868     		ldr	r0, [r3, #4]
+ 1412 0008 0270     		strb	r2, [r0]
+ 194:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.b = 0;
+ 1413              		.loc 1 194 0 is_stmt 1 discriminator 3
+ 1414 000a 9868     		ldr	r0, [r3, #8]
+ 1415 000c 0270     		strb	r2, [r0]
+ 195:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1416              		.loc 1 195 0 discriminator 3
+ 1417 000e D868     		ldr	r0, [r3, #12]
+ 1418 0010 2C33     		adds	r3, r3, #44
+ 192:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.r = 0;
+ 1419              		.loc 1 192 0 discriminator 3
+ 1420 0012 8B42     		cmp	r3, r1
+ 195:tmk_core/protocol/arm_atsam/led_matrix.c ****     }
+ 1421              		.loc 1 195 0 discriminator 3
+ 1422 0014 0270     		strb	r2, [r0]
+ 192:tmk_core/protocol/arm_atsam/led_matrix.c ****         *led_map[i].rgb.r = 0;
+ 1423              		.loc 1 192 0 discriminator 3
+ 1424 0016 F6D1     		bne	.L180
+ 1425              	.LBE18:
+ 197:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1426              		.loc 1 197 0
+ 1427 0018 7047     		bx	lr
+ 1428              	.L183:
+ 1429 001a 00BF     		.align	2
+ 1430              	.L182:
+ 1431 001c 00000000 		.word	led_map
+ 1432 0020 0C120000 		.word	led_map+4620
+ 1433              		.cfi_endproc
+ 1434              	.LFE149:
+ 1436              		.section	.text.init,"ax",%progbits
+ 1437              		.align	1
+ 1438              		.global	init
+ 1439              		.syntax unified
+ 1440              		.thumb
+ 1441              		.thumb_func
+ 1442              		.fpu fpv4-sp-d16
+ 1444              	init:
+ 1445              	.LFB152:
+ 217:tmk_core/protocol/arm_atsam/led_matrix.c ****     DBGC(DC_LED_MATRIX_INIT_BEGIN);
+ 1446              		.loc 1 217 0
+ 1447              		.cfi_startproc
+ 1448              		@ args = 0, pretend = 0, frame = 0
+ 1449              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1450 0000 10B5     		push	{r4, lr}
+ 1451              		.cfi_def_cfa_offset 8
+ 1452              		.cfi_offset 4, -8
+ 1453              		.cfi_offset 14, -4
+ 218:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1454              		.loc 1 218 0
+ 1455 0002 074C     		ldr	r4, .L185
+ 1456 0004 6B23     		movs	r3, #107
+ 1457 0006 2360     		str	r3, [r4]
+ 220:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1458              		.loc 1 220 0
+ 1459 0008 FFF7FEFF 		bl	issi3733_prepare_arrays
+ 1460              	.LVL93:
+ 222:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1461              		.loc 1 222 0
+ 1462 000c FFF7FEFF 		bl	led_matrix_prepare
+ 1463              	.LVL94:
+ 224:tmk_core/protocol/arm_atsam/led_matrix.c ****     v_5v_cat_hit    = 0;
+ 1464              		.loc 1 224 0
+ 1465 0010 044B     		ldr	r3, .L185+4
+ 1466 0012 0022     		movs	r2, #0
+ 1467 0014 DA71     		strb	r2, [r3, #7]
+ 225:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1468              		.loc 1 225 0
+ 1469 0016 9A71     		strb	r2, [r3, #6]
+ 227:tmk_core/protocol/arm_atsam/led_matrix.c **** }
+ 1470              		.loc 1 227 0
+ 1471 0018 6C23     		movs	r3, #108
+ 1472 001a 2360     		str	r3, [r4]
+ 228:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1473              		.loc 1 228 0
+ 1474 001c 10BD     		pop	{r4, pc}
+ 1475              	.L186:
+ 1476 001e 00BF     		.align	2
+ 1477              	.L185:
+ 1478 0020 00000000 		.word	debug_code
+ 1479 0024 00000000 		.word	.LANCHOR0
+ 1480              		.cfi_endproc
+ 1481              	.LFE152:
+ 1483              		.section	.text.led_matrix_indicators,"ax",%progbits
+ 1484              		.align	1
+ 1485              		.global	led_matrix_indicators
+ 1486              		.syntax unified
+ 1487              		.thumb
+ 1488              		.thumb_func
+ 1489              		.fpu fpv4-sp-d16
+ 1491              	led_matrix_indicators:
+ 1492              	.LFB154:
+ 293:tmk_core/protocol/arm_atsam/led_matrix.c ****     uint8_t kbled = keyboard_leds();
+ 1493              		.loc 1 293 0
+ 1494              		.cfi_startproc
+ 1495              		@ args = 0, pretend = 0, frame = 0
+ 1496              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1497 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1498              		.cfi_def_cfa_offset 24
+ 1499              		.cfi_offset 3, -24
+ 1500              		.cfi_offset 4, -20
+ 1501              		.cfi_offset 5, -16
+ 1502              		.cfi_offset 6, -12
+ 1503              		.cfi_offset 7, -8
+ 1504              		.cfi_offset 14, -4
+ 294:tmk_core/protocol/arm_atsam/led_matrix.c ****     if (kbled && rgb_matrix_config.enable) {
+ 1505              		.loc 1 294 0
+ 1506 0002 FFF7FEFF 		bl	keyboard_leds
+ 1507              	.LVL95:
+ 295:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 1508              		.loc 1 295 0
+ 1509 0006 F8B1     		cbz	r0, .L187
+ 295:tmk_core/protocol/arm_atsam/led_matrix.c ****         for (uint8_t i = 0; i < ISSI3733_LED_COUNT; i++) {
+ 1510              		.loc 1 295 0 is_stmt 0 discriminator 1
+ 1511 0008 104B     		ldr	r3, .L201
+ 1512 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1513 000c 9B07     		lsls	r3, r3, #30
+ 1514 000e 1BD0     		beq	.L187
+ 1515              	.LBB19:
+ 302:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // CAPS LOCK
+ 1516              		.loc 1 302 0 is_stmt 1
+ 1517 0010 0F4F     		ldr	r7, .L201+4
+ 1518 0012 104D     		ldr	r5, .L201+8
+ 1519              	.LBE19:
+ 1520 0014 0023     		movs	r3, #0
+ 1521              	.LBB20:
+ 1522 0016 2C26     		movs	r6, #44
+ 1523 0018 00F00200 		and	r0, r0, #2
+ 1524              	.LVL96:
+ 1525              	.L190:
+ 1526 001c 06FB0372 		mla	r2, r6, r3, r7
+ 297:tmk_core/protocol/arm_atsam/led_matrix.c **** #if USB_LED_NUM_LOCK_SCANCODE != 255
+ 1527              		.loc 1 297 0
+ 1528 0020 92F82820 		ldrb	r2, [r2, #40]	@ zero_extendqisi2
+ 1529 0024 1E2A     		cmp	r2, #30
+ 1530 0026 0CD1     		bne	.L189
+ 302:tmk_core/protocol/arm_atsam/led_matrix.c **** #endif  // CAPS LOCK
+ 1531              		.loc 1 302 0
+ 1532 0028 58B1     		cbz	r0, .L189
+ 1533 002a 03EB4301 		add	r1, r3, r3, lsl #1
+ 1534 002e 4A19     		adds	r2, r1, r5
+ 314:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_buffer[i].g = 255 - led_buffer[i].g;
+ 1535              		.loc 1 314 0
+ 1536 0030 5478     		ldrb	r4, [r2, #1]	@ zero_extendqisi2
+ 1537 0032 E443     		mvns	r4, r4
+ 1538 0034 5470     		strb	r4, [r2, #1]
+ 315:tmk_core/protocol/arm_atsam/led_matrix.c ****                 led_buffer[i].b = 255 - led_buffer[i].b;
+ 1539              		.loc 1 315 0
+ 1540 0036 4C5D     		ldrb	r4, [r1, r5]	@ zero_extendqisi2
+ 1541 0038 E443     		mvns	r4, r4
+ 1542 003a 4C55     		strb	r4, [r1, r5]
+ 316:tmk_core/protocol/arm_atsam/led_matrix.c ****             }
+ 1543              		.loc 1 316 0
+ 1544 003c 9178     		ldrb	r1, [r2, #2]	@ zero_extendqisi2
+ 1545 003e C943     		mvns	r1, r1
+ 1546 0040 9170     		strb	r1, [r2, #2]
+ 1547              	.L189:
+ 1548              	.LVL97:
+ 1549 0042 0133     		adds	r3, r3, #1
+ 1550              	.LVL98:
+ 296:tmk_core/protocol/arm_atsam/led_matrix.c ****             if (
+ 1551              		.loc 1 296 0 discriminator 2
+ 1552 0044 692B     		cmp	r3, #105
+ 1553 0046 E9D1     		bne	.L190
+ 1554              	.L187:
+ 1555              	.LBE20:
+ 320:tmk_core/protocol/arm_atsam/led_matrix.c **** 
+ 1556              		.loc 1 320 0
+ 1557 0048 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1558              	.L202:
+ 1559 004a 00BF     		.align	2
+ 1560              	.L201:
+ 1561 004c 00000000 		.word	rgb_matrix_config
+ 1562 0050 00000000 		.word	led_map
+ 1563 0054 00000000 		.word	led_buffer
+ 1564              		.cfi_endproc
+ 1565              	.LFE154:
+ 1567              		.global	breathe_dir
+ 1568              		.global	led_animation_breathe_cur
+ 1569              		.global	led_enabled
+ 1570              		.global	led_lighting_mode
+ 1571              		.global	led_animation_speed
+ 1572              		.global	led_animation_id
+ 1573              		.global	led_animation_breathing
+ 1574              		.global	led_animation_direction
+ 1575              		.global	led_animation_orientation
+ 1576              		.global	rgb_matrix_driver
+ 1577              		.comm	pomod,4,4
+ 1578              		.comm	breathe_mult,4,4
+ 1579              		.comm	gcr_breathe,1,1
+ 1580              		.comm	gcr_actual_last,1,1
+ 1581              		.comm	gcr_actual,1,1
+ 1582              		.comm	gcr_desired,1,1
+ 1583              		.comm	led_buffer,315,1
+ 1584              		.global	led_map
+ 1585              		.comm	issidrv,962,1
+ 1586              		.weak	led_instructions
+ 1587              		.comm	dmac_desc_wb,16,16
+ 1588              		.comm	dmac_desc,16,16
+ 1589              		.section	.rodata
+ 1590              		.align	2
+ 1593              	rgb_matrix_driver:
+ 1594 0000 00000000 		.word	init
+ 1595 0004 00000000 		.word	led_set_one
+ 1596 0008 00000000 		.word	led_set_all
+ 1597 000c 00000000 		.word	flush
+ 1598              		.data
+ 1599              		.align	2
+ 1600              		.set	.LANCHOR1,. + 0
+ 1603              	led_enabled:
+ 1604 0000 01       		.byte	1
+ 1607              	breathe_dir:
+ 1608 0001 01       		.byte	1
+ 1609 0002 0000     		.space	2
+ 1612              	led_animation_speed:
+ 1613 0004 00008040 		.word	1082130432
+ 1616              	led_map:
+ 1617 0008 01       		.byte	1
+ 1618 0009 00000000 		.space	15
+ 1618      00000000 
+ 1618      00000000 
+ 1618      000000
+ 1619 0018 02       		.byte	2
+ 1620 0019 02       		.byte	2
+ 1621 001a 02       		.byte	2
+ 1622 001b 01       		.byte	1
+ 1623 001c 03       		.byte	3
+ 1624 001d 000000   		.space	3
+ 1625 0020 00000000 		.word	0
+ 1626 0024 00000000 		.word	0
+ 1627 0028 00000000 		.space	8
+ 1627      00000000 
+ 1628 0030 00       		.byte	0
+ 1629 0031 000000   		.space	3
+ 1630 0034 02       		.byte	2
+ 1631 0035 00000000 		.space	15
+ 1631      00000000 
+ 1631      00000000 
+ 1631      000000
+ 1632 0044 02       		.byte	2
+ 1633 0045 03       		.byte	3
+ 1634 0046 05       		.byte	5
+ 1635 0047 04       		.byte	4
+ 1636 0048 06       		.byte	6
+ 1637 0049 000000   		.space	3
+ 1638 004c 0000403F 		.word	1061158912
+ 1639 0050 00000000 		.word	0
+ 1640 0054 00000000 		.space	8
+ 1640      00000000 
+ 1641 005c 01       		.byte	1
+ 1642 005d 000000   		.space	3
+ 1643 0060 03       		.byte	3
+ 1644 0061 00000000 		.space	15
+ 1644      00000000 
+ 1644      00000000 
+ 1644      000000
+ 1645 0070 02       		.byte	2
+ 1646 0071 04       		.byte	4
+ 1647 0072 05       		.byte	5
+ 1648 0073 04       		.byte	4
+ 1649 0074 06       		.byte	6
+ 1650 0075 000000   		.space	3
+ 1651 0078 0000C03F 		.word	1069547520
+ 1652 007c 00000000 		.word	0
+ 1653 0080 00000000 		.space	8
+ 1653      00000000 
+ 1654 0088 02       		.byte	2
+ 1655 0089 000000   		.space	3
+ 1656 008c 04       		.byte	4
+ 1657 008d 00000000 		.space	15
+ 1657      00000000 
+ 1657      00000000 
+ 1657      000000
+ 1658 009c 02       		.byte	2
+ 1659 009d 05       		.byte	5
+ 1660 009e 05       		.byte	5
+ 1661 009f 04       		.byte	4
+ 1662 00a0 06       		.byte	6
+ 1663 00a1 000000   		.space	3
+ 1664 00a4 00001040 		.word	1074790400
+ 1665 00a8 00000000 		.word	0
+ 1666 00ac 00000000 		.space	8
+ 1666      00000000 
+ 1667 00b4 03       		.byte	3
+ 1668 00b5 000000   		.space	3
+ 1669 00b8 05       		.byte	5
+ 1670 00b9 00000000 		.space	15
+ 1670      00000000 
+ 1670      00000000 
+ 1670      000000
+ 1671 00c8 02       		.byte	2
+ 1672 00c9 06       		.byte	6
+ 1673 00ca 05       		.byte	5
+ 1674 00cb 04       		.byte	4
+ 1675 00cc 06       		.byte	6
+ 1676 00cd 000000   		.space	3
+ 1677 00d0 00004040 		.word	1077936128
+ 1678 00d4 00000000 		.word	0
+ 1679 00d8 00000000 		.space	8
+ 1679      00000000 
+ 1680 00e0 04       		.byte	4
+ 1681 00e1 000000   		.space	3
+ 1682 00e4 06       		.byte	6
+ 1683 00e5 00000000 		.space	15
+ 1683      00000000 
+ 1683      00000000 
+ 1683      000000
+ 1684 00f4 02       		.byte	2
+ 1685 00f5 07       		.byte	7
+ 1686 00f6 05       		.byte	5
+ 1687 00f7 04       		.byte	4
+ 1688 00f8 06       		.byte	6
+ 1689 00f9 000000   		.space	3
+ 1690 00fc 00007040 		.word	1081081856
+ 1691 0100 00000000 		.word	0
+ 1692 0104 00000000 		.space	8
+ 1692      00000000 
+ 1693 010c 05       		.byte	5
+ 1694 010d 000000   		.space	3
+ 1695 0110 07       		.byte	7
+ 1696 0111 00000000 		.space	15
+ 1696      00000000 
+ 1696      00000000 
+ 1696      000000
+ 1697 0120 02       		.byte	2
+ 1698 0121 08       		.byte	8
+ 1699 0122 05       		.byte	5
+ 1700 0123 04       		.byte	4
+ 1701 0124 06       		.byte	6
+ 1702 0125 000000   		.space	3
+ 1703 0128 00009040 		.word	1083179008
+ 1704 012c 00000000 		.word	0
+ 1705 0130 00000000 		.space	8
+ 1705      00000000 
+ 1706 0138 06       		.byte	6
+ 1707 0139 000000   		.space	3
+ 1708 013c 08       		.byte	8
+ 1709 013d 00000000 		.space	15
+ 1709      00000000 
+ 1709      00000000 
+ 1709      000000
+ 1710 014c 02       		.byte	2
+ 1711 014d 0D       		.byte	13
+ 1712 014e 02       		.byte	2
+ 1713 014f 01       		.byte	1
+ 1714 0150 03       		.byte	3
+ 1715 0151 000000   		.space	3
+ 1716 0154 0000A840 		.word	1084751872
+ 1717 0158 00000000 		.word	0
+ 1718 015c 00000000 		.space	8
+ 1718      00000000 
+ 1719 0164 07       		.byte	7
+ 1720 0165 000000   		.space	3
+ 1721 0168 09       		.byte	9
+ 1722 0169 00000000 		.space	15
+ 1722      00000000 
+ 1722      00000000 
+ 1722      000000
+ 1723 0178 01       		.byte	1
+ 1724 0179 01       		.byte	1
+ 1725 017a 05       		.byte	5
+ 1726 017b 04       		.byte	4
+ 1727 017c 06       		.byte	6
+ 1728 017d 000000   		.space	3
+ 1729 0180 0000C040 		.word	1086324736
+ 1730 0184 00000000 		.word	0
+ 1731 0188 00000000 		.space	8
+ 1731      00000000 
+ 1732 0190 08       		.byte	8
+ 1733 0191 000000   		.space	3
+ 1734 0194 0A       		.byte	10
+ 1735 0195 00000000 		.space	15
+ 1735      00000000 
+ 1735      00000000 
+ 1735      000000
+ 1736 01a4 01       		.byte	1
+ 1737 01a5 02       		.byte	2
+ 1738 01a6 05       		.byte	5
+ 1739 01a7 04       		.byte	4
+ 1740 01a8 06       		.byte	6
+ 1741 01a9 000000   		.space	3
+ 1742 01ac 0000D840 		.word	1087897600
+ 1743 01b0 00000000 		.word	0
+ 1744 01b4 00000000 		.space	8
+ 1744      00000000 
+ 1745 01bc 09       		.byte	9
+ 1746 01bd 000000   		.space	3
+ 1747 01c0 0B       		.byte	11
+ 1748 01c1 00000000 		.space	15
+ 1748      00000000 
+ 1748      00000000 
+ 1748      000000
+ 1749 01d0 01       		.byte	1
+ 1750 01d1 03       		.byte	3
+ 1751 01d2 05       		.byte	5
+ 1752 01d3 04       		.byte	4
+ 1753 01d4 06       		.byte	6
+ 1754 01d5 000000   		.space	3
+ 1755 01d8 0000F040 		.word	1089470464
+ 1756 01dc 00000000 		.word	0
+ 1757 01e0 00000000 		.space	8
+ 1757      00000000 
+ 1758 01e8 0A       		.byte	10
+ 1759 01e9 000000   		.space	3
+ 1760 01ec 0C       		.byte	12
+ 1761 01ed 00000000 		.space	15
+ 1761      00000000 
+ 1761      00000000 
+ 1761      000000
+ 1762 01fc 01       		.byte	1
+ 1763 01fd 04       		.byte	4
+ 1764 01fe 05       		.byte	5
+ 1765 01ff 04       		.byte	4
+ 1766 0200 06       		.byte	6
+ 1767 0201 000000   		.space	3
+ 1768 0204 00000441 		.word	1090781184
+ 1769 0208 00000000 		.word	0
+ 1770 020c 00000000 		.space	8
+ 1770      00000000 
+ 1771 0214 0B       		.byte	11
+ 1772 0215 000000   		.space	3
+ 1773 0218 0D       		.byte	13
+ 1774 0219 00000000 		.space	15
+ 1774      00000000 
+ 1774      00000000 
+ 1774      000000
+ 1775 0228 01       		.byte	1
+ 1776 0229 05       		.byte	5
+ 1777 022a 05       		.byte	5
+ 1778 022b 04       		.byte	4
+ 1779 022c 06       		.byte	6
+ 1780 022d 000000   		.space	3
+ 1781 0230 00001041 		.word	1091567616
+ 1782 0234 00000000 		.word	0
+ 1783 0238 00000000 		.space	8
+ 1783      00000000 
+ 1784 0240 0C       		.byte	12
+ 1785 0241 000000   		.space	3
+ 1786 0244 0E       		.byte	14
+ 1787 0245 00000000 		.space	15
+ 1787      00000000 
+ 1787      00000000 
+ 1787      000000
+ 1788 0254 01       		.byte	1
+ 1789 0255 06       		.byte	6
+ 1790 0256 05       		.byte	5
+ 1791 0257 04       		.byte	4
+ 1792 0258 06       		.byte	6
+ 1793 0259 000000   		.space	3
+ 1794 025c 00002241 		.word	1092747264
+ 1795 0260 00000000 		.word	0
+ 1796 0264 00000000 		.space	8
+ 1796      00000000 
+ 1797 026c 0D       		.byte	13
+ 1798 026d 000000   		.space	3
+ 1799 0270 0F       		.byte	15
+ 1800 0271 00000000 		.space	15
+ 1800      00000000 
+ 1800      00000000 
+ 1800      000000
+ 1801 0280 01       		.byte	1
+ 1802 0281 07       		.byte	7
+ 1803 0282 02       		.byte	2
+ 1804 0283 01       		.byte	1
+ 1805 0284 03       		.byte	3
+ 1806 0285 000000   		.space	3
+ 1807 0288 00003441 		.word	1093926912
+ 1808 028c 00000000 		.word	0
+ 1809 0290 00000000 		.space	8
+ 1809      00000000 
+ 1810 0298 0E       		.byte	14
+ 1811 0299 000000   		.space	3
+ 1812 029c 10       		.byte	16
+ 1813 029d 00000000 		.space	15
+ 1813      00000000 
+ 1813      00000000 
+ 1813      000000
+ 1814 02ac 02       		.byte	2
+ 1815 02ad 02       		.byte	2
+ 1816 02ae 05       		.byte	5
+ 1817 02af 04       		.byte	4
+ 1818 02b0 06       		.byte	6
+ 1819 02b1 000000   		.space	3
+ 1820 02b4 1283403E 		.word	1044415250
+ 1821 02b8 000040BF 		.word	3208642560
+ 1822 02bc 00000000 		.space	8
+ 1822      00000000 
+ 1823 02c4 0F       		.byte	15
+ 1824 02c5 000000   		.space	3
+ 1825 02c8 11       		.byte	17
+ 1826 02c9 00000000 		.space	15
+ 1826      00000000 
+ 1826      00000000 
+ 1826      000000
+ 1827 02d8 02       		.byte	2
+ 1828 02d9 03       		.byte	3
+ 1829 02da 08       		.byte	8
+ 1830 02db 07       		.byte	7
+ 1831 02dc 09       		.byte	9
+ 1832 02dd 000000   		.space	3
+ 1833 02e0 0000903F 		.word	1066401792
+ 1834 02e4 000040BF 		.word	3208642560
+ 1835 02e8 00000000 		.space	8
+ 1835      00000000 
+ 1836 02f0 10       		.byte	16
+ 1837 02f1 000000   		.space	3
+ 1838 02f4 12       		.byte	18
+ 1839 02f5 00000000 		.space	15
+ 1839      00000000 
+ 1839      00000000 
+ 1839      000000
+ 1840 0304 02       		.byte	2
+ 1841 0305 04       		.byte	4
+ 1842 0306 08       		.byte	8
+ 1843 0307 07       		.byte	7
+ 1844 0308 09       		.byte	9
+ 1845 0309 000000   		.space	3
+ 1846 030c 0000F03F 		.word	1072693248
+ 1847 0310 000040BF 		.word	3208642560
+ 1848 0314 00000000 		.space	8
+ 1848      00000000 
+ 1849 031c 11       		.byte	17
+ 1850 031d 000000   		.space	3
+ 1851 0320 13       		.byte	19
+ 1852 0321 00000000 		.space	15
+ 1852      00000000 
+ 1852      00000000 
+ 1852      000000
+ 1853 0330 02       		.byte	2
+ 1854 0331 05       		.byte	5
+ 1855 0332 08       		.byte	8
+ 1856 0333 07       		.byte	7
+ 1857 0334 09       		.byte	9
+ 1858 0335 000000   		.space	3
+ 1859 0338 00002840 		.word	1076363264
+ 1860 033c 000040BF 		.word	3208642560
+ 1861 0340 00000000 		.space	8
+ 1861      00000000 
+ 1862 0348 12       		.byte	18
+ 1863 0349 000000   		.space	3
+ 1864 034c 14       		.byte	20
+ 1865 034d 00000000 		.space	15
+ 1865      00000000 
+ 1865      00000000 
+ 1865      000000
+ 1866 035c 02       		.byte	2
+ 1867 035d 06       		.byte	6
+ 1868 035e 08       		.byte	8
+ 1869 035f 07       		.byte	7
+ 1870 0360 09       		.byte	9
+ 1871 0361 000000   		.space	3
+ 1872 0364 00005840 		.word	1079508992
+ 1873 0368 000040BF 		.word	3208642560
+ 1874 036c 00000000 		.space	8
+ 1874      00000000 
+ 1875 0374 13       		.byte	19
+ 1876 0375 000000   		.space	3
+ 1877 0378 15       		.byte	21
+ 1878 0379 00000000 		.space	15
+ 1878      00000000 
+ 1878      00000000 
+ 1878      000000
+ 1879 0388 02       		.byte	2
+ 1880 0389 07       		.byte	7
+ 1881 038a 08       		.byte	8
+ 1882 038b 07       		.byte	7
+ 1883 038c 09       		.byte	9
+ 1884 038d 000000   		.space	3
+ 1885 0390 00008440 		.word	1082392576
+ 1886 0394 000040BF 		.word	3208642560
+ 1887 0398 00000000 		.space	8
+ 1887      00000000 
+ 1888 03a0 14       		.byte	20
+ 1889 03a1 000000   		.space	3
+ 1890 03a4 16       		.byte	22
+ 1891 03a5 00000000 		.space	15
+ 1891      00000000 
+ 1891      00000000 
+ 1891      000000
+ 1892 03b4 02       		.byte	2
+ 1893 03b5 08       		.byte	8
+ 1894 03b6 08       		.byte	8
+ 1895 03b7 07       		.byte	7
+ 1896 03b8 09       		.byte	9
+ 1897 03b9 000000   		.space	3
+ 1898 03bc 00009C40 		.word	1083965440
+ 1899 03c0 000040BF 		.word	3208642560
+ 1900 03c4 00000000 		.space	8
+ 1900      00000000 
+ 1901 03cc 15       		.byte	21
+ 1902 03cd 000000   		.space	3
+ 1903 03d0 17       		.byte	23
+ 1904 03d1 00000000 		.space	15
+ 1904      00000000 
+ 1904      00000000 
+ 1904      000000
+ 1905 03e0 01       		.byte	1
+ 1906 03e1 01       		.byte	1
+ 1907 03e2 08       		.byte	8
+ 1908 03e3 07       		.byte	7
+ 1909 03e4 09       		.byte	9
+ 1910 03e5 000000   		.space	3
+ 1911 03e8 0000B440 		.word	1085538304
+ 1912 03ec 000040BF 		.word	3208642560
+ 1913 03f0 00000000 		.space	8
+ 1913      00000000 
+ 1914 03f8 16       		.byte	22
+ 1915 03f9 000000   		.space	3
+ 1916 03fc 18       		.byte	24
+ 1917 03fd 00000000 		.space	15
+ 1917      00000000 
+ 1917      00000000 
+ 1917      000000
+ 1918 040c 01       		.byte	1
+ 1919 040d 02       		.byte	2
+ 1920 040e 08       		.byte	8
+ 1921 040f 07       		.byte	7
+ 1922 0410 09       		.byte	9
+ 1923 0411 000000   		.space	3
+ 1924 0414 0000CC40 		.word	1087111168
+ 1925 0418 000040BF 		.word	3208642560
+ 1926 041c 00000000 		.space	8
+ 1926      00000000 
+ 1927 0424 17       		.byte	23
+ 1928 0425 000000   		.space	3
+ 1929 0428 19       		.byte	25
+ 1930 0429 00000000 		.space	15
+ 1930      00000000 
+ 1930      00000000 
+ 1930      000000
+ 1931 0438 01       		.byte	1
+ 1932 0439 03       		.byte	3
+ 1933 043a 08       		.byte	8
+ 1934 043b 07       		.byte	7
+ 1935 043c 09       		.byte	9
+ 1936 043d 000000   		.space	3
+ 1937 0440 0000E440 		.word	1088684032
+ 1938 0444 000040BF 		.word	3208642560
+ 1939 0448 00000000 		.space	8
+ 1939      00000000 
+ 1940 0450 18       		.byte	24
+ 1941 0451 000000   		.space	3
+ 1942 0454 1A       		.byte	26
+ 1943 0455 00000000 		.space	15
+ 1943      00000000 
+ 1943      00000000 
+ 1943      000000
+ 1944 0464 01       		.byte	1
+ 1945 0465 04       		.byte	4
+ 1946 0466 08       		.byte	8
+ 1947 0467 07       		.byte	7
+ 1948 0468 09       		.byte	9
+ 1949 0469 000000   		.space	3
+ 1950 046c 0000FC40 		.word	1090256896
+ 1951 0470 000040BF 		.word	3208642560
+ 1952 0474 00000000 		.space	8
+ 1952      00000000 
+ 1953 047c 19       		.byte	25
+ 1954 047d 000000   		.space	3
+ 1955 0480 1B       		.byte	27
+ 1956 0481 00000000 		.space	15
+ 1956      00000000 
+ 1956      00000000 
+ 1956      000000
+ 1957 0490 01       		.byte	1
+ 1958 0491 05       		.byte	5
+ 1959 0492 08       		.byte	8
+ 1960 0493 07       		.byte	7
+ 1961 0494 09       		.byte	9
+ 1962 0495 000000   		.space	3
+ 1963 0498 00000A41 		.word	1091174400
+ 1964 049c 000040BF 		.word	3208642560
+ 1965 04a0 00000000 		.space	8
+ 1965      00000000 
+ 1966 04a8 1A       		.byte	26
+ 1967 04a9 000000   		.space	3
+ 1968 04ac 1C       		.byte	28
+ 1969 04ad 00000000 		.space	15
+ 1969      00000000 
+ 1969      00000000 
+ 1969      000000
+ 1970 04bc 01       		.byte	1
+ 1971 04bd 0B       		.byte	11
+ 1972 04be 0B       		.byte	11
+ 1973 04bf 0A       		.byte	10
+ 1974 04c0 0C       		.byte	12
+ 1975 04c1 000000   		.space	3
+ 1976 04c4 00001641 		.word	1091960832
+ 1977 04c8 000040BF 		.word	3208642560
+ 1978 04cc 00000000 		.space	8
+ 1978      00000000 
+ 1979 04d4 1B       		.byte	27
+ 1980 04d5 000000   		.space	3
+ 1981 04d8 1D       		.byte	29
+ 1982 04d9 00000000 		.space	15
+ 1982      00000000 
+ 1982      00000000 
+ 1982      000000
+ 1983 04e8 01       		.byte	1
+ 1984 04e9 06       		.byte	6
+ 1985 04ea 08       		.byte	8
+ 1986 04eb 07       		.byte	7
+ 1987 04ec 09       		.byte	9
+ 1988 04ed 000000   		.space	3
+ 1989 04f0 0C022541 		.word	1092944396
+ 1990 04f4 000040BF 		.word	3208642560
+ 1991 04f8 00000000 		.space	8
+ 1991      00000000 
+ 1992 0500 1C       		.byte	28
+ 1993 0501 000000   		.space	3
+ 1994 0504 1E       		.byte	30
+ 1995 0505 00000000 		.space	15
+ 1995      00000000 
+ 1995      00000000 
+ 1995      000000
+ 1996 0514 01       		.byte	1
+ 1997 0515 07       		.byte	7
+ 1998 0516 05       		.byte	5
+ 1999 0517 04       		.byte	4
+ 2000 0518 06       		.byte	6
+ 2001 0519 000000   		.space	3
+ 2002 051c 00003441 		.word	1093926912
+ 2003 0520 000040BF 		.word	3208642560
+ 2004 0524 00000000 		.space	8
+ 2004      00000000 
+ 2005 052c 1D       		.byte	29
+ 2006 052d 000000   		.space	3
+ 2007 0530 1F       		.byte	31
+ 2008 0531 00000000 		.space	15
+ 2008      00000000 
+ 2008      00000000 
+ 2008      000000
+ 2009 0540 02       		.byte	2
+ 2010 0541 02       		.byte	2
+ 2011 0542 08       		.byte	8
+ 2012 0543 07       		.byte	7
+ 2013 0544 09       		.byte	9
+ 2014 0545 000000   		.space	3
+ 2015 0548 3BDF8F3E 		.word	1049616187
+ 2016 054c 0000C0BF 		.word	3217031168
+ 2017 0550 00000000 		.space	8
+ 2017      00000000 
+ 2018 0558 1E       		.byte	30
+ 2019 0559 000000   		.space	3
+ 2020 055c 20       		.byte	32
+ 2021 055d 00000000 		.space	15
+ 2021      00000000 
+ 2021      00000000 
+ 2021      000000
+ 2022 056c 02       		.byte	2
+ 2023 056d 03       		.byte	3
+ 2024 056e 0B       		.byte	11
+ 2025 056f 0A       		.byte	10
+ 2026 0570 0C       		.byte	12
+ 2027 0571 000000   		.space	3
+ 2028 0574 6210A83F 		.word	1067978850
+ 2029 0578 0000C0BF 		.word	3217031168
+ 2030 057c 00000000 		.space	8
+ 2030      00000000 
+ 2031 0584 1F       		.byte	31
+ 2032 0585 000000   		.space	3
+ 2033 0588 21       		.byte	33
+ 2034 0589 00000000 		.space	15
+ 2034      00000000 
+ 2034      00000000 
+ 2034      000000
+ 2035 0598 02       		.byte	2
+ 2036 0599 04       		.byte	4
+ 2037 059a 0B       		.byte	11
+ 2038 059b 0A       		.byte	10
+ 2039 059c 0C       		.byte	12
+ 2040 059d 000000   		.space	3
+ 2041 05a0 31080440 		.word	1074006065
+ 2042 05a4 0000C0BF 		.word	3217031168
+ 2043 05a8 00000000 		.space	8
+ 2043      00000000 
+ 2044 05b0 20       		.byte	32
+ 2045 05b1 000000   		.space	3
+ 2046 05b4 22       		.byte	34
+ 2047 05b5 00000000 		.space	15
+ 2047      00000000 
+ 2047      00000000 
+ 2047      000000
+ 2048 05c4 02       		.byte	2
+ 2049 05c5 05       		.byte	5
+ 2050 05c6 0B       		.byte	11
+ 2051 05c7 0A       		.byte	10
+ 2052 05c8 0C       		.byte	12
+ 2053 05c9 000000   		.space	3
+ 2054 05cc 31083440 		.word	1077151793
+ 2055 05d0 0000C0BF 		.word	3217031168
+ 2056 05d4 00000000 		.space	8
+ 2056      00000000 
+ 2057 05dc 21       		.byte	33
+ 2058 05dd 000000   		.space	3
+ 2059 05e0 23       		.byte	35
+ 2060 05e1 00000000 		.space	15
+ 2060      00000000 
+ 2060      00000000 
+ 2060      000000
+ 2061 05f0 02       		.byte	2
+ 2062 05f1 06       		.byte	6
+ 2063 05f2 0B       		.byte	11
+ 2064 05f3 0A       		.byte	10
+ 2065 05f4 0C       		.byte	12
+ 2066 05f5 000000   		.space	3
+ 2067 05f8 31086440 		.word	1080297521
+ 2068 05fc 0000C0BF 		.word	3217031168
+ 2069 0600 00000000 		.space	8
+ 2069      00000000 
+ 2070 0608 22       		.byte	34
+ 2071 0609 000000   		.space	3
+ 2072 060c 24       		.byte	36
+ 2073 060d 00000000 		.space	15
+ 2073      00000000 
+ 2073      00000000 
+ 2073      000000
+ 2074 061c 02       		.byte	2
+ 2075 061d 07       		.byte	7
+ 2076 061e 0B       		.byte	11
+ 2077 061f 0A       		.byte	10
+ 2078 0620 0C       		.byte	12
+ 2079 0621 000000   		.space	3
+ 2080 0624 19048A40 		.word	1082786841
+ 2081 0628 0000C0BF 		.word	3217031168
+ 2082 062c 00000000 		.space	8
+ 2082      00000000 
+ 2083 0634 23       		.byte	35
+ 2084 0635 000000   		.space	3
+ 2085 0638 25       		.byte	37
+ 2086 0639 00000000 		.space	15
+ 2086      00000000 
+ 2086      00000000 
+ 2086      000000
+ 2087 0648 02       		.byte	2
+ 2088 0649 08       		.byte	8
+ 2089 064a 0B       		.byte	11
+ 2090 064b 0A       		.byte	10
+ 2091 064c 0C       		.byte	12
+ 2092 064d 000000   		.space	3
+ 2093 0650 1904A240 		.word	1084359705
+ 2094 0654 0000C0BF 		.word	3217031168
+ 2095 0658 00000000 		.space	8
+ 2095      00000000 
+ 2096 0660 24       		.byte	36
+ 2097 0661 000000   		.space	3
+ 2098 0664 26       		.byte	38
+ 2099 0665 00000000 		.space	15
+ 2099      00000000 
+ 2099      00000000 
+ 2099      000000
+ 2100 0674 01       		.byte	1
+ 2101 0675 01       		.byte	1
+ 2102 0676 0B       		.byte	11
+ 2103 0677 0A       		.byte	10
+ 2104 0678 0C       		.byte	12
+ 2105 0679 000000   		.space	3
+ 2106 067c 1904BA40 		.word	1085932569
+ 2107 0680 0000C0BF 		.word	3217031168
+ 2108 0684 00000000 		.space	8
+ 2108      00000000 
+ 2109 068c 25       		.byte	37
+ 2110 068d 000000   		.space	3
+ 2111 0690 27       		.byte	39
+ 2112 0691 00000000 		.space	15
+ 2112      00000000 
+ 2112      00000000 
+ 2112      000000
+ 2113 06a0 01       		.byte	1
+ 2114 06a1 02       		.byte	2
+ 2115 06a2 0B       		.byte	11
+ 2116 06a3 0A       		.byte	10
+ 2117 06a4 0C       		.byte	12
+ 2118 06a5 000000   		.space	3
+ 2119 06a8 1904D240 		.word	1087505433
+ 2120 06ac 0000C0BF 		.word	3217031168
+ 2121 06b0 00000000 		.space	8
+ 2121      00000000 
+ 2122 06b8 26       		.byte	38
+ 2123 06b9 000000   		.space	3
+ 2124 06bc 28       		.byte	40
+ 2125 06bd 00000000 		.space	15
+ 2125      00000000 
+ 2125      00000000 
+ 2125      000000
+ 2126 06cc 01       		.byte	1
+ 2127 06cd 03       		.byte	3
+ 2128 06ce 0B       		.byte	11
+ 2129 06cf 0A       		.byte	10
+ 2130 06d0 0C       		.byte	12
+ 2131 06d1 000000   		.space	3
+ 2132 06d4 1904EA40 		.word	1089078297
+ 2133 06d8 0000C0BF 		.word	3217031168
+ 2134 06dc 00000000 		.space	8
+ 2134      00000000 
+ 2135 06e4 27       		.byte	39
+ 2136 06e5 000000   		.space	3
+ 2137 06e8 29       		.byte	41
+ 2138 06e9 00000000 		.space	15
+ 2138      00000000 
+ 2138      00000000 
+ 2138      000000
+ 2139 06f8 01       		.byte	1
+ 2140 06f9 04       		.byte	4
+ 2141 06fa 0B       		.byte	11
+ 2142 06fb 0A       		.byte	10
+ 2143 06fc 0C       		.byte	12
+ 2144 06fd 000000   		.space	3
+ 2145 0700 0C020141 		.word	1090585100
+ 2146 0704 0000C0BF 		.word	3217031168
+ 2147 0708 00000000 		.space	8
+ 2147      00000000 
+ 2148 0710 28       		.byte	40
+ 2149 0711 000000   		.space	3
+ 2150 0714 2A       		.byte	42
+ 2151 0715 00000000 		.space	15
+ 2151      00000000 
+ 2151      00000000 
+ 2151      000000
+ 2152 0724 01       		.byte	1
+ 2153 0725 05       		.byte	5
+ 2154 0726 0B       		.byte	11
+ 2155 0727 0A       		.byte	10
+ 2156 0728 0C       		.byte	12
+ 2157 0729 000000   		.space	3
+ 2158 072c 0C020D41 		.word	1091371532
+ 2159 0730 0000C0BF 		.word	3217031168
+ 2160 0734 00000000 		.space	8
+ 2160      00000000 
+ 2161 073c 29       		.byte	41
+ 2162 073d 000000   		.space	3
+ 2163 0740 2B       		.byte	43
+ 2164 0741 00000000 		.space	15
+ 2164      00000000 
+ 2164      00000000 
+ 2164      000000
+ 2165 0750 01       		.byte	1
+ 2166 0751 06       		.byte	6
+ 2167 0752 0B       		.byte	11
+ 2168 0753 0A       		.byte	10
+ 2169 0754 0C       		.byte	12
+ 2170 0755 000000   		.space	3
+ 2171 0758 FA7E2041 		.word	1092648698
+ 2172 075c 0000C0BF 		.word	3217031168
+ 2173 0760 00000000 		.space	8
+ 2173      00000000 
+ 2174 0768 2B       		.byte	43
+ 2175 0769 000000   		.space	3
+ 2176 076c 2C       		.byte	44
+ 2177 076d 00000000 		.space	15
+ 2177      00000000 
+ 2177      00000000 
+ 2177      000000
+ 2178 077c 01       		.byte	1
+ 2179 077d 07       		.byte	7
+ 2180 077e 08       		.byte	8
+ 2181 077f 07       		.byte	7
+ 2182 0780 09       		.byte	9
+ 2183 0781 000000   		.space	3
+ 2184 0784 00003441 		.word	1093926912
+ 2185 0788 0000C0BF 		.word	3217031168
+ 2186 078c 00000000 		.space	8
+ 2186      00000000 
+ 2187 0794 2C       		.byte	44
+ 2188 0795 000000   		.space	3
+ 2189 0798 2D       		.byte	45
+ 2190 0799 00000000 		.space	15
+ 2190      00000000 
+ 2190      00000000 
+ 2190      000000
+ 2191 07a8 02       		.byte	2
+ 2192 07a9 02       		.byte	2
+ 2193 07aa 0B       		.byte	11
+ 2194 07ab 0A       		.byte	10
+ 2195 07ac 0C       		.byte	12
+ 2196 07ad 000000   		.space	3
+ 2197 07b0 C520F03E 		.word	1055924421
+ 2198 07b4 000010C0 		.word	3222274048
+ 2199 07b8 00000000 		.space	8
+ 2199      00000000 
+ 2200 07c0 2D       		.byte	45
+ 2201 07c1 000000   		.space	3
+ 2202 07c4 2E       		.byte	46
+ 2203 07c5 00000000 		.space	15
+ 2203      00000000 
+ 2203      00000000 
+ 2203      000000
+ 2204 07d4 02       		.byte	2
+ 2205 07d5 09       		.byte	9
+ 2206 07d6 05       		.byte	5
+ 2207 07d7 04       		.byte	4
+ 2208 07d8 06       		.byte	6
+ 2209 07d9 000000   		.space	3
+ 2210 07dc 6210D83F 		.word	1071124578
+ 2211 07e0 000010C0 		.word	3222274048
+ 2212 07e4 00000000 		.space	8
+ 2212      00000000 
+ 2213 07ec 2F       		.byte	47
+ 2214 07ed 000000   		.space	3
+ 2215 07f0 2F       		.byte	47
+ 2216 07f1 00000000 		.space	15
+ 2216      00000000 
+ 2216      00000000 
+ 2216      000000
+ 2217 0800 02       		.byte	2
+ 2218 0801 09       		.byte	9
+ 2219 0802 02       		.byte	2
+ 2220 0803 01       		.byte	1
+ 2221 0804 03       		.byte	3
+ 2222 0805 000000   		.space	3
+ 2223 0808 31081C40 		.word	1075578929
+ 2224 080c 000010C0 		.word	3222274048
+ 2225 0810 00000000 		.space	8
+ 2225      00000000 
+ 2226 0818 30       		.byte	48
+ 2227 0819 000000   		.space	3
+ 2228 081c 30       		.byte	48
+ 2229 081d 00000000 		.space	15
+ 2229      00000000 
+ 2229      00000000 
+ 2229      000000
+ 2230 082c 02       		.byte	2
+ 2231 082d 09       		.byte	9
+ 2232 082e 0B       		.byte	11
+ 2233 082f 0A       		.byte	10
+ 2234 0830 0C       		.byte	12
+ 2235 0831 000000   		.space	3
+ 2236 0834 31084C40 		.word	1078724657
+ 2237 0838 000010C0 		.word	3222274048
+ 2238 083c 00000000 		.space	8
+ 2238      00000000 
+ 2239 0844 31       		.byte	49
+ 2240 0845 000000   		.space	3
+ 2241 0848 31       		.byte	49
+ 2242 0849 00000000 		.space	15
+ 2242      00000000 
+ 2242      00000000 
+ 2242      000000
+ 2243 0858 02       		.byte	2
+ 2244 0859 09       		.byte	9
+ 2245 085a 08       		.byte	8
+ 2246 085b 07       		.byte	7
+ 2247 085c 09       		.byte	9
+ 2248 085d 000000   		.space	3
+ 2249 0860 31087C40 		.word	1081870385
+ 2250 0864 000010C0 		.word	3222274048
+ 2251 0868 00000000 		.space	8
+ 2251      00000000 
+ 2252 0870 32       		.byte	50
+ 2253 0871 000000   		.space	3
+ 2254 0874 32       		.byte	50
+ 2255 0875 00000000 		.space	15
+ 2255      00000000 
+ 2255      00000000 
+ 2255      000000
+ 2256 0884 02       		.byte	2
+ 2257 0885 0C       		.byte	12
+ 2258 0886 0B       		.byte	11
+ 2259 0887 0A       		.byte	10
+ 2260 0888 0C       		.byte	12
+ 2261 0889 000000   		.space	3
+ 2262 088c 19049640 		.word	1083573273
+ 2263 0890 000010C0 		.word	3222274048
+ 2264 0894 00000000 		.space	8
+ 2264      00000000 
+ 2265 089c 33       		.byte	51
+ 2266 089d 000000   		.space	3
+ 2267 08a0 33       		.byte	51
+ 2268 08a1 00000000 		.space	15
+ 2268      00000000 
+ 2268      00000000 
+ 2268      000000
+ 2269 08b0 02       		.byte	2
+ 2270 08b1 0D       		.byte	13
+ 2271 08b2 0B       		.byte	11
+ 2272 08b3 0A       		.byte	10
+ 2273 08b4 0C       		.byte	12
+ 2274 08b5 000000   		.space	3
+ 2275 08b8 1904AE40 		.word	1085146137
+ 2276 08bc 000010C0 		.word	3222274048
+ 2277 08c0 00000000 		.space	8
+ 2277      00000000 
+ 2278 08c8 34       		.byte	52
+ 2279 08c9 000000   		.space	3
+ 2280 08cc 34       		.byte	52
+ 2281 08cd 00000000 		.space	15
+ 2281      00000000 
+ 2281      00000000 
+ 2281      000000
+ 2282 08dc 01       		.byte	1
+ 2283 08dd 09       		.byte	9
+ 2284 08de 0B       		.byte	11
+ 2285 08df 0A       		.byte	10
+ 2286 08e0 0C       		.byte	12
+ 2287 08e1 000000   		.space	3
+ 2288 08e4 1904C640 		.word	1086719001
+ 2289 08e8 000010C0 		.word	3222274048
+ 2290 08ec 00000000 		.space	8
+ 2290      00000000 
+ 2291 08f4 35       		.byte	53
+ 2292 08f5 000000   		.space	3
+ 2293 08f8 35       		.byte	53
+ 2294 08f9 00000000 		.space	15
+ 2294      00000000 
+ 2294      00000000 
+ 2294      000000
+ 2295 0908 01       		.byte	1
+ 2296 0909 0A       		.byte	10
+ 2297 090a 0B       		.byte	11
+ 2298 090b 0A       		.byte	10
+ 2299 090c 0C       		.byte	12
+ 2300 090d 000000   		.space	3
+ 2301 0910 1904DE40 		.word	1088291865
+ 2302 0914 000010C0 		.word	3222274048
+ 2303 0918 00000000 		.space	8
+ 2303      00000000 
+ 2304 0920 36       		.byte	54
+ 2305 0921 000000   		.space	3
+ 2306 0924 36       		.byte	54
+ 2307 0925 00000000 		.space	15
+ 2307      00000000 
+ 2307      00000000 
+ 2307      000000
+ 2308 0934 01       		.byte	1
+ 2309 0935 0A       		.byte	10
+ 2310 0936 08       		.byte	8
+ 2311 0937 07       		.byte	7
+ 2312 0938 09       		.byte	9
+ 2313 0939 000000   		.space	3
+ 2314 093c 1904F640 		.word	1089864729
+ 2315 0940 000010C0 		.word	3222274048
+ 2316 0944 00000000 		.space	8
+ 2316      00000000 
+ 2317 094c 37       		.byte	55
+ 2318 094d 000000   		.space	3
+ 2319 0950 37       		.byte	55
+ 2320 0951 00000000 		.space	15
+ 2320      00000000 
+ 2320      00000000 
+ 2320      000000
+ 2321 0960 01       		.byte	1
+ 2322 0961 0B       		.byte	11
+ 2323 0962 08       		.byte	8
+ 2324 0963 07       		.byte	7
+ 2325 0964 09       		.byte	9
+ 2326 0965 000000   		.space	3
+ 2327 0968 0C020741 		.word	1090978316
+ 2328 096c 000010C0 		.word	3222274048
+ 2329 0970 00000000 		.space	8
+ 2329      00000000 
+ 2330 0978 38       		.byte	56
+ 2331 0979 000000   		.space	3
+ 2332 097c 38       		.byte	56
+ 2333 097d 00000000 		.space	15
+ 2333      00000000 
+ 2333      00000000 
+ 2333      000000
+ 2334 098c 01       		.byte	1
+ 2335 098d 0B       		.byte	11
+ 2336 098e 02       		.byte	2
+ 2337 098f 01       		.byte	1
+ 2338 0990 03       		.byte	3
+ 2339 0991 000000   		.space	3
+ 2340 0994 06811741 		.word	1092059398
+ 2341 0998 000010C0 		.word	3222274048
+ 2342 099c 00000000 		.space	8
+ 2342      00000000 
+ 2343 09a4 39       		.byte	57
+ 2344 09a5 000000   		.space	3
+ 2345 09a8 39       		.byte	57
+ 2346 09a9 00000000 		.space	15
+ 2346      00000000 
+ 2346      00000000 
+ 2346      000000
+ 2347 09b8 01       		.byte	1
+ 2348 09b9 0B       		.byte	11
+ 2349 09ba 05       		.byte	5
+ 2350 09bb 04       		.byte	4
+ 2351 09bc 06       		.byte	6
+ 2352 09bd 000000   		.space	3
+ 2353 09c0 00002841 		.word	1093140480
+ 2354 09c4 000010C0 		.word	3222274048
+ 2355 09c8 00000000 		.space	8
+ 2355      00000000 
+ 2356 09d0 3A       		.byte	58
+ 2357 09d1 000000   		.space	3
+ 2358 09d4 3A       		.byte	58
+ 2359 09d5 00000000 		.space	15
+ 2359      00000000 
+ 2359      00000000 
+ 2359      000000
+ 2360 09e4 01       		.byte	1
+ 2361 09e5 07       		.byte	7
+ 2362 09e6 0B       		.byte	11
+ 2363 09e7 0A       		.byte	10
+ 2364 09e8 0C       		.byte	12
+ 2365 09e9 000000   		.space	3
+ 2366 09ec 00003441 		.word	1093926912
+ 2367 09f0 000010C0 		.word	3222274048
+ 2368 09f4 00000000 		.space	8
+ 2368      00000000 
+ 2369 09fc 3B       		.byte	59
+ 2370 09fd 000000   		.space	3
+ 2371 0a00 3B       		.byte	59
+ 2372 0a01 00000000 		.space	15
+ 2372      00000000 
+ 2372      00000000 
+ 2372      000000
+ 2373 0a10 02       		.byte	2
+ 2374 0a11 0A       		.byte	10
+ 2375 0a12 08       		.byte	8
+ 2376 0a13 07       		.byte	7
+ 2377 0a14 09       		.byte	9
+ 2378 0a15 000000   		.space	3
+ 2379 0a18 1283C03D 		.word	1036026642
+ 2380 0a1c 000040C0 		.word	3225419776
+ 2381 0a20 00000000 		.space	8
+ 2381      00000000 
+ 2382 0a28 3C       		.byte	60
+ 2383 0a29 000000   		.space	3
+ 2384 0a2c 3C       		.byte	60
+ 2385 0a2d 00000000 		.space	15
+ 2385      00000000 
+ 2385      00000000 
+ 2385      000000
+ 2386 0a3c 02       		.byte	2
+ 2387 0a3d 0A       		.byte	10
+ 2388 0a3e 05       		.byte	5
+ 2389 0a3f 04       		.byte	4
+ 2390 0a40 06       		.byte	6
+ 2391 0a41 000000   		.space	3
+ 2392 0a44 CFF7833F 		.word	1065613263
+ 2393 0a48 000040C0 		.word	3225419776
+ 2394 0a4c 00000000 		.space	8
+ 2394      00000000 
+ 2395 0a54 3D       		.byte	61
+ 2396 0a55 000000   		.space	3
+ 2397 0a58 3D       		.byte	61
+ 2398 0a59 00000000 		.space	15
+ 2398      00000000 
+ 2398      00000000 
+ 2398      000000
+ 2399 0a68 02       		.byte	2
+ 2400 0a69 0A       		.byte	10
+ 2401 0a6a 02       		.byte	2
+ 2402 0a6b 01       		.byte	1
+ 2403 0a6c 03       		.byte	3
+ 2404 0a6d 000000   		.space	3
+ 2405 0a70 3108FC3F 		.word	1073481777
+ 2406 0a74 000040C0 		.word	3225419776
+ 2407 0a78 00000000 		.space	8
+ 2407      00000000 
+ 2408 0a80 3E       		.byte	62
+ 2409 0a81 000000   		.space	3
+ 2410 0a84 3E       		.byte	62
+ 2411 0a85 00000000 		.space	15
+ 2411      00000000 
+ 2411      00000000 
+ 2411      000000
+ 2412 0a94 02       		.byte	2
+ 2413 0a95 0C       		.byte	12
+ 2414 0a96 08       		.byte	8
+ 2415 0a97 07       		.byte	7
+ 2416 0a98 09       		.byte	9
+ 2417 0a99 000000   		.space	3
+ 2418 0a9c F4FD9840 		.word	1083768308
+ 2419 0aa0 000040C0 		.word	3225419776
+ 2420 0aa4 00000000 		.space	8
+ 2420      00000000 
+ 2421 0aac 42       		.byte	66
+ 2422 0aad 000000   		.space	3
+ 2423 0ab0 3F       		.byte	63
+ 2424 0ab1 00000000 		.space	15
+ 2424      00000000 
+ 2424      00000000 
+ 2424      000000
+ 2425 0ac0 01       		.byte	1
+ 2426 0ac1 0A       		.byte	10
+ 2427 0ac2 05       		.byte	5
+ 2428 0ac3 04       		.byte	4
+ 2429 0ac4 06       		.byte	6
+ 2430 0ac5 000000   		.space	3
+ 2431 0ac8 0C02F340 		.word	1089667596
+ 2432 0acc 000040C0 		.word	3225419776
+ 2433 0ad0 00000000 		.space	8
+ 2433      00000000 
+ 2434 0ad8 46       		.byte	70
+ 2435 0ad9 000000   		.space	3
+ 2436 0adc 40       		.byte	64
+ 2437 0add 00000000 		.space	15
+ 2437      00000000 
+ 2437      00000000 
+ 2437      000000
+ 2438 0aec 01       		.byte	1
+ 2439 0aed 0A       		.byte	10
+ 2440 0aee 02       		.byte	2
+ 2441 0aef 01       		.byte	1
+ 2442 0af0 03       		.byte	3
+ 2443 0af1 000000   		.space	3
+ 2444 0af4 FA7E0841 		.word	1091075834
+ 2445 0af8 000040C0 		.word	3225419776
+ 2446 0afc 00000000 		.space	8
+ 2446      00000000 
+ 2447 0b04 47       		.byte	71
+ 2448 0b05 000000   		.space	3
+ 2449 0b08 41       		.byte	65
+ 2450 0b09 00000000 		.space	15
+ 2450      00000000 
+ 2450      00000000 
+ 2450      000000
+ 2451 0b18 01       		.byte	1
+ 2452 0b19 0C       		.byte	12
+ 2453 0b1a 02       		.byte	2
+ 2454 0b1b 01       		.byte	1
+ 2455 0b1c 03       		.byte	3
+ 2456 0b1d 000000   		.space	3
+ 2457 0b20 00001C41 		.word	1092354048
+ 2458 0b24 000040C0 		.word	3225419776
+ 2459 0b28 00000000 		.space	8
+ 2459      00000000 
+ 2460 0b30 48       		.byte	72
+ 2461 0b31 000000   		.space	3
+ 2462 0b34 42       		.byte	66
+ 2463 0b35 00000000 		.space	15
+ 2463      00000000 
+ 2463      00000000 
+ 2463      000000
+ 2464 0b44 01       		.byte	1
+ 2465 0b45 0C       		.byte	12
+ 2466 0b46 08       		.byte	8
+ 2467 0b47 07       		.byte	7
+ 2468 0b48 09       		.byte	9
+ 2469 0b49 000000   		.space	3
+ 2470 0b4c 00002841 		.word	1093140480
+ 2471 0b50 000040C0 		.word	3225419776
+ 2472 0b54 00000000 		.space	8
+ 2472      00000000 
+ 2473 0b5c 49       		.byte	73
+ 2474 0b5d 000000   		.space	3
+ 2475 0b60 43       		.byte	67
+ 2476 0b61 00000000 		.space	15
+ 2476      00000000 
+ 2476      00000000 
+ 2476      000000
+ 2477 0b70 01       		.byte	1
+ 2478 0b71 0C       		.byte	12
+ 2479 0b72 05       		.byte	5
+ 2480 0b73 04       		.byte	4
+ 2481 0b74 06       		.byte	6
+ 2482 0b75 000000   		.space	3
+ 2483 0b78 00003441 		.word	1093926912
+ 2484 0b7c 000040C0 		.word	3225419776
+ 2485 0b80 00000000 		.space	8
+ 2485      00000000 
+ 2486 0b88 4A       		.byte	74
+ 2487 0b89 000000   		.space	3
+ 2488 0b8c 44       		.byte	68
+ 2489 0b8d 00000000 		.space	15
+ 2489      00000000 
+ 2489      00000000 
+ 2489      000000
+ 2490 0b9c 02       		.byte	2
+ 2491 0b9d 0B       		.byte	11
+ 2492 0b9e 0B       		.byte	11
+ 2493 0b9f 0A       		.byte	10
+ 2494 0ba0 0C       		.byte	12
+ 2495 0ba1 000000   		.space	3
+ 2496 0ba4 560EADBE 		.word	3199012438
+ 2497 0ba8 CBA155C0 		.word	3226837451
+ 2498 0bac 00000000 		.space	8
+ 2498      00000000 
+ 2499 0bb4 FF       		.byte	-1
+ 2500 0bb5 000000   		.space	3
+ 2501 0bb8 45       		.byte	69
+ 2502 0bb9 00000000 		.space	15
+ 2502      00000000 
+ 2502      00000000 
+ 2502      000000
+ 2503 0bc8 02       		.byte	2
+ 2504 0bc9 0B       		.byte	11
+ 2505 0bca 08       		.byte	8
+ 2506 0bcb 07       		.byte	7
+ 2507 0bcc 09       		.byte	9
+ 2508 0bcd 000000   		.space	3
+ 2509 0bd0 14AEC73E 		.word	1053273620
+ 2510 0bd4 1D5A5CC0 		.word	3227277853
+ 2511 0bd8 00000000 		.space	8
+ 2511      00000000 
+ 2512 0be0 FF       		.byte	-1
+ 2513 0be1 000000   		.space	3
+ 2514 0be4 46       		.byte	70
+ 2515 0be5 00000000 		.space	15
+ 2515      00000000 
+ 2515      00000000 
+ 2515      000000
+ 2516 0bf4 02       		.byte	2
+ 2517 0bf5 0B       		.byte	11
+ 2518 0bf6 05       		.byte	5
+ 2519 0bf7 04       		.byte	4
+ 2520 0bf8 06       		.byte	6
+ 2521 0bf9 000000   		.space	3
+ 2522 0bfc FCA9A13F 		.word	1067559420
+ 2523 0c00 1D5A5CC0 		.word	3227277853
+ 2524 0c04 00000000 		.space	8
+ 2524      00000000 
+ 2525 0c0c FF       		.byte	-1
+ 2526 0c0d 000000   		.space	3
+ 2527 0c10 47       		.byte	71
+ 2528 0c11 00000000 		.space	15
+ 2528      00000000 
+ 2528      00000000 
+ 2528      000000
+ 2529 0c20 02       		.byte	2
+ 2530 0c21 0B       		.byte	11
+ 2531 0c22 02       		.byte	2
+ 2532 0c23 01       		.byte	1
+ 2533 0c24 03       		.byte	3
+ 2534 0c25 000000   		.space	3
+ 2535 0c28 D7A30840 		.word	1074308055
+ 2536 0c2c 1D5A5CC0 		.word	3227277853
+ 2537 0c30 00000000 		.space	8
+ 2537      00000000 
+ 2538 0c38 FF       		.byte	-1
+ 2539 0c39 000000   		.space	3
+ 2540 0c3c 48       		.byte	72
+ 2541 0c3d 00000000 		.space	15
+ 2541      00000000 
+ 2541      00000000 
+ 2541      000000
+ 2542 0c4c 02       		.byte	2
+ 2543 0c4d 0C       		.byte	12
+ 2544 0c4e 02       		.byte	2
+ 2545 0c4f 01       		.byte	1
+ 2546 0c50 03       		.byte	3
+ 2547 0c51 000000   		.space	3
+ 2548 0c54 12834040 		.word	1077969682
+ 2549 0c58 1D5A5CC0 		.word	3227277853
+ 2550 0c5c 00000000 		.space	8
+ 2550      00000000 
+ 2551 0c64 FF       		.byte	-1
+ 2552 0c65 000000   		.space	3
+ 2553 0c68 49       		.byte	73
+ 2554 0c69 00000000 		.space	15
+ 2554      00000000 
+ 2554      00000000 
+ 2554      000000
+ 2555 0c78 02       		.byte	2
+ 2556 0c79 0C       		.byte	12
+ 2557 0c7a 05       		.byte	5
+ 2558 0c7b 04       		.byte	4
+ 2559 0c7c 06       		.byte	6
+ 2560 0c7d 000000   		.space	3
+ 2561 0c80 EC517840 		.word	1081627116
+ 2562 0c84 1D5A5CC0 		.word	3227277853
+ 2563 0c88 00000000 		.space	8
+ 2563      00000000 
+ 2564 0c90 FF       		.byte	-1
+ 2565 0c91 000000   		.space	3
+ 2566 0c94 4A       		.byte	74
+ 2567 0c95 00000000 		.space	15
+ 2567      00000000 
+ 2567      00000000 
+ 2567      000000
+ 2568 0ca4 02       		.byte	2
+ 2569 0ca5 0D       		.byte	13
+ 2570 0ca6 05       		.byte	5
+ 2571 0ca7 04       		.byte	4
+ 2572 0ca8 06       		.byte	6
+ 2573 0ca9 000000   		.space	3
+ 2574 0cac 93189840 		.word	1083709587
+ 2575 0cb0 1D5A5CC0 		.word	3227277853
+ 2576 0cb4 00000000 		.space	8
+ 2576      00000000 
+ 2577 0cbc FF       		.byte	-1
+ 2578 0cbd 000000   		.space	3
+ 2579 0cc0 4B       		.byte	75
+ 2580 0cc1 00000000 		.space	15
+ 2580      00000000 
+ 2580      00000000 
+ 2580      000000
+ 2581 0cd0 02       		.byte	2
+ 2582 0cd1 0D       		.byte	13
+ 2583 0cd2 08       		.byte	8
+ 2584 0cd3 07       		.byte	7
+ 2585 0cd4 09       		.byte	9
+ 2586 0cd5 000000   		.space	3
+ 2587 0cd8 0000B440 		.word	1085538304
+ 2588 0cdc 1D5A5CC0 		.word	3227277853
+ 2589 0ce0 00000000 		.space	8
+ 2589      00000000 
+ 2590 0ce8 FF       		.byte	-1
+ 2591 0ce9 000000   		.space	3
+ 2592 0cec 4C       		.byte	76
+ 2593 0ced 00000000 		.space	15
+ 2593      00000000 
+ 2593      00000000 
+ 2593      000000
+ 2594 0cfc 01       		.byte	1
+ 2595 0cfd 09       		.byte	9
+ 2596 0cfe 08       		.byte	8
+ 2597 0cff 07       		.byte	7
+ 2598 0d00 09       		.byte	9
+ 2599 0d01 000000   		.space	3
+ 2600 0d04 6DE7CF40 		.word	1087367021
+ 2601 0d08 1D5A5CC0 		.word	3227277853
+ 2602 0d0c 00000000 		.space	8
+ 2602      00000000 
+ 2603 0d14 FF       		.byte	-1
+ 2604 0d15 000000   		.space	3
+ 2605 0d18 4D       		.byte	77
+ 2606 0d19 00000000 		.space	15
+ 2606      00000000 
+ 2606      00000000 
+ 2606      000000
+ 2607 0d28 01       		.byte	1
+ 2608 0d29 09       		.byte	9
+ 2609 0d2a 05       		.byte	5
+ 2610 0d2b 04       		.byte	4
+ 2611 0d2c 06       		.byte	6
+ 2612 0d2d 000000   		.space	3
+ 2613 0d30 0AD7EB40 		.word	1089197834
+ 2614 0d34 1D5A5CC0 		.word	3227277853
+ 2615 0d38 00000000 		.space	8
+ 2615      00000000 
+ 2616 0d40 FF       		.byte	-1
+ 2617 0d41 000000   		.space	3
+ 2618 0d44 4E       		.byte	78
+ 2619 0d45 00000000 		.space	15
+ 2619      00000000 
+ 2619      00000000 
+ 2619      000000
+ 2620 0d54 01       		.byte	1
+ 2621 0d55 09       		.byte	9
+ 2622 0d56 02       		.byte	2
+ 2623 0d57 01       		.byte	1
+ 2624 0d58 03       		.byte	3
+ 2625 0d59 000000   		.space	3
+ 2626 0d5c 3BDF0341 		.word	1090772795
+ 2627 0d60 1D5A5CC0 		.word	3227277853
+ 2628 0d64 00000000 		.space	8
+ 2628      00000000 
+ 2629 0d6c FF       		.byte	-1
+ 2630 0d6d 000000   		.space	3
+ 2631 0d70 4F       		.byte	79
+ 2632 0d71 00000000 		.space	15
+ 2632      00000000 
+ 2632      00000000 
+ 2632      000000
+ 2633 0d80 01       		.byte	1
+ 2634 0d81 0D       		.byte	13
+ 2635 0d82 02       		.byte	2
+ 2636 0d83 01       		.byte	1
+ 2637 0d84 03       		.byte	3
+ 2638 0d85 000000   		.space	3
+ 2639 0d88 0AD71141 		.word	1091688202
+ 2640 0d8c 1D5A5CC0 		.word	3227277853
+ 2641 0d90 00000000 		.space	8
+ 2641      00000000 
+ 2642 0d98 FF       		.byte	-1
+ 2643 0d99 000000   		.space	3
+ 2644 0d9c 50       		.byte	80
+ 2645 0d9d 00000000 		.space	15
+ 2645      00000000 
+ 2645      00000000 
+ 2645      000000
+ 2646 0dac 01       		.byte	1
+ 2647 0dad 0D       		.byte	13
+ 2648 0dae 08       		.byte	8
+ 2649 0daf 07       		.byte	7
+ 2650 0db0 09       		.byte	9
+ 2651 0db1 000000   		.space	3
+ 2652 0db4 C1CA1F41 		.word	1092602561
+ 2653 0db8 1D5A5CC0 		.word	3227277853
+ 2654 0dbc 00000000 		.space	8
+ 2654      00000000 
+ 2655 0dc4 FF       		.byte	-1
+ 2656 0dc5 000000   		.space	3
+ 2657 0dc8 51       		.byte	81
+ 2658 0dc9 00000000 		.space	15
+ 2658      00000000 
+ 2658      00000000 
+ 2658      000000
+ 2659 0dd8 01       		.byte	1
+ 2660 0dd9 0D       		.byte	13
+ 2661 0dda 05       		.byte	5
+ 2662 0ddb 04       		.byte	4
+ 2663 0ddc 06       		.byte	6
+ 2664 0ddd 000000   		.space	3
+ 2665 0de0 8FC22D41 		.word	1093517967
+ 2666 0de4 1D5A5CC0 		.word	3227277853
+ 2667 0de8 00000000 		.space	8
+ 2667      00000000 
+ 2668 0df0 FF       		.byte	-1
+ 2669 0df1 000000   		.space	3
+ 2670 0df4 52       		.byte	82
+ 2671 0df5 00000000 		.space	15
+ 2671      00000000 
+ 2671      00000000 
+ 2671      000000
+ 2672 0e04 01       		.byte	1
+ 2673 0e05 0D       		.byte	13
+ 2674 0e06 0B       		.byte	11
+ 2675 0e07 0A       		.byte	10
+ 2676 0e08 0C       		.byte	12
+ 2677 0e09 000000   		.space	3
+ 2678 0e0c 73683941 		.word	1094281331
+ 2679 0e10 CBA155C0 		.word	3226837451
+ 2680 0e14 00000000 		.space	8
+ 2680      00000000 
+ 2681 0e1c FF       		.byte	-1
+ 2682 0e1d 000000   		.space	3
+ 2683 0e20 53       		.byte	83
+ 2684 0e21 00000000 		.space	15
+ 2684      00000000 
+ 2684      00000000 
+ 2684      000000
+ 2685 0e30 01       		.byte	1
+ 2686 0e31 0C       		.byte	12
+ 2687 0e32 0B       		.byte	11
+ 2688 0e33 0A       		.byte	10
+ 2689 0e34 0C       		.byte	12
+ 2690 0e35 000000   		.space	3
+ 2691 0e38 87163B41 		.word	1094391431
+ 2692 0e3c 3BDF27C0 		.word	3223838523
+ 2693 0e40 00000000 		.space	8
+ 2693      00000000 
+ 2694 0e48 FF       		.byte	-1
+ 2695 0e49 000000   		.space	3
+ 2696 0e4c 54       		.byte	84
+ 2697 0e4d 00000000 		.space	15
+ 2697      00000000 
+ 2697      00000000 
+ 2697      000000
+ 2698 0e5c 01       		.byte	1
+ 2699 0e5d 08       		.byte	8
+ 2700 0e5e 0B       		.byte	11
+ 2701 0e5f 0A       		.byte	10
+ 2702 0e60 0C       		.byte	12
+ 2703 0e61 000000   		.space	3
+ 2704 0e64 87163B41 		.word	1094391431
+ 2705 0e68 77BEEFBF 		.word	3220160119
+ 2706 0e6c 00000000 		.space	8
+ 2706      00000000 
+ 2707 0e74 FF       		.byte	-1
+ 2708 0e75 000000   		.space	3
+ 2709 0e78 55       		.byte	85
+ 2710 0e79 00000000 		.space	15
+ 2710      00000000 
+ 2710      00000000 
+ 2710      000000
+ 2711 0e88 01       		.byte	1
+ 2712 0e89 08       		.byte	8
+ 2713 0e8a 08       		.byte	8
+ 2714 0e8b 07       		.byte	7
+ 2715 0e8c 09       		.byte	9
+ 2716 0e8d 000000   		.space	3
+ 2717 0e90 87163B41 		.word	1094391431
+ 2718 0e94 77BE8FBF 		.word	3213868663
+ 2719 0e98 00000000 		.space	8
+ 2719      00000000 
+ 2720 0ea0 FF       		.byte	-1
+ 2721 0ea1 000000   		.space	3
+ 2722 0ea4 56       		.byte	86
+ 2723 0ea5 00000000 		.space	15
+ 2723      00000000 
+ 2723      00000000 
+ 2723      000000
+ 2724 0eb4 01       		.byte	1
+ 2725 0eb5 08       		.byte	8
+ 2726 0eb6 05       		.byte	5
+ 2727 0eb7 04       		.byte	4
+ 2728 0eb8 06       		.byte	6
+ 2729 0eb9 000000   		.space	3
+ 2730 0ebc 87163B41 		.word	1094391431
+ 2731 0ec0 DBF9BEBE 		.word	3200186843
+ 2732 0ec4 00000000 		.space	8
+ 2732      00000000 
+ 2733 0ecc FF       		.byte	-1
+ 2734 0ecd 000000   		.space	3
+ 2735 0ed0 57       		.byte	87
+ 2736 0ed1 00000000 		.space	15
+ 2736      00000000 
+ 2736      00000000 
+ 2736      000000
+ 2737 0ee0 01       		.byte	1
+ 2738 0ee1 08       		.byte	8
+ 2739 0ee2 02       		.byte	2
+ 2740 0ee3 01       		.byte	1
+ 2741 0ee4 03       		.byte	3
+ 2742 0ee5 000000   		.space	3
+ 2743 0ee8 73683941 		.word	1094281331
+ 2744 0eec 560EAD3E 		.word	1051528790
+ 2745 0ef0 00000000 		.space	8
+ 2745      00000000 
+ 2746 0ef8 FF       		.byte	-1
+ 2747 0ef9 000000   		.space	3
+ 2748 0efc 58       		.byte	88
+ 2749 0efd 00000000 		.space	15
+ 2749      00000000 
+ 2749      00000000 
+ 2749      000000
+ 2750 0f0c 01       		.byte	1
+ 2751 0f0d 06       		.byte	6
+ 2752 0f0e 02       		.byte	2
+ 2753 0f0f 01       		.byte	1
+ 2754 0f10 03       		.byte	3
+ 2755 0f11 000000   		.space	3
+ 2756 0f14 2B871E41 		.word	1092519723
+ 2757 0f18 E5D0E23E 		.word	1055052005
+ 2758 0f1c 00000000 		.space	8
+ 2758      00000000 
+ 2759 0f24 FF       		.byte	-1
+ 2760 0f25 000000   		.space	3
+ 2761 0f28 59       		.byte	89
+ 2762 0f29 00000000 		.space	15
+ 2762      00000000 
+ 2762      00000000 
+ 2762      000000
+ 2763 0f38 01       		.byte	1
+ 2764 0f39 05       		.byte	5
+ 2765 0f3a 02       		.byte	2
+ 2766 0f3b 01       		.byte	1
+ 2767 0f3c 03       		.byte	3
+ 2768 0f3d 000000   		.space	3
+ 2769 0f40 A69B1441 		.word	1091869606
+ 2770 0f44 E5D0E23E 		.word	1055052005
+ 2771 0f48 00000000 		.space	8
+ 2771      00000000 
+ 2772 0f50 FF       		.byte	-1
+ 2773 0f51 000000   		.space	3
+ 2774 0f54 5A       		.byte	90
+ 2775 0f55 00000000 		.space	15
+ 2775      00000000 
+ 2775      00000000 
+ 2775      000000
+ 2776 0f64 01       		.byte	1
+ 2777 0f65 04       		.byte	4
+ 2778 0f66 02       		.byte	2
+ 2779 0f67 01       		.byte	1
+ 2780 0f68 03       		.byte	3
+ 2781 0f69 000000   		.space	3
+ 2782 0f6c 00000A41 		.word	1091174400
+ 2783 0f70 E5D0E23E 		.word	1055052005
+ 2784 0f74 00000000 		.space	8
+ 2784      00000000 
+ 2785 0f7c FF       		.byte	-1
+ 2786 0f7d 000000   		.space	3
+ 2787 0f80 5B       		.byte	91
+ 2788 0f81 00000000 		.space	15
+ 2788      00000000 
+ 2788      00000000 
+ 2788      000000
+ 2789 0f90 01       		.byte	1
+ 2790 0f91 03       		.byte	3
+ 2791 0f92 02       		.byte	2
+ 2792 0f93 01       		.byte	1
+ 2793 0f94 03       		.byte	3
+ 2794 0f95 000000   		.space	3
+ 2795 0f98 0000FC40 		.word	1090256896
+ 2796 0f9c E5D0E23E 		.word	1055052005
+ 2797 0fa0 00000000 		.space	8
+ 2797      00000000 
+ 2798 0fa8 FF       		.byte	-1
+ 2799 0fa9 000000   		.space	3
+ 2800 0fac 5C       		.byte	92
+ 2801 0fad 00000000 		.space	15
+ 2801      00000000 
+ 2801      00000000 
+ 2801      000000
+ 2802 0fbc 01       		.byte	1
+ 2803 0fbd 02       		.byte	2
+ 2804 0fbe 02       		.byte	2
+ 2805 0fbf 01       		.byte	1
+ 2806 0fc0 03       		.byte	3
+ 2807 0fc1 000000   		.space	3
+ 2808 0fc4 0000E440 		.word	1088684032
+ 2809 0fc8 E5D0E23E 		.word	1055052005
+ 2810 0fcc 00000000 		.space	8
+ 2810      00000000 
+ 2811 0fd4 FF       		.byte	-1
+ 2812 0fd5 000000   		.space	3
+ 2813 0fd8 5D       		.byte	93
+ 2814 0fd9 00000000 		.space	15
+ 2814      00000000 
+ 2814      00000000 
+ 2814      000000
+ 2815 0fe8 01       		.byte	1
+ 2816 0fe9 01       		.byte	1
+ 2817 0fea 02       		.byte	2
+ 2818 0feb 01       		.byte	1
+ 2819 0fec 03       		.byte	3
+ 2820 0fed 000000   		.space	3
+ 2821 0ff0 0000CC40 		.word	1087111168
+ 2822 0ff4 E5D0E23E 		.word	1055052005
+ 2823 0ff8 00000000 		.space	8
+ 2823      00000000 
+ 2824 1000 FF       		.byte	-1
+ 2825 1001 000000   		.space	3
+ 2826 1004 5E       		.byte	94
+ 2827 1005 00000000 		.space	15
+ 2827      00000000 
+ 2827      00000000 
+ 2827      000000
+ 2828 1014 01       		.byte	1
+ 2829 1015 0E       		.byte	14
+ 2830 1016 02       		.byte	2
+ 2831 1017 01       		.byte	1
+ 2832 1018 03       		.byte	3
+ 2833 1019 000000   		.space	3
+ 2834 101c 0000B440 		.word	1085538304
+ 2835 1020 E5D0E23E 		.word	1055052005
+ 2836 1024 00000000 		.space	8
+ 2836      00000000 
+ 2837 102c FF       		.byte	-1
+ 2838 102d 000000   		.space	3
+ 2839 1030 5F       		.byte	95
+ 2840 1031 00000000 		.space	15
+ 2840      00000000 
+ 2840      00000000 
+ 2840      000000
+ 2841 1040 02       		.byte	2
+ 2842 1041 08       		.byte	8
+ 2843 1042 02       		.byte	2
+ 2844 1043 01       		.byte	1
+ 2845 1044 03       		.byte	3
+ 2846 1045 000000   		.space	3
+ 2847 1048 00009C40 		.word	1083965440
+ 2848 104c E5D0E23E 		.word	1055052005
+ 2849 1050 00000000 		.space	8
+ 2849      00000000 
+ 2850 1058 FF       		.byte	-1
+ 2851 1059 000000   		.space	3
+ 2852 105c 60       		.byte	96
+ 2853 105d 00000000 		.space	15
+ 2853      00000000 
+ 2853      00000000 
+ 2853      000000
+ 2854 106c 02       		.byte	2
+ 2855 106d 07       		.byte	7
+ 2856 106e 02       		.byte	2
+ 2857 106f 01       		.byte	1
+ 2858 1070 03       		.byte	3
+ 2859 1071 000000   		.space	3
+ 2860 1074 00008440 		.word	1082392576
+ 2861 1078 E5D0E23E 		.word	1055052005
+ 2862 107c 00000000 		.space	8
+ 2862      00000000 
+ 2863 1084 FF       		.byte	-1
+ 2864 1085 000000   		.space	3
+ 2865 1088 61       		.byte	97
+ 2866 1089 00000000 		.space	15
+ 2866      00000000 
+ 2866      00000000 
+ 2866      000000
+ 2867 1098 02       		.byte	2
+ 2868 1099 06       		.byte	6
+ 2869 109a 02       		.byte	2
+ 2870 109b 01       		.byte	1
+ 2871 109c 03       		.byte	3
+ 2872 109d 000000   		.space	3
+ 2873 10a0 00005840 		.word	1079508992
+ 2874 10a4 E5D0E23E 		.word	1055052005
+ 2875 10a8 00000000 		.space	8
+ 2875      00000000 
+ 2876 10b0 FF       		.byte	-1
+ 2877 10b1 000000   		.space	3
+ 2878 10b4 62       		.byte	98
+ 2879 10b5 00000000 		.space	15
+ 2879      00000000 
+ 2879      00000000 
+ 2879      000000
+ 2880 10c4 02       		.byte	2
+ 2881 10c5 05       		.byte	5
+ 2882 10c6 02       		.byte	2
+ 2883 10c7 01       		.byte	1
+ 2884 10c8 03       		.byte	3
+ 2885 10c9 000000   		.space	3
+ 2886 10cc 00002840 		.word	1076363264
+ 2887 10d0 E5D0E23E 		.word	1055052005
+ 2888 10d4 00000000 		.space	8
+ 2888      00000000 
+ 2889 10dc FF       		.byte	-1
+ 2890 10dd 000000   		.space	3
+ 2891 10e0 63       		.byte	99
+ 2892 10e1 00000000 		.space	15
+ 2892      00000000 
+ 2892      00000000 
+ 2892      000000
+ 2893 10f0 02       		.byte	2
+ 2894 10f1 04       		.byte	4
+ 2895 10f2 02       		.byte	2
+ 2896 10f3 01       		.byte	1
+ 2897 10f4 03       		.byte	3
+ 2898 10f5 000000   		.space	3
+ 2899 10f8 0000F03F 		.word	1072693248
+ 2900 10fc E5D0E23E 		.word	1055052005
+ 2901 1100 00000000 		.space	8
+ 2901      00000000 
+ 2902 1108 FF       		.byte	-1
+ 2903 1109 000000   		.space	3
+ 2904 110c 64       		.byte	100
+ 2905 110d 00000000 		.space	15
+ 2905      00000000 
+ 2905      00000000 
+ 2905      000000
+ 2906 111c 02       		.byte	2
+ 2907 111d 03       		.byte	3
+ 2908 111e 02       		.byte	2
+ 2909 111f 01       		.byte	1
+ 2910 1120 03       		.byte	3
+ 2911 1121 000000   		.space	3
+ 2912 1124 0000903F 		.word	1066401792
+ 2913 1128 E5D0E23E 		.word	1055052005
+ 2914 112c 00000000 		.space	8
+ 2914      00000000 
+ 2915 1134 FF       		.byte	-1
+ 2916 1135 000000   		.space	3
+ 2917 1138 65       		.byte	101
+ 2918 1139 00000000 		.space	15
+ 2918      00000000 
+ 2918      00000000 
+ 2918      000000
+ 2919 1148 02       		.byte	2
+ 2920 1149 01       		.byte	1
+ 2921 114a 02       		.byte	2
+ 2922 114b 01       		.byte	1
+ 2923 114c 03       		.byte	3
+ 2924 114d 000000   		.space	3
+ 2925 1150 560EADBE 		.word	3199012438
+ 2926 1154 560EAD3E 		.word	1051528790
+ 2927 1158 00000000 		.space	8
+ 2927      00000000 
+ 2928 1160 FF       		.byte	-1
+ 2929 1161 000000   		.space	3
+ 2930 1164 66       		.byte	102
+ 2931 1165 00000000 		.space	15
+ 2931      00000000 
+ 2931      00000000 
+ 2931      000000
+ 2932 1174 02       		.byte	2
+ 2933 1175 01       		.byte	1
+ 2934 1176 05       		.byte	5
+ 2935 1177 04       		.byte	4
+ 2936 1178 06       		.byte	6
+ 2937 1179 000000   		.space	3
+ 2938 117c E5D0E2BE 		.word	3202535653
+ 2939 1180 DBF9BEBE 		.word	3200186843
+ 2940 1184 00000000 		.space	8
+ 2940      00000000 
+ 2941 118c FF       		.byte	-1
+ 2942 118d 000000   		.space	3
+ 2943 1190 67       		.byte	103
+ 2944 1191 00000000 		.space	15
+ 2944      00000000 
+ 2944      00000000 
+ 2944      000000
+ 2945 11a0 02       		.byte	2
+ 2946 11a1 01       		.byte	1
+ 2947 11a2 08       		.byte	8
+ 2948 11a3 07       		.byte	7
+ 2949 11a4 09       		.byte	9
+ 2950 11a5 000000   		.space	3
+ 2951 11a8 E5D0E2BE 		.word	3202535653
+ 2952 11ac 77BE8FBF 		.word	3213868663
+ 2953 11b0 00000000 		.space	8
+ 2953      00000000 
+ 2954 11b8 FF       		.byte	-1
+ 2955 11b9 000000   		.space	3
+ 2956 11bc 68       		.byte	104
+ 2957 11bd 00000000 		.space	15
+ 2957      00000000 
+ 2957      00000000 
+ 2957      000000
+ 2958 11cc 02       		.byte	2
+ 2959 11cd 01       		.byte	1
+ 2960 11ce 0B       		.byte	11
+ 2961 11cf 0A       		.byte	10
+ 2962 11d0 0C       		.byte	12
+ 2963 11d1 000000   		.space	3
+ 2964 11d4 E5D0E2BE 		.word	3202535653
+ 2965 11d8 77BEEFBF 		.word	3220160119
+ 2966 11dc 00000000 		.space	8
+ 2966      00000000 
+ 2967 11e4 FF       		.byte	-1
+ 2968 11e5 000000   		.space	3
+ 2969 11e8 69       		.byte	105
+ 2970 11e9 00000000 		.space	15
+ 2970      00000000 
+ 2970      00000000 
+ 2970      000000
+ 2971 11f8 02       		.byte	2
+ 2972 11f9 0A       		.byte	10
+ 2973 11fa 0B       		.byte	11
+ 2974 11fb 0A       		.byte	10
+ 2975 11fc 0C       		.byte	12
+ 2976 11fd 000000   		.space	3
+ 2977 1200 E5D0E2BE 		.word	3202535653
+ 2978 1204 3BDF27C0 		.word	3223838523
+ 2979 1208 00000000 		.space	8
+ 2979      00000000 
+ 2980 1210 FF       		.byte	-1
+ 2981 1211 000000   		.space	3
+ 2984              	led_instructions:
+ 2985 1214 00000000 		.space	25
+ 2985      00000000 
+ 2985      00000000 
+ 2985      00000000 
+ 2985      00000000 
+ 2986 122d 01       		.byte	1
+ 2987 122e 0000     		.space	2
+ 2988              		.bss
+ 2989              		.set	.LANCHOR0,. + 0
+ 2992              	led_animation_direction:
+ 2993 0000 00       		.space	1
+ 2996              	led_animation_orientation:
+ 2997 0001 00       		.space	1
+ 3000              	led_lighting_mode:
+ 3001 0002 00       		.space	1
+ 3004              	led_animation_id:
+ 3005 0003 00       		.space	1
+ 3008              	led_animation_breathing:
+ 3009 0004 00       		.space	1
+ 3012              	led_animation_breathe_cur:
+ 3013 0005 00       		.space	1
+ 3016              	v_5v_cat_hit:
+ 3017 0006 00       		.space	1
+ 3020              	gcr_min_counter:
+ 3021 0007 00       		.space	1
+ 3022              		.section	.rodata.str1.1,"aMS",%progbits,1
+ 3023              	.LC1:
+ 3024 0000 5553423A 		.ascii	"USB: WARNING: Re-enabling LED drivers\015\012\000"
+ 3024      20574152 
+ 3024      4E494E47 
+ 3024      3A205265 
+ 3024      2D656E61 
+ 3025              	.LC2:
+ 3026 0028 5553423A 		.ascii	"USB: Disabling extra port until replug!\015\012\000"
+ 3026      20446973 
+ 3026      61626C69 
+ 3026      6E672065 
+ 3026      78747261 
+ 3027              		.text
+ 3028              	.Letext0:
+ 3029              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 3030              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 3031              		.file 4 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/samd51j18a.h"
+ 3032              		.file 5 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 3033              		.file 6 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 3034              		.file 7 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 3035              		.file 8 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/sercom.h"
+ 3036              		.file 9 "tmk_core/protocol/arm_atsam/md_bootloader.h"
+ 3037              		.file 10 "tmk_core/common/timer.h"
+ 3038              		.file 11 "tmk_core/protocol/arm_atsam/d51_util.h"
+ 3039              		.file 12 "tmk_core/protocol/arm_atsam/clks.h"
+ 3040              		.file 13 "tmk_core/protocol/arm_atsam/adc.h"
+ 3041              		.file 14 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 3042              		.file 15 "tmk_core/protocol/arm_atsam/spi.h"
+ 3043              		.file 16 "tmk_core/protocol/arm_atsam/./usb/usb2422.h"
+ 3044              		.file 17 "tmk_core/common/action.h"
+ 3045              		.file 18 "tmk_core/common/report.h"
+ 3046              		.file 19 "tmk_core/common/host.h"
+ 3047              		.file 20 "tmk_core/common/debug.h"
+ 3048              		.file 21 "quantum/keycode_config.h"
+ 3049              		.file 22 "quantum/keymap.h"
+ 3050              		.file 23 "quantum/color.h"
+ 3051              		.file 24 "quantum/rgb_matrix_types.h"
+ 3052              		.file 25 "quantum/rgb_matrix.h"
+ 3053              		.file 26 "tmk_core/common/action_layer.h"
+ 3054              		.file 27 "tmk_core/common/action_util.h"
+ 3055              		.file 28 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 3056              		.file 29 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 3057              		.file 30 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 3058              		.file 31 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 3059              		.file 32 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 3060              		.file 33 "quantum/quantum.h"
+ 3061              		.file 34 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 3062              		.file 35 "tmk_core/protocol/arm_atsam/./usb/compiler.h"
+ 3063              		.file 36 "tmk_core/protocol/arm_atsam/./usb/usb_protocol.h"
+ 3064              		.file 37 "tmk_core/protocol/arm_atsam/./usb/udi_device_conf.h"
+ 3065              		.file 38 "tmk_core/protocol/arm_atsam/./usb/udi.h"
+ 3066              		.file 39 "tmk_core/protocol/arm_atsam/./usb/udc_desc.h"
+ 3067              		.file 40 "tmk_core/protocol/arm_atsam/./usb/udi_hid_kbd.h"
+ 3068              		.file 41 "tmk_core/protocol/arm_atsam/./usb/usb_main.h"
+ 3069              		.file 42 "tmk_core/protocol/arm_atsam/./usb/udd.h"
+ 3070              		.file 43 "tmk_core/protocol/arm_atsam/./usb/udi_cdc.h"
+ 3071              		.file 44 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/math.h"
+ 3072              		.file 45 "tmk_core/protocol/arm_atsam/main_arm_atsam.h"
+ 3073              		.file 46 "tmk_core/common/util.h"
+ 3074              		.file 47 "<built-in>"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 led_matrix.c
+/var/tmp//cc9CSHvK.s:18     .text.led_run_pattern:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:24     .text.led_run_pattern:0000000000000000 led_run_pattern
+/var/tmp//cc9CSHvK.s:236    .text.led_run_pattern:00000000000001c4 $d
+                            *COM*:0000000000000004 pomod
+/var/tmp//cc9CSHvK.s:243    .text.led_set_one:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:250    .text.led_set_one:0000000000000000 led_set_one
+/var/tmp//cc9CSHvK.s:570    .text.led_set_one:0000000000000204 $d
+                            *COM*:000000000000013b led_buffer
+/var/tmp//cc9CSHvK.s:2984   .data:0000000000001214 led_instructions
+                            *COM*:0000000000000004 breathe_mult
+/var/tmp//cc9CSHvK.s:587    .text.led_set_all:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:594    .text.led_set_all:0000000000000000 led_set_all
+/var/tmp//cc9CSHvK.s:639    .text.flush:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:646    .text.flush:0000000000000000 flush
+/var/tmp//cc9CSHvK.s:927    .text.flush:00000000000001b0 $d
+/var/tmp//cc9CSHvK.s:1616   .data:0000000000000008 led_map
+                            *COM*:0000000000000001 gcr_actual
+                            *COM*:0000000000000001 gcr_actual_last
+/var/tmp//cc9CSHvK.s:947    .text.SERCOM1_0_Handler:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:954    .text.SERCOM1_0_Handler:0000000000000000 SERCOM1_0_Handler
+/var/tmp//cc9CSHvK.s:974    .text.SERCOM1_0_Handler:0000000000000010 $d
+/var/tmp//cc9CSHvK.s:979    .text.DMAC_0_Handler:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:986    .text.DMAC_0_Handler:0000000000000000 DMAC_0_Handler
+/var/tmp//cc9CSHvK.s:1034   .text.DMAC_0_Handler:0000000000000034 $d
+/var/tmp//cc9CSHvK.s:1040   .text.gcr_compute:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:1047   .text.gcr_compute:0000000000000000 gcr_compute
+/var/tmp//cc9CSHvK.s:1242   .text.gcr_compute:00000000000000d8 $d
+                            *COM*:0000000000000001 gcr_desired
+                            *COM*:0000000000000001 gcr_breathe
+/var/tmp//cc9CSHvK.s:1257   .text.issi3733_prepare_arrays:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:1264   .text.issi3733_prepare_arrays:0000000000000000 issi3733_prepare_arrays
+/var/tmp//cc9CSHvK.s:1381   .text.issi3733_prepare_arrays:00000000000000c4 $d
+                            *COM*:00000000000003c2 issidrv
+/var/tmp//cc9CSHvK.s:1388   .text.led_matrix_prepare:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:1395   .text.led_matrix_prepare:0000000000000000 led_matrix_prepare
+/var/tmp//cc9CSHvK.s:1431   .text.led_matrix_prepare:000000000000001c $d
+/var/tmp//cc9CSHvK.s:1437   .text.init:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:1444   .text.init:0000000000000000 init
+/var/tmp//cc9CSHvK.s:1478   .text.init:0000000000000020 $d
+/var/tmp//cc9CSHvK.s:1484   .text.led_matrix_indicators:0000000000000000 $t
+/var/tmp//cc9CSHvK.s:1491   .text.led_matrix_indicators:0000000000000000 led_matrix_indicators
+/var/tmp//cc9CSHvK.s:1561   .text.led_matrix_indicators:000000000000004c $d
+/var/tmp//cc9CSHvK.s:1607   .data:0000000000000001 breathe_dir
+/var/tmp//cc9CSHvK.s:3012   .bss:0000000000000005 led_animation_breathe_cur
+/var/tmp//cc9CSHvK.s:1603   .data:0000000000000000 led_enabled
+/var/tmp//cc9CSHvK.s:3000   .bss:0000000000000002 led_lighting_mode
+/var/tmp//cc9CSHvK.s:1612   .data:0000000000000004 led_animation_speed
+/var/tmp//cc9CSHvK.s:3004   .bss:0000000000000003 led_animation_id
+/var/tmp//cc9CSHvK.s:3008   .bss:0000000000000004 led_animation_breathing
+/var/tmp//cc9CSHvK.s:2992   .bss:0000000000000000 led_animation_direction
+/var/tmp//cc9CSHvK.s:2996   .bss:0000000000000001 led_animation_orientation
+/var/tmp//cc9CSHvK.s:1593   .rodata:0000000000000000 rgb_matrix_driver
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+/var/tmp//cc9CSHvK.s:1590   .rodata:0000000000000000 $d
+/var/tmp//cc9CSHvK.s:1599   .data:0000000000000000 $d
+/var/tmp//cc9CSHvK.s:2993   .bss:0000000000000000 $d
+/var/tmp//cc9CSHvK.s:3016   .bss:0000000000000006 v_5v_cat_hit
+/var/tmp//cc9CSHvK.s:3020   .bss:0000000000000007 gcr_min_counter
+
+UNDEFINED SYMBOLS
+biton32
+g_led_config
+layer_state
+led_setups
+__aeabi_i2d
+__aeabi_dmul
+__aeabi_d2f
+i2c_led_q_request_room
+i2c_led_q_add
+i2c_led_q_run
+i2c_led_q_running
+g_rgb_counters
+i2c1_stop
+I2C3733_Control_Set
+CDC_print
+USB_ExtraSetState
+v_5v
+usb_gcr_auto
+v_5v_avg
+usb_extra_state
+usb_extra_manual
+memset
+debug_code
+keyboard_leds
+rgb_matrix_config

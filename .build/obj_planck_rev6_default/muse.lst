@@ -1,0 +1,462 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"muse.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.bit_for_value,"ax",%progbits
+  16              		.align	1
+  17              		.global	bit_for_value
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	bit_for_value:
+  24              	.LFB287:
+  25              		.file 1 "quantum/audio/muse.c"
+   1:quantum/audio/muse.c **** #include "muse.h"
+   2:quantum/audio/muse.c **** 
+   3:quantum/audio/muse.c **** enum { MUSE_OFF, MUSE_ON, MUSE_C_1_2, MUSE_C1, MUSE_C2, MUSE_C4, MUSE_C8, MUSE_C3, MUSE_C6, MUSE_B1
+   4:quantum/audio/muse.c **** 
+   5:quantum/audio/muse.c **** bool number_of_ones_to_bool[16] = {1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1};
+   6:quantum/audio/muse.c **** 
+   7:quantum/audio/muse.c **** uint8_t muse_interval[4] = {MUSE_B7, MUSE_B19, MUSE_B3, MUSE_B28};
+   8:quantum/audio/muse.c **** uint8_t muse_theme[4]    = {MUSE_B8, MUSE_B23, MUSE_B18, MUSE_B17};
+   9:quantum/audio/muse.c **** 
+  10:quantum/audio/muse.c **** bool     muse_timer_1bit         = 0;
+  11:quantum/audio/muse.c **** uint8_t  muse_timer_2bit         = 0;
+  12:quantum/audio/muse.c **** uint8_t  muse_timer_2bit_counter = 0;
+  13:quantum/audio/muse.c **** uint8_t  muse_timer_4bit         = 0;
+  14:quantum/audio/muse.c **** uint32_t muse_timer_31bit        = 0;
+  15:quantum/audio/muse.c **** 
+  16:quantum/audio/muse.c **** bool bit_for_value(uint8_t value) {
+  26              		.loc 1 16 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  17:quantum/audio/muse.c ****     switch (value) {
+  32              		.loc 1 17 0
+  33 0000 0828     		cmp	r0, #8
+  34 0002 23D8     		bhi	.L2
+  35 0004 DFE800F0 		tbb	[pc, r0]
+  36              	.L4:
+  37 0008 2D       		.byte	(.L13-.L4)/2
+  38 0009 05       		.byte	(.L5-.L4)/2
+  39 000a 07       		.byte	(.L6-.L4)/2
+  40 000b 0A       		.byte	(.L7-.L4)/2
+  41 000c 0F       		.byte	(.L8-.L4)/2
+  42 000d 14       		.byte	(.L9-.L4)/2
+  43 000e 19       		.byte	(.L10-.L4)/2
+  44 000f 1E       		.byte	(.L11-.L4)/2
+  45 0010 20       		.byte	(.L12-.L4)/2
+  46 0011 00       		.p2align 1
+  47              	.L5:
+  18:quantum/audio/muse.c ****         case MUSE_OFF:
+  19:quantum/audio/muse.c ****             return 0;
+  20:quantum/audio/muse.c ****         case MUSE_ON:
+  21:quantum/audio/muse.c ****             return 1;
+  48              		.loc 1 21 0
+  49 0012 0120     		movs	r0, #1
+  50              	.LVL1:
+  51 0014 7047     		bx	lr
+  52              	.LVL2:
+  53              	.L6:
+  22:quantum/audio/muse.c ****         case MUSE_C_1_2:
+  23:quantum/audio/muse.c ****             return muse_timer_1bit;
+  54              		.loc 1 23 0
+  55 0016 144B     		ldr	r3, .L16
+  56 0018 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  57              	.LVL3:
+  58 001a 7047     		bx	lr
+  59              	.LVL4:
+  60              	.L7:
+  24:quantum/audio/muse.c ****         case MUSE_C1:
+  25:quantum/audio/muse.c ****             return (muse_timer_4bit & 1);
+  61              		.loc 1 25 0
+  62 001c 134B     		ldr	r3, .L16+4
+  63              	.L14:
+  26:quantum/audio/muse.c ****         case MUSE_C2:
+  27:quantum/audio/muse.c ****             return (muse_timer_4bit & 2);
+  28:quantum/audio/muse.c ****         case MUSE_C4:
+  29:quantum/audio/muse.c ****             return (muse_timer_4bit & 4);
+  30:quantum/audio/muse.c ****         case MUSE_C8:
+  31:quantum/audio/muse.c ****             return (muse_timer_4bit & 8);
+  32:quantum/audio/muse.c ****         case MUSE_C3:
+  33:quantum/audio/muse.c ****             return (muse_timer_2bit & 1);
+  64              		.loc 1 33 0
+  65 001e 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  66              	.LVL5:
+  67 0020 00F00100 		and	r0, r0, #1
+  68 0024 7047     		bx	lr
+  69              	.LVL6:
+  70              	.L8:
+  27:quantum/audio/muse.c ****         case MUSE_C4:
+  71              		.loc 1 27 0
+  72 0026 114B     		ldr	r3, .L16+4
+  73              	.L15:
+  34:quantum/audio/muse.c ****         case MUSE_C6:
+  35:quantum/audio/muse.c ****             return (muse_timer_2bit & 2);
+  74              		.loc 1 35 0
+  75 0028 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  76              	.LVL7:
+  77 002a C0F34000 		ubfx	r0, r0, #1, #1
+  78 002e 7047     		bx	lr
+  79              	.LVL8:
+  80              	.L9:
+  29:quantum/audio/muse.c ****         case MUSE_C8:
+  81              		.loc 1 29 0
+  82 0030 0E4B     		ldr	r3, .L16+4
+  83 0032 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  84              	.LVL9:
+  85 0034 C0F38000 		ubfx	r0, r0, #2, #1
+  86 0038 7047     		bx	lr
+  87              	.LVL10:
+  88              	.L10:
+  31:quantum/audio/muse.c ****         case MUSE_C3:
+  89              		.loc 1 31 0
+  90 003a 0C4B     		ldr	r3, .L16+4
+  91 003c 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+  92              	.LVL11:
+  93 003e C0F3C000 		ubfx	r0, r0, #3, #1
+  94 0042 7047     		bx	lr
+  95              	.LVL12:
+  96              	.L11:
+  33:quantum/audio/muse.c ****         case MUSE_C6:
+  97              		.loc 1 33 0
+  98 0044 0A4B     		ldr	r3, .L16+8
+  99 0046 EAE7     		b	.L14
+ 100              	.L12:
+ 101              		.loc 1 35 0
+ 102 0048 094B     		ldr	r3, .L16+8
+ 103 004a EDE7     		b	.L15
+ 104              	.L2:
+  36:quantum/audio/muse.c ****         default:
+  37:quantum/audio/muse.c ****             return muse_timer_31bit & (1UL << (value - MUSE_B1));
+ 105              		.loc 1 37 0
+ 106 004c 0123     		movs	r3, #1
+ 107 004e 0938     		subs	r0, r0, #9
+ 108              	.LVL13:
+ 109 0050 03FA00F0 		lsl	r0, r3, r0
+ 110 0054 074B     		ldr	r3, .L16+12
+ 111 0056 1B68     		ldr	r3, [r3]
+ 112 0058 1842     		tst	r0, r3
+ 113 005a 14BF     		ite	ne
+ 114 005c 0120     		movne	r0, #1
+ 115 005e 0020     		moveq	r0, #0
+ 116 0060 7047     		bx	lr
+ 117              	.LVL14:
+ 118              	.L13:
+  19:quantum/audio/muse.c ****         case MUSE_ON:
+ 119              		.loc 1 19 0
+ 120 0062 0020     		movs	r0, #0
+ 121              	.LVL15:
+  38:quantum/audio/muse.c ****     }
+  39:quantum/audio/muse.c **** }
+ 122              		.loc 1 39 0
+ 123 0064 7047     		bx	lr
+ 124              	.L17:
+ 125 0066 00BF     		.align	2
+ 126              	.L16:
+ 127 0068 00000000 		.word	.LANCHOR0
+ 128 006c 00000000 		.word	.LANCHOR1
+ 129 0070 00000000 		.word	.LANCHOR2
+ 130 0074 00000000 		.word	.LANCHOR3
+ 131              		.cfi_endproc
+ 132              	.LFE287:
+ 134              		.section	.text.muse_clock_pulse,"ax",%progbits
+ 135              		.align	1
+ 136              		.global	muse_clock_pulse
+ 137              		.syntax unified
+ 138              		.thumb
+ 139              		.thumb_func
+ 140              		.fpu softvfp
+ 142              	muse_clock_pulse:
+ 143              	.LFB288:
+  40:quantum/audio/muse.c **** 
+  41:quantum/audio/muse.c **** uint8_t muse_clock_pulse(void) {
+ 144              		.loc 1 41 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148 0000 70B5     		push	{r4, r5, r6, lr}
+ 149              		.cfi_def_cfa_offset 16
+ 150              		.cfi_offset 4, -16
+ 151              		.cfi_offset 5, -12
+ 152              		.cfi_offset 6, -8
+ 153              		.cfi_offset 14, -4
+  42:quantum/audio/muse.c ****     bool top = number_of_ones_to_bool[bit_for_value(muse_theme[0]) + (bit_for_value(muse_theme[1]) 
+ 154              		.loc 1 42 0
+ 155 0002 294A     		ldr	r2, .L21
+  43:quantum/audio/muse.c **** 
+  44:quantum/audio/muse.c ****     if (muse_timer_1bit == 0) {
+ 156              		.loc 1 44 0
+ 157 0004 294C     		ldr	r4, .L21+4
+  42:quantum/audio/muse.c ****     bool top = number_of_ones_to_bool[bit_for_value(muse_theme[0]) + (bit_for_value(muse_theme[1]) 
+ 158              		.loc 1 42 0
+ 159 0006 1078     		ldrb	r0, [r2]	@ zero_extendqisi2
+ 160 0008 FFF7FEFF 		bl	bit_for_value
+ 161              	.LVL16:
+ 162 000c 0646     		mov	r6, r0
+ 163 000e 5078     		ldrb	r0, [r2, #1]	@ zero_extendqisi2
+ 164 0010 FFF7FEFF 		bl	bit_for_value
+ 165              	.LVL17:
+ 166 0014 0546     		mov	r5, r0
+ 167 0016 9078     		ldrb	r0, [r2, #2]	@ zero_extendqisi2
+ 168 0018 FFF7FEFF 		bl	bit_for_value
+ 169              	.LVL18:
+ 170 001c 0146     		mov	r1, r0
+ 171 001e D078     		ldrb	r0, [r2, #3]	@ zero_extendqisi2
+ 172 0020 FFF7FEFF 		bl	bit_for_value
+ 173              	.LVL19:
+ 174              		.loc 1 44 0
+ 175 0024 2278     		ldrb	r2, [r4]	@ zero_extendqisi2
+ 176 0026 1ABB     		cbnz	r2, .L19
+  42:quantum/audio/muse.c ****     bool top = number_of_ones_to_bool[bit_for_value(muse_theme[0]) + (bit_for_value(muse_theme[1]) 
+ 177              		.loc 1 42 0
+ 178 0028 214B     		ldr	r3, .L21+8
+ 179 002a 3344     		add	r3, r3, r6
+ 180 002c 03EB4503 		add	r3, r3, r5, lsl #1
+ 181 0030 03EB8103 		add	r3, r3, r1, lsl #2
+  45:quantum/audio/muse.c ****         if (muse_timer_2bit_counter == 0) {
+ 182              		.loc 1 45 0
+ 183 0034 1F4D     		ldr	r5, .L21+12
+ 184              	.LVL20:
+  42:quantum/audio/muse.c ****     bool top = number_of_ones_to_bool[bit_for_value(muse_theme[0]) + (bit_for_value(muse_theme[1]) 
+ 185              		.loc 1 42 0
+ 186 0036 13F83000 		ldrb	r0, [r3, r0, lsl #3]	@ zero_extendqisi2
+ 187              		.loc 1 45 0
+ 188 003a 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
+ 189 003c 2BB9     		cbnz	r3, .L20
+  46:quantum/audio/muse.c ****             muse_timer_2bit = (muse_timer_2bit + 1) % 4;
+ 190              		.loc 1 46 0
+ 191 003e 1E4E     		ldr	r6, .L21+16
+ 192 0040 3178     		ldrb	r1, [r6]	@ zero_extendqisi2
+ 193 0042 0131     		adds	r1, r1, #1
+ 194 0044 01F00301 		and	r1, r1, #3
+ 195 0048 3170     		strb	r1, [r6]
+ 196              	.L20:
+  47:quantum/audio/muse.c ****         }
+  48:quantum/audio/muse.c ****         muse_timer_2bit_counter = (muse_timer_2bit_counter + 1) % 3;
+ 197              		.loc 1 48 0
+ 198 004a 0133     		adds	r3, r3, #1
+ 199 004c 0321     		movs	r1, #3
+ 200 004e 93FBF1F1 		sdiv	r1, r3, r1
+ 201 0052 01EB4101 		add	r1, r1, r1, lsl #1
+ 202 0056 5B1A     		subs	r3, r3, r1
+  49:quantum/audio/muse.c ****         muse_timer_4bit         = (muse_timer_4bit + 1) % 16;
+ 203              		.loc 1 49 0
+ 204 0058 1849     		ldr	r1, .L21+20
+  48:quantum/audio/muse.c ****         muse_timer_4bit         = (muse_timer_4bit + 1) % 16;
+ 205              		.loc 1 48 0
+ 206 005a 2B70     		strb	r3, [r5]
+ 207              		.loc 1 49 0
+ 208 005c 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 209 005e 0133     		adds	r3, r3, #1
+ 210 0060 03F00F03 		and	r3, r3, #15
+ 211 0064 0B70     		strb	r3, [r1]
+  50:quantum/audio/muse.c ****         muse_timer_31bit        = (muse_timer_31bit << 1) + top;
+ 212              		.loc 1 50 0
+ 213 0066 164B     		ldr	r3, .L21+24
+ 214 0068 1968     		ldr	r1, [r3]
+ 215 006a 00EB4100 		add	r0, r0, r1, lsl #1
+ 216 006e 1860     		str	r0, [r3]
+ 217              	.L19:
+  51:quantum/audio/muse.c ****     }
+  52:quantum/audio/muse.c **** 
+  53:quantum/audio/muse.c ****     muse_timer_1bit = (muse_timer_1bit + 1) % 2;
+  54:quantum/audio/muse.c **** 
+  55:quantum/audio/muse.c ****     return bit_for_value(muse_interval[0]) + (bit_for_value(muse_interval[1]) << 1) + (bit_for_valu
+ 218              		.loc 1 55 0
+ 219 0070 1449     		ldr	r1, .L21+28
+  53:quantum/audio/muse.c **** 
+ 220              		.loc 1 53 0
+ 221 0072 0132     		adds	r2, r2, #1
+ 222              		.loc 1 55 0
+ 223 0074 0878     		ldrb	r0, [r1]	@ zero_extendqisi2
+  53:quantum/audio/muse.c **** 
+ 224              		.loc 1 53 0
+ 225 0076 02F00102 		and	r2, r2, #1
+ 226 007a 2270     		strb	r2, [r4]
+ 227              		.loc 1 55 0
+ 228 007c FFF7FEFF 		bl	bit_for_value
+ 229              	.LVL21:
+ 230 0080 0246     		mov	r2, r0
+ 231 0082 4878     		ldrb	r0, [r1, #1]	@ zero_extendqisi2
+ 232 0084 FFF7FEFF 		bl	bit_for_value
+ 233              	.LVL22:
+ 234 0088 0446     		mov	r4, r0
+ 235 008a 8878     		ldrb	r0, [r1, #2]	@ zero_extendqisi2
+ 236 008c FFF7FEFF 		bl	bit_for_value
+ 237              	.LVL23:
+ 238 0090 8000     		lsls	r0, r0, #2
+ 239 0092 00EB4400 		add	r0, r0, r4, lsl #1
+ 240 0096 0244     		add	r2, r2, r0
+ 241 0098 C878     		ldrb	r0, [r1, #3]	@ zero_extendqisi2
+ 242 009a D2B2     		uxtb	r2, r2
+ 243 009c FFF7FEFF 		bl	bit_for_value
+ 244              	.LVL24:
+ 245 00a0 02EBC000 		add	r0, r2, r0, lsl #3
+  56:quantum/audio/muse.c **** }
+ 246              		.loc 1 56 0
+ 247 00a4 C0B2     		uxtb	r0, r0
+ 248 00a6 70BD     		pop	{r4, r5, r6, pc}
+ 249              	.L22:
+ 250              		.align	2
+ 251              	.L21:
+ 252 00a8 00000000 		.word	.LANCHOR4
+ 253 00ac 00000000 		.word	.LANCHOR0
+ 254 00b0 00000000 		.word	.LANCHOR5
+ 255 00b4 00000000 		.word	.LANCHOR6
+ 256 00b8 00000000 		.word	.LANCHOR2
+ 257 00bc 00000000 		.word	.LANCHOR1
+ 258 00c0 00000000 		.word	.LANCHOR3
+ 259 00c4 00000000 		.word	.LANCHOR7
+ 260              		.cfi_endproc
+ 261              	.LFE288:
+ 263              		.global	muse_timer_31bit
+ 264              		.global	muse_timer_4bit
+ 265              		.global	muse_timer_2bit_counter
+ 266              		.global	muse_timer_2bit
+ 267              		.global	muse_timer_1bit
+ 268              		.global	muse_theme
+ 269              		.global	muse_interval
+ 270              		.global	number_of_ones_to_bool
+ 271              		.section	.bss.muse_timer_1bit,"aw",%nobits
+ 272              		.set	.LANCHOR0,. + 0
+ 275              	muse_timer_1bit:
+ 276 0000 00       		.space	1
+ 277              		.section	.bss.muse_timer_2bit,"aw",%nobits
+ 278              		.set	.LANCHOR2,. + 0
+ 281              	muse_timer_2bit:
+ 282 0000 00       		.space	1
+ 283              		.section	.bss.muse_timer_2bit_counter,"aw",%nobits
+ 284              		.set	.LANCHOR6,. + 0
+ 287              	muse_timer_2bit_counter:
+ 288 0000 00       		.space	1
+ 289              		.section	.bss.muse_timer_31bit,"aw",%nobits
+ 290              		.align	2
+ 291              		.set	.LANCHOR3,. + 0
+ 294              	muse_timer_31bit:
+ 295 0000 00000000 		.space	4
+ 296              		.section	.bss.muse_timer_4bit,"aw",%nobits
+ 297              		.set	.LANCHOR1,. + 0
+ 300              	muse_timer_4bit:
+ 301 0000 00       		.space	1
+ 302              		.section	.data.muse_interval,"aw",%progbits
+ 303              		.set	.LANCHOR7,. + 0
+ 306              	muse_interval:
+ 307 0000 0F       		.byte	15
+ 308 0001 1B       		.byte	27
+ 309 0002 0B       		.byte	11
+ 310 0003 24       		.byte	36
+ 311              		.section	.data.muse_theme,"aw",%progbits
+ 312              		.set	.LANCHOR4,. + 0
+ 315              	muse_theme:
+ 316 0000 10       		.byte	16
+ 317 0001 1F       		.byte	31
+ 318 0002 1A       		.byte	26
+ 319 0003 19       		.byte	25
+ 320              		.section	.data.number_of_ones_to_bool,"aw",%progbits
+ 321              		.set	.LANCHOR5,. + 0
+ 324              	number_of_ones_to_bool:
+ 325 0000 01       		.byte	1
+ 326 0001 00       		.byte	0
+ 327 0002 00       		.byte	0
+ 328 0003 01       		.byte	1
+ 329 0004 00       		.byte	0
+ 330 0005 01       		.byte	1
+ 331 0006 01       		.byte	1
+ 332 0007 00       		.byte	0
+ 333 0008 00       		.byte	0
+ 334 0009 01       		.byte	1
+ 335 000a 01       		.byte	1
+ 336 000b 00       		.byte	0
+ 337 000c 01       		.byte	1
+ 338 000d 00       		.byte	0
+ 339 000e 00       		.byte	0
+ 340 000f 01       		.byte	1
+ 341              		.text
+ 342              	.Letext0:
+ 343              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 344              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 345              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 346              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 347              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 348              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 349              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 350              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 351              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 352              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 353              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 354              		.file 13 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 355              		.file 14 "./lib/chibios/os/rt/include/chtm.h"
+ 356              		.file 15 "./lib/chibios/os/rt/include/chsem.h"
+ 357              		.file 16 "./lib/chibios/os/rt/include/chmtx.h"
+ 358              		.file 17 "./lib/chibios/os/rt/include/chsys.h"
+ 359              		.file 18 "./lib/chibios/os/rt/include/chregistry.h"
+ 360              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 361              		.file 20 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 362              		.file 21 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 363              		.file 22 "./lib/chibios/os/hal/include/hal_dac.h"
+ 364              		.file 23 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 365              		.file 24 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 366              		.file 25 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 367              		.file 26 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 368              		.file 27 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 369              		.file 28 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 370              		.file 29 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 371              		.file 30 "./lib/chibios/os/hal/include/hal_usb.h"
+ 372              		.file 31 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 373              		.file 32 "tmk_core/common/action.h"
+ 374              		.file 33 "tmk_core/common/report.h"
+ 375              		.file 34 "tmk_core/common/host.h"
+ 376              		.file 35 "tmk_core/common/debug.h"
+ 377              		.file 36 "quantum/keycode_config.h"
+ 378              		.file 37 "quantum/keymap.h"
+ 379              		.file 38 "tmk_core/common/action_layer.h"
+ 380              		.file 39 "tmk_core/common/timer.h"
+ 381              		.file 40 "tmk_core/common/action_util.h"
+ 382              		.file 41 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 383              		.file 42 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 384              		.file 43 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 385              		.file 44 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 386              		.file 45 "quantum/audio/luts.h"
+ 387              		.file 46 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/math.h"
+ 388              		.file 47 "quantum/process_keycode/process_music.h"
+ 389              		.file 48 "quantum/quantum.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 muse.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:16     .text.bit_for_value:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:23     .text.bit_for_value:0000000000000000 bit_for_value
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:37     .text.bit_for_value:0000000000000008 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:127    .text.bit_for_value:0000000000000068 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:135    .text.muse_clock_pulse:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:142    .text.muse_clock_pulse:0000000000000000 muse_clock_pulse
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:252    .text.muse_clock_pulse:00000000000000a8 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:294    .bss.muse_timer_31bit:0000000000000000 muse_timer_31bit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:300    .bss.muse_timer_4bit:0000000000000000 muse_timer_4bit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:287    .bss.muse_timer_2bit_counter:0000000000000000 muse_timer_2bit_counter
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:281    .bss.muse_timer_2bit:0000000000000000 muse_timer_2bit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:275    .bss.muse_timer_1bit:0000000000000000 muse_timer_1bit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:315    .data.muse_theme:0000000000000000 muse_theme
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:306    .data.muse_interval:0000000000000000 muse_interval
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:324    .data.number_of_ones_to_bool:0000000000000000 number_of_ones_to_bool
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:276    .bss.muse_timer_1bit:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:282    .bss.muse_timer_2bit:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:288    .bss.muse_timer_2bit_counter:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:290    .bss.muse_timer_31bit:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:301    .bss.muse_timer_4bit:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:46     .text.bit_for_value:0000000000000011 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccxicOZC.s:46     .text.bit_for_value:0000000000000012 $t
+
+NO UNDEFINED SYMBOLS

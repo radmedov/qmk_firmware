@@ -1,0 +1,987 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"keymap.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.matrix_init_user,"ax",%progbits
+  18              		.align	1
+  19              		.global	matrix_init_user
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	matrix_init_user:
+  26              	.LFB131:
+  27              		.file 1 "keyboards/massdrop/alt/keymaps/default_md/keymap.c"
+   1:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** #include QMK_KEYBOARD_H
+   2:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+   3:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** enum alt_keycodes {
+   4:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_BRI = SAFE_RANGE, //LED Brightness Increase                                   //Working
+   5:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_BRD,              //LED Brightness Decrease                                   //Working
+   6:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_PTN,              //LED Pattern Select Next                                   //Working
+   7:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_PTP,              //LED Pattern Select Previous                               //Working
+   8:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_PSI,              //LED Pattern Speed Increase                                //Working
+   9:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_PSD,              //LED Pattern Speed Decrease                                //Working
+  10:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_T_MD,             //LED Toggle Mode                                           //Working
+  11:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_T_ONF,            //LED Toggle On / Off                                       //Broken
+  12:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_ON,               //LED On                                                    //Broken
+  13:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_OFF,              //LED Off                                                   //Broken
+  14:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_T_BR,             //LED Toggle Breath Effect                                  //Working
+  15:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     L_T_PTD,            //LED Toggle Scrolling Pattern Direction                    //Working
+  16:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     U_T_AGCR,           //USB Toggle Automatic GCR control                          //Working
+  17:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     DBG_TOG,            //DEBUG Toggle On / Off                                     //
+  18:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     DBG_MTRX,           //DEBUG Toggle Matrix Prints                                //
+  19:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     DBG_KBD,            //DEBUG Toggle Keyboard Prints                              //
+  20:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     DBG_MOU,            //DEBUG Toggle Mouse Prints                                 //
+  21:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     MD_BOOT             //Restart into bootloader after hold timeout                //Working
+  22:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** };
+  23:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  24:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
+  25:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  26:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** keymap_config_t keymap_config;
+  27:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  28:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+  29:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     [0] = LAYOUT(
+  30:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    K
+  31:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    K
+  32:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    K
+  33:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  K
+  34:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             K
+  35:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     ),
+  36:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     [1] = LAYOUT(
+  37:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   K
+  38:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         L_T_BR,  L_PSD,   L_BRI,   L_PSI,   _______, _______, _______, _______, U_T_AGCR,_______, K
+  39:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         L_T_PTD, L_PTP,   L_BRD,   L_PTN,   _______, _______, _______, _______, _______, _______, _
+  40:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, L_T_MD,  L_T_ONF, _______, _______, MD_BOOT, TG_NKRO, _______, _______, _______, _
+  41:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______,                            _______,                            _
+  42:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     ),
+  43:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     /*
+  44:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     [X] = LAYOUT(
+  45:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  46:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  47:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  48:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  49:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         _______, _______, _______,                            _______,                            _
+  50:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     ),
+  51:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     */
+  52:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** };
+  53:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  54:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** // Runs just one time when the keyboard initializes.
+  55:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** void matrix_init_user(void) {
+  28              		.loc 1 55 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  56:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** };
+  33              		.loc 1 56 0
+  34 0000 7047     		bx	lr
+  35              		.cfi_endproc
+  36              	.LFE131:
+  38              		.section	.text.matrix_scan_user,"ax",%progbits
+  39              		.align	1
+  40              		.global	matrix_scan_user
+  41              		.syntax unified
+  42              		.thumb
+  43              		.thumb_func
+  44              		.fpu fpv4-sp-d16
+  46              	matrix_scan_user:
+  47              	.LFB135:
+  48              		.cfi_startproc
+  49              		@ args = 0, pretend = 0, frame = 0
+  50              		@ frame_needed = 0, uses_anonymous_args = 0
+  51              		@ link register save eliminated.
+  52 0000 7047     		bx	lr
+  53              		.cfi_endproc
+  54              	.LFE135:
+  56              		.section	.text.process_record_user,"ax",%progbits
+  57              		.align	1
+  58              		.global	process_record_user
+  59              		.syntax unified
+  60              		.thumb
+  61              		.thumb_func
+  62              		.fpu fpv4-sp-d16
+  64              	process_record_user:
+  65              	.LFB133:
+  57:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  58:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** // Runs constantly in the background, in a loop.
+  59:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** void matrix_scan_user(void) {
+  60:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** };
+  61:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  62:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** #define MODS_SHIFT  (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
+  63:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTRL))
+  64:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
+  65:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  66:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  66              		.loc 1 66 0
+  67              		.cfi_startproc
+  68              		@ args = 0, pretend = 0, frame = 0
+  69              		@ frame_needed = 0, uses_anonymous_args = 0
+  70              	.LVL0:
+  67:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     static uint32_t key_timer;
+  68:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** 
+  69:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     switch (keycode) {
+  71              		.loc 1 69 0
+  72 0000 A0F5BA40 		sub	r0, r0, #23808
+  73              	.LVL1:
+  74 0004 0138     		subs	r0, r0, #1
+  66:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     static uint32_t key_timer;
+  75              		.loc 1 66 0
+  76 0006 38B5     		push	{r3, r4, r5, lr}
+  77              		.cfi_def_cfa_offset 16
+  78              		.cfi_offset 3, -16
+  79              		.cfi_offset 4, -12
+  80              		.cfi_offset 5, -8
+  81              		.cfi_offset 14, -4
+  82              		.loc 1 69 0
+  83 0008 1128     		cmp	r0, #17
+  84 000a 00F21E81 		bhi	.L41
+  85 000e DFE810F0 		tbh	[pc, r0, lsl #1]
+  86              	.L6:
+  87 0012 1200     		.2byte	(.L5-.L6)/2
+  88 0014 2700     		.2byte	(.L7-.L6)/2
+  89 0016 3100     		.2byte	(.L8-.L6)/2
+  90 0018 4300     		.2byte	(.L9-.L6)/2
+  91 001a 5100     		.2byte	(.L10-.L6)/2
+  92 001c 5E00     		.2byte	(.L11-.L6)/2
+  93 001e 7000     		.2byte	(.L12-.L6)/2
+  94 0020 7D00     		.2byte	(.L13-.L6)/2
+  95 0022 8900     		.2byte	(.L14-.L6)/2
+  96 0024 8F00     		.2byte	(.L15-.L6)/2
+  97 0026 9900     		.2byte	(.L16-.L6)/2
+  98 0028 AF00     		.2byte	(.L17-.L6)/2
+  99 002a B900     		.2byte	(.L18-.L6)/2
+ 100 002c D600     		.2byte	(.L19-.L6)/2
+ 101 002e E400     		.2byte	(.L20-.L6)/2
+ 102 0030 F100     		.2byte	(.L21-.L6)/2
+ 103 0032 FE00     		.2byte	(.L22-.L6)/2
+ 104 0034 0B01     		.2byte	(.L23-.L6)/2
+ 105              		.p2align 1
+ 106              	.L5:
+  70:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_BRI:
+  71:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 107              		.loc 1 71 0
+ 108 0036 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 109 0038 0BB9     		cbnz	r3, .L24
+ 110              	.LVL2:
+ 111              	.L104:
+  72:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (LED_GCR_STEP > LED_GCR_MAX - gcr_desired) gcr_desired = LED_GCR_MAX;
+  73:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else gcr_desired += LED_GCR_STEP;
+  74:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) gcr_breathe = gcr_desired;
+  75:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+  76:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+  77:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_BRD:
+  78:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+  79:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (LED_GCR_STEP > gcr_desired) gcr_desired = 0;
+  80:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else gcr_desired -= LED_GCR_STEP;
+  81:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) gcr_breathe = gcr_desired;
+  82:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+  83:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+  84:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_PTN:
+  85:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+  86:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_id == led_setups_count - 1) led_animation_id = 0;
+  87:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else led_animation_id++;
+  88:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+  89:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+  90:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_PTP:
+  91:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+  92:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_id == 0) led_animation_id = led_setups_count - 1;
+  93:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else led_animation_id--;
+  94:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+  95:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 112              		.loc 1 95 0
+ 113 003a 0024     		movs	r4, #0
+ 114 003c 2AE0     		b	.L4
+ 115              	.LVL3:
+ 116              	.L24:
+  72:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (LED_GCR_STEP > LED_GCR_MAX - gcr_desired) gcr_desired = LED_GCR_MAX;
+ 117              		.loc 1 72 0
+ 118 003e 844B     		ldr	r3, .L111
+ 119 0040 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 120 0042 C2F1A501 		rsb	r1, r2, #165
+ 121              	.LVL4:
+ 122 0046 0929     		cmp	r1, #9
+ 123 0048 D4BF     		ite	le
+ 124 004a A522     		movle	r2, #165
+  73:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) gcr_breathe = gcr_desired;
+ 125              		.loc 1 73 0
+ 126 004c 0A32     		addgt	r2, r2, #10
+ 127              	.L99:
+  80:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) gcr_breathe = gcr_desired;
+ 128              		.loc 1 80 0
+ 129 004e 1A70     		strb	r2, [r3]
+  81:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 130              		.loc 1 81 0
+ 131 0050 804A     		ldr	r2, .L111+4
+ 132 0052 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 133 0054 002A     		cmp	r2, #0
+ 134 0056 F0D0     		beq	.L104
+  81:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 135              		.loc 1 81 0 is_stmt 0 discriminator 1
+ 136 0058 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 137 005a 7F4B     		ldr	r3, .L111+8
+ 138              	.L38:
+  96:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_PSI:
+  97:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+  98:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_speed += ANIMATION_SPEED_STEP;
+  99:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 100:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 101:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_PSD:
+ 102:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 103:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_speed -= ANIMATION_SPEED_STEP;
+ 104:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_speed < 0) led_animation_speed = 0;
+ 105:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 106:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 107:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_T_MD:
+ 108:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 109:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_lighting_mode++;
+ 110:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_lighting_mode > LED_MODE_MAX_INDEX) led_lighting_mode = LED_MODE_NORMAL;
+ 111:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 112:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 113:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_T_ONF:
+ 114:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 115:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = !led_enabled;
+ 116:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 117:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 118:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 119:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_ON:
+ 120:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 121:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = 1;
+ 122:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 123:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 124:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 125:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_OFF:
+ 126:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 127:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = 0;
+ 128:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 129:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 130:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 131:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_T_BR:
+ 132:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 133:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_breathing = !led_animation_breathing;
+ 134:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) {
+ 135:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     gcr_breathe = gcr_desired;
+ 136:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     led_animation_breathe_cur = BREATHE_MIN_STEP;
+ 137:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     breathe_dir = 1;
+ 138:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 }
+ 139:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 140:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 141:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case L_T_PTD:
+ 142:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 143:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_direction = !led_animation_direction;
+ 144:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 145:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 146:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case U_T_AGCR:
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
+ 148:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 139              		.loc 1 148 0 is_stmt 1 discriminator 1
+ 140 005c 1A70     		strb	r2, [r3]
+ 141 005e ECE7     		b	.L104
+ 142              	.LVL5:
+ 143              	.L7:
+  78:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (LED_GCR_STEP > gcr_desired) gcr_desired = 0;
+ 144              		.loc 1 78 0
+ 145 0060 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 146 0062 002B     		cmp	r3, #0
+ 147 0064 E9D0     		beq	.L104
+  79:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else gcr_desired -= LED_GCR_STEP;
+ 148              		.loc 1 79 0
+ 149 0066 7A4B     		ldr	r3, .L111
+ 150 0068 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 151 006a 092A     		cmp	r2, #9
+ 152 006c 94BF     		ite	ls
+ 153 006e 0022     		movls	r2, #0
+  80:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) gcr_breathe = gcr_desired;
+ 154              		.loc 1 80 0
+ 155 0070 0A3A     		subhi	r2, r2, #10
+ 156 0072 ECE7     		b	.L99
+ 157              	.L8:
+  85:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_id == led_setups_count - 1) led_animation_id = 0;
+ 158              		.loc 1 85 0
+ 159 0074 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 160 0076 002B     		cmp	r3, #0
+ 161 0078 DFD0     		beq	.L104
+  86:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else led_animation_id++;
+ 162              		.loc 1 86 0
+ 163 007a 7849     		ldr	r1, .L111+12
+ 164              	.LVL6:
+ 165 007c 784A     		ldr	r2, .L111+16
+ 166 007e 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 167 0080 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 168 0082 0139     		subs	r1, r1, #1
+ 169 0084 8B42     		cmp	r3, r1
+ 170 0086 4FF00004 		mov	r4, #0
+ 171 008a 01D1     		bne	.L30
+ 172              	.L100:
+ 110:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 173              		.loc 1 110 0 discriminator 1
+ 174 008c 1470     		strb	r4, [r2]
+ 175 008e 01E0     		b	.L4
+ 176              	.L30:
+  87:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 177              		.loc 1 87 0
+ 178 0090 0133     		adds	r3, r3, #1
+ 179 0092 1370     		strb	r3, [r2]
+ 180              	.L4:
+ 149:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 150:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 151:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case DBG_TOG:
+ 152:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 153:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_enable, "Debug mode");
+ 154:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 155:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 156:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case DBG_MTRX:
+ 157:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 158:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_matrix, "Debug matrix");
+ 159:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 160:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 161:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case DBG_KBD:
+ 162:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 163:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_keyboard, "Debug keyboard");
+ 164:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 165:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 166:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case DBG_MOU:
+ 167:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 168:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_mouse, "Debug mouse");
+ 169:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 170:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 171:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         case MD_BOOT:
+ 172:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             if (record->event.pressed) {
+ 173:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 key_timer = timer_read32();
+ 174:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             } else {
+ 175:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (timer_elapsed32(key_timer) >= 500) {
+ 176:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     reset_keyboard();
+ 177:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 }
+ 178:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 179:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return false;
+ 180:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****         default:
+ 181:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             return true; //Process all other keycodes normally
+ 182:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     }
+ 183:keyboards/massdrop/alt/keymaps/default_md/keymap.c **** }
+ 181              		.loc 1 183 0
+ 182 0094 2046     		mov	r0, r4
+ 183 0096 38BD     		pop	{r3, r4, r5, pc}
+ 184              	.LVL7:
+ 185              	.L9:
+  91:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_id == 0) led_animation_id = led_setups_count - 1;
+ 186              		.loc 1 91 0
+ 187 0098 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 188 009a 002B     		cmp	r3, #0
+ 189 009c CDD0     		beq	.L104
+  92:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else led_animation_id--;
+ 190              		.loc 1 92 0
+ 191 009e 704B     		ldr	r3, .L111+16
+ 192 00a0 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+ 193 00a2 24B9     		cbnz	r4, .L31
+  92:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 else led_animation_id--;
+ 194              		.loc 1 92 0 is_stmt 0 discriminator 1
+ 195 00a4 6D4A     		ldr	r2, .L111+12
+ 196 00a6 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 197 00a8 013A     		subs	r2, r2, #1
+ 198              	.LVL8:
+ 199              	.L101:
+ 137:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 }
+ 200              		.loc 1 137 0 is_stmt 1
+ 201 00aa 1A70     		strb	r2, [r3]
+ 202 00ac F2E7     		b	.L4
+ 203              	.LVL9:
+ 204              	.L31:
+  93:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 205              		.loc 1 93 0
+ 206 00ae 013C     		subs	r4, r4, #1
+ 207 00b0 1C70     		strb	r4, [r3]
+ 208 00b2 C2E7     		b	.L104
+ 209              	.L10:
+  97:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_speed += ANIMATION_SPEED_STEP;
+ 210              		.loc 1 97 0
+ 211 00b4 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 212 00b6 002B     		cmp	r3, #0
+ 213 00b8 BFD0     		beq	.L104
+  98:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 214              		.loc 1 98 0
+ 215 00ba 6A4B     		ldr	r3, .L111+20
+ 216 00bc D3ED007A 		vldr.32	s15, [r3]
+ 217 00c0 B7EE007A 		vmov.f32	s14, #1.0e+0
+ 218 00c4 77EE877A 		vadd.f32	s15, s15, s14
+ 219              	.L109:
+ 103:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_speed < 0) led_animation_speed = 0;
+ 220              		.loc 1 103 0
+ 221 00c8 C3ED007A 		vstr.32	s15, [r3]
+ 222 00cc B5E7     		b	.L104
+ 223              	.L11:
+ 102:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_speed -= ANIMATION_SPEED_STEP;
+ 224              		.loc 1 102 0
+ 225 00ce 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 226 00d0 002B     		cmp	r3, #0
+ 227 00d2 B2D0     		beq	.L104
+ 103:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_speed < 0) led_animation_speed = 0;
+ 228              		.loc 1 103 0
+ 229 00d4 634B     		ldr	r3, .L111+20
+ 230 00d6 D3ED007A 		vldr.32	s15, [r3]
+ 231 00da B7EE007A 		vmov.f32	s14, #1.0e+0
+ 232 00de 77EEC77A 		vsub.f32	s15, s15, s14
+ 104:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 233              		.loc 1 104 0
+ 234 00e2 F5EEC07A 		vcmpe.f32	s15, #0
+ 235 00e6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 236 00ea EDD5     		bpl	.L109
+ 104:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 237              		.loc 1 104 0 is_stmt 0 discriminator 1
+ 238 00ec 0022     		movs	r2, #0
+ 239 00ee 1A60     		str	r2, [r3]	@ float
+ 240 00f0 A3E7     		b	.L104
+ 241              	.L12:
+ 108:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_lighting_mode++;
+ 242              		.loc 1 108 0 is_stmt 1
+ 243 00f2 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 244 00f4 002B     		cmp	r3, #0
+ 245 00f6 A0D0     		beq	.L104
+ 109:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_lighting_mode > LED_MODE_MAX_INDEX) led_lighting_mode = LED_MODE_NORMAL;
+ 246              		.loc 1 109 0
+ 247 00f8 5B4A     		ldr	r2, .L111+24
+ 248 00fa 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 249 00fc 0133     		adds	r3, r3, #1
+ 250 00fe DBB2     		uxtb	r3, r3
+ 110:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 251              		.loc 1 110 0
+ 252 0100 032B     		cmp	r3, #3
+ 253 0102 01D8     		bhi	.L33
+ 254              	.L110:
+ 143:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 255              		.loc 1 143 0
+ 256 0104 1370     		strb	r3, [r2]
+ 257 0106 98E7     		b	.L104
+ 258              	.L33:
+ 110:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 259              		.loc 1 110 0 discriminator 1
+ 260 0108 0024     		movs	r4, #0
+ 261 010a BFE7     		b	.L100
+ 262              	.L13:
+ 114:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = !led_enabled;
+ 263              		.loc 1 114 0
+ 264 010c 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 265 010e 002B     		cmp	r3, #0
+ 266 0110 93D0     		beq	.L104
+ 115:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 267              		.loc 1 115 0
+ 268 0112 564B     		ldr	r3, .L111+28
+ 269 0114 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 270 0116 B0FA80F0 		clz	r0, r0
+ 271 011a 4009     		lsrs	r0, r0, #5
+ 272              	.L105:
+ 121:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 273              		.loc 1 121 0
+ 274 011c 1870     		strb	r0, [r3]
+ 122:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 275              		.loc 1 122 0
+ 276 011e FFF7FEFF 		bl	I2C3733_Control_Set
+ 277              	.LVL10:
+ 278 0122 8AE7     		b	.L104
+ 279              	.LVL11:
+ 280              	.L14:
+ 120:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = 1;
+ 281              		.loc 1 120 0
+ 282 0124 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 283 0126 002B     		cmp	r3, #0
+ 284 0128 87D0     		beq	.L104
+ 121:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 285              		.loc 1 121 0
+ 286 012a 0120     		movs	r0, #1
+ 287 012c 4F4B     		ldr	r3, .L111+28
+ 288 012e F5E7     		b	.L105
+ 289              	.L15:
+ 126:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_enabled = 0;
+ 290              		.loc 1 126 0
+ 291 0130 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 292 0132 002B     		cmp	r3, #0
+ 293 0134 81D0     		beq	.L104
+ 127:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 294              		.loc 1 127 0
+ 295 0136 0024     		movs	r4, #0
+ 296 0138 4C4B     		ldr	r3, .L111+28
+ 128:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 297              		.loc 1 128 0
+ 298 013a 2046     		mov	r0, r4
+ 127:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 I2C3733_Control_Set(led_enabled);
+ 299              		.loc 1 127 0
+ 300 013c 1C70     		strb	r4, [r3]
+ 128:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 301              		.loc 1 128 0
+ 302 013e FFF7FEFF 		bl	I2C3733_Control_Set
+ 303              	.LVL12:
+ 304 0142 A7E7     		b	.L4
+ 305              	.LVL13:
+ 306              	.L16:
+ 132:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_breathing = !led_animation_breathing;
+ 307              		.loc 1 132 0
+ 308 0144 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 309 0146 002B     		cmp	r3, #0
+ 310 0148 3FF477AF 		beq	.L104
+ 133:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 if (led_animation_breathing) {
+ 311              		.loc 1 133 0
+ 312 014c 414B     		ldr	r3, .L111+4
+ 313 014e 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+ 314 0150 002C     		cmp	r4, #0
+ 315 0152 0CBF     		ite	eq
+ 316 0154 0122     		moveq	r2, #1
+ 317 0156 0022     		movne	r2, #0
+ 318 0158 1A70     		strb	r2, [r3]
+ 134:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     gcr_breathe = gcr_desired;
+ 319              		.loc 1 134 0
+ 320 015a 7FF46EAF 		bne	.L104
+ 135:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     led_animation_breathe_cur = BREATHE_MIN_STEP;
+ 321              		.loc 1 135 0
+ 322 015e 3C4B     		ldr	r3, .L111
+ 323 0160 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 324 0162 3D4B     		ldr	r3, .L111+8
+ 325 0164 1A70     		strb	r2, [r3]
+ 136:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     breathe_dir = 1;
+ 326              		.loc 1 136 0
+ 327 0166 424B     		ldr	r3, .L111+32
+ 328 0168 1C70     		strb	r4, [r3]
+ 137:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 }
+ 329              		.loc 1 137 0
+ 330 016a 424B     		ldr	r3, .L111+36
+ 331              	.LVL14:
+ 332              	.L103:
+ 333 016c 0122     		movs	r2, #1
+ 334 016e 9CE7     		b	.L101
+ 335              	.LVL15:
+ 336              	.L17:
+ 142:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 led_animation_direction = !led_animation_direction;
+ 337              		.loc 1 142 0
+ 338 0170 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 339 0172 002B     		cmp	r3, #0
+ 340 0174 3FF461AF 		beq	.L104
+ 143:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 341              		.loc 1 143 0
+ 342 0178 3F4A     		ldr	r2, .L111+40
+ 343 017a 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 344 017c B3FA83F3 		clz	r3, r3
+ 345 0180 5B09     		lsrs	r3, r3, #5
+ 346 0182 BFE7     		b	.L110
+ 347              	.L18:
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 348              		.loc 1 147 0
+ 349 0184 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 350 0186 002B     		cmp	r3, #0
+ 351 0188 3FF457AF 		beq	.L104
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 352              		.loc 1 147 0 is_stmt 0 discriminator 1
+ 353 018c FFF7FEFF 		bl	get_mods
+ 354              	.LVL16:
+ 355 0190 8007     		lsls	r0, r0, #30
+ 356 0192 0FD5     		bpl	.L34
+ 357              	.L37:
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 358              		.loc 1 147 0
+ 359 0194 FFF7FEFF 		bl	get_mods
+ 360              	.LVL17:
+ 361 0198 C107     		lsls	r1, r0, #31
+ 362 019a 04D4     		bmi	.L35
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 363              		.loc 1 147 0 discriminator 5
+ 364 019c FFF7FEFF 		bl	get_mods
+ 365              	.LVL18:
+ 366 01a0 C306     		lsls	r3, r0, #27
+ 367 01a2 7FF54AAF 		bpl	.L104
+ 368              	.L35:
+ 148:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 369              		.loc 1 148 0 is_stmt 1
+ 370 01a6 354B     		ldr	r3, .L111+44
+ 371 01a8 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+ 372 01aa 0022     		movs	r2, #0
+ 373 01ac 002C     		cmp	r4, #0
+ 374 01ae 7FF455AF 		bne	.L38
+ 375 01b2 DBE7     		b	.L103
+ 376              	.L34:
+ 147:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 377              		.loc 1 147 0 discriminator 3
+ 378 01b4 FFF7FEFF 		bl	get_mods
+ 379              	.LVL19:
+ 380 01b8 8206     		lsls	r2, r0, #26
+ 381 01ba EBD4     		bmi	.L37
+ 382 01bc 3DE7     		b	.L104
+ 383              	.LVL20:
+ 384              	.L19:
+ 152:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_enable, "Debug mode");
+ 385              		.loc 1 152 0
+ 386 01be 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 387 01c0 002B     		cmp	r3, #0
+ 388 01c2 3FF43AAF 		beq	.L104
+ 153:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 389              		.loc 1 153 0
+ 390 01c6 2E49     		ldr	r1, .L111+48
+ 391              	.LVL21:
+ 392 01c8 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 393 01ca C3F30002 		ubfx	r2, r3, #0, #1
+ 394 01ce 82F00102 		eor	r2, r2, #1
+ 395 01d2 62F30003 		bfi	r3, r2, #0, #1
+ 396              	.L108:
+ 163:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 397              		.loc 1 163 0
+ 398 01d6 0B70     		strb	r3, [r1]
+ 399 01d8 2FE7     		b	.L104
+ 400              	.LVL22:
+ 401              	.L20:
+ 157:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_matrix, "Debug matrix");
+ 402              		.loc 1 157 0
+ 403 01da 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 404 01dc 002B     		cmp	r3, #0
+ 405 01de 3FF42CAF 		beq	.L104
+ 158:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 406              		.loc 1 158 0
+ 407 01e2 2749     		ldr	r1, .L111+48
+ 408              	.LVL23:
+ 409 01e4 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 410 01e6 C3F34002 		ubfx	r2, r3, #1, #1
+ 411 01ea 82F00102 		eor	r2, r2, #1
+ 412 01ee 62F34103 		bfi	r3, r2, #1, #1
+ 413 01f2 F0E7     		b	.L108
+ 414              	.LVL24:
+ 415              	.L21:
+ 162:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_keyboard, "Debug keyboard");
+ 416              		.loc 1 162 0
+ 417 01f4 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 418 01f6 002B     		cmp	r3, #0
+ 419 01f8 3FF41FAF 		beq	.L104
+ 163:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 420              		.loc 1 163 0
+ 421 01fc 2049     		ldr	r1, .L111+48
+ 422              	.LVL25:
+ 423 01fe 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 424 0200 C3F38002 		ubfx	r2, r3, #2, #1
+ 425 0204 82F00102 		eor	r2, r2, #1
+ 426 0208 62F38203 		bfi	r3, r2, #2, #1
+ 427 020c E3E7     		b	.L108
+ 428              	.LVL26:
+ 429              	.L22:
+ 167:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_mouse, "Debug mouse");
+ 430              		.loc 1 167 0
+ 431 020e 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 432 0210 002B     		cmp	r3, #0
+ 433 0212 3FF412AF 		beq	.L104
+ 168:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             }
+ 434              		.loc 1 168 0
+ 435 0216 1A49     		ldr	r1, .L111+48
+ 436              	.LVL27:
+ 437 0218 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 438 021a C3F3C002 		ubfx	r2, r3, #3, #1
+ 439 021e 82F00102 		eor	r2, r2, #1
+ 440 0222 62F3C303 		bfi	r3, r2, #3, #1
+ 441 0226 D6E7     		b	.L108
+ 442              	.LVL28:
+ 443              	.L23:
+ 172:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 key_timer = timer_read32();
+ 444              		.loc 1 172 0
+ 445 0228 8C78     		ldrb	r4, [r1, #2]	@ zero_extendqisi2
+ 446 022a 164D     		ldr	r5, .L111+52
+ 447 022c 1CB1     		cbz	r4, .L40
+ 173:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****             } else {
+ 448              		.loc 1 173 0
+ 449 022e FFF7FEFF 		bl	timer_read32
+ 450              	.LVL29:
+ 451 0232 2860     		str	r0, [r5]
+ 452 0234 01E7     		b	.L104
+ 453              	.LVL30:
+ 454              	.L40:
+ 175:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                     reset_keyboard();
+ 455              		.loc 1 175 0
+ 456 0236 2868     		ldr	r0, [r5]
+ 457 0238 FFF7FEFF 		bl	timer_elapsed32
+ 458              	.LVL31:
+ 459 023c B0F5FA7F 		cmp	r0, #500
+ 460 0240 FFF4FBAE 		bcc	.L104
+ 176:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****                 }
+ 461              		.loc 1 176 0
+ 462 0244 FFF7FEFF 		bl	reset_keyboard
+ 463              	.LVL32:
+ 464 0248 24E7     		b	.L4
+ 465              	.LVL33:
+ 466              	.L41:
+ 181:keyboards/massdrop/alt/keymaps/default_md/keymap.c ****     }
+ 467              		.loc 1 181 0
+ 468 024a 0124     		movs	r4, #1
+ 469 024c 22E7     		b	.L4
+ 470              	.L112:
+ 471 024e 00BF     		.align	2
+ 472              	.L111:
+ 473 0250 00000000 		.word	gcr_desired
+ 474 0254 00000000 		.word	led_animation_breathing
+ 475 0258 00000000 		.word	gcr_breathe
+ 476 025c 00000000 		.word	led_setups_count
+ 477 0260 00000000 		.word	led_animation_id
+ 478 0264 00000000 		.word	led_animation_speed
+ 479 0268 00000000 		.word	led_lighting_mode
+ 480 026c 00000000 		.word	led_enabled
+ 481 0270 00000000 		.word	led_animation_breathe_cur
+ 482 0274 00000000 		.word	breathe_dir
+ 483 0278 00000000 		.word	led_animation_direction
+ 484 027c 00000000 		.word	usb_gcr_auto
+ 485 0280 00000000 		.word	debug_config
+ 486 0284 00000000 		.word	.LANCHOR0
+ 487              		.cfi_endproc
+ 488              	.LFE133:
+ 490              		.global	led_instructions
+ 491              		.global	keymaps
+ 492              		.comm	keymap_config,2,2
+ 493              		.comm	dmac_desc_wb,16,16
+ 494              		.comm	dmac_desc,16,16
+ 495              		.section	.rodata
+ 496              		.align	1
+ 499              	keymaps:
+ 500 0000 2900     		.short	41
+ 501 0002 1E00     		.short	30
+ 502 0004 1F00     		.short	31
+ 503 0006 2000     		.short	32
+ 504 0008 2100     		.short	33
+ 505 000a 2200     		.short	34
+ 506 000c 2300     		.short	35
+ 507 000e 2400     		.short	36
+ 508 0010 2500     		.short	37
+ 509 0012 2600     		.short	38
+ 510 0014 2700     		.short	39
+ 511 0016 2D00     		.short	45
+ 512 0018 2E00     		.short	46
+ 513 001a 2A00     		.short	42
+ 514 001c 4C00     		.short	76
+ 515 001e 2B00     		.short	43
+ 516 0020 1400     		.short	20
+ 517 0022 1A00     		.short	26
+ 518 0024 0800     		.short	8
+ 519 0026 1500     		.short	21
+ 520 0028 1700     		.short	23
+ 521 002a 1C00     		.short	28
+ 522 002c 1800     		.short	24
+ 523 002e 0C00     		.short	12
+ 524 0030 1200     		.short	18
+ 525 0032 1300     		.short	19
+ 526 0034 2F00     		.short	47
+ 527 0036 3000     		.short	48
+ 528 0038 3100     		.short	49
+ 529 003a 4A00     		.short	74
+ 530 003c 3900     		.short	57
+ 531 003e 0400     		.short	4
+ 532 0040 1600     		.short	22
+ 533 0042 0700     		.short	7
+ 534 0044 0900     		.short	9
+ 535 0046 0A00     		.short	10
+ 536 0048 0B00     		.short	11
+ 537 004a 0D00     		.short	13
+ 538 004c 0E00     		.short	14
+ 539 004e 0F00     		.short	15
+ 540 0050 3300     		.short	51
+ 541 0052 3400     		.short	52
+ 542 0054 0000     		.short	0
+ 543 0056 2800     		.short	40
+ 544 0058 4B00     		.short	75
+ 545 005a E100     		.short	225
+ 546 005c 0000     		.short	0
+ 547 005e 1D00     		.short	29
+ 548 0060 1B00     		.short	27
+ 549 0062 0600     		.short	6
+ 550 0064 1900     		.short	25
+ 551 0066 0500     		.short	5
+ 552 0068 1100     		.short	17
+ 553 006a 1000     		.short	16
+ 554 006c 3600     		.short	54
+ 555 006e 3700     		.short	55
+ 556 0070 3800     		.short	56
+ 557 0072 E500     		.short	229
+ 558 0074 5200     		.short	82
+ 559 0076 4E00     		.short	78
+ 560 0078 E000     		.short	224
+ 561 007a E300     		.short	227
+ 562 007c E200     		.short	226
+ 563 007e 0000     		.short	0
+ 564 0080 0000     		.short	0
+ 565 0082 0000     		.short	0
+ 566 0084 2C00     		.short	44
+ 567 0086 0000     		.short	0
+ 568 0088 0000     		.short	0
+ 569 008a 0000     		.short	0
+ 570 008c E600     		.short	230
+ 571 008e 0151     		.short	20737
+ 572 0090 5000     		.short	80
+ 573 0092 5100     		.short	81
+ 574 0094 4F00     		.short	79
+ 575 0096 3500     		.short	53
+ 576 0098 3A00     		.short	58
+ 577 009a 3B00     		.short	59
+ 578 009c 3C00     		.short	60
+ 579 009e 3D00     		.short	61
+ 580 00a0 3E00     		.short	62
+ 581 00a2 3F00     		.short	63
+ 582 00a4 4000     		.short	64
+ 583 00a6 4100     		.short	65
+ 584 00a8 4200     		.short	66
+ 585 00aa 4300     		.short	67
+ 586 00ac 4400     		.short	68
+ 587 00ae 4500     		.short	69
+ 588 00b0 0100     		.short	1
+ 589 00b2 A800     		.short	168
+ 590 00b4 0B5D     		.short	23819
+ 591 00b6 065D     		.short	23814
+ 592 00b8 015D     		.short	23809
+ 593 00ba 055D     		.short	23813
+ 594 00bc 0100     		.short	1
+ 595 00be 0100     		.short	1
+ 596 00c0 0100     		.short	1
+ 597 00c2 0100     		.short	1
+ 598 00c4 0D5D     		.short	23821
+ 599 00c6 0100     		.short	1
+ 600 00c8 4600     		.short	70
+ 601 00ca 4700     		.short	71
+ 602 00cc 4800     		.short	72
+ 603 00ce 0100     		.short	1
+ 604 00d0 4D00     		.short	77
+ 605 00d2 0C5D     		.short	23820
+ 606 00d4 045D     		.short	23812
+ 607 00d6 025D     		.short	23810
+ 608 00d8 035D     		.short	23811
+ 609 00da 0100     		.short	1
+ 610 00dc 0100     		.short	1
+ 611 00de 0100     		.short	1
+ 612 00e0 0100     		.short	1
+ 613 00e2 0100     		.short	1
+ 614 00e4 0100     		.short	1
+ 615 00e6 0100     		.short	1
+ 616 00e8 0100     		.short	1
+ 617 00ea 0000     		.short	0
+ 618 00ec 0100     		.short	1
+ 619 00ee A900     		.short	169
+ 620 00f0 0100     		.short	1
+ 621 00f2 0000     		.short	0
+ 622 00f4 075D     		.short	23815
+ 623 00f6 085D     		.short	23816
+ 624 00f8 0100     		.short	1
+ 625 00fa 0100     		.short	1
+ 626 00fc 125D     		.short	23826
+ 627 00fe 145C     		.short	23572
+ 628 0100 0100     		.short	1
+ 629 0102 0100     		.short	1
+ 630 0104 0100     		.short	1
+ 631 0106 0100     		.short	1
+ 632 0108 0100     		.short	1
+ 633 010a 4B00     		.short	75
+ 634 010c AA00     		.short	170
+ 635 010e 0100     		.short	1
+ 636 0110 0100     		.short	1
+ 637 0112 0100     		.short	1
+ 638 0114 0000     		.short	0
+ 639 0116 0000     		.short	0
+ 640 0118 0000     		.short	0
+ 641 011a 0100     		.short	1
+ 642 011c 0000     		.short	0
+ 643 011e 0000     		.short	0
+ 644 0120 0000     		.short	0
+ 645 0122 0100     		.short	1
+ 646 0124 0100     		.short	1
+ 647 0126 4A00     		.short	74
+ 648 0128 4E00     		.short	78
+ 649 012a 4D00     		.short	77
+ 650              		.data
+ 651              		.align	2
+ 654              	led_instructions:
+ 655 0000 4000     		.short	64
+ 656 0002 00000000 		.space	26
+ 656      00000000 
+ 656      00000000 
+ 656      00000000 
+ 656      00000000 
+ 657 001c 00000000 		.space	25
+ 657      00000000 
+ 657      00000000 
+ 657      00000000 
+ 657      00000000 
+ 658 0035 01       		.byte	1
+ 659 0036 0000     		.space	2
+ 660              		.bss
+ 661              		.align	2
+ 662              		.set	.LANCHOR0,. + 0
+ 665              	key_timer.19104:
+ 666 0000 00000000 		.space	4
+ 667              		.text
+ 668              	.Letext0:
+ 669              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 670              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 671              		.file 4 "tmk_core/protocol/arm_atsam/clks.h"
+ 672              		.file 5 "tmk_core/common/keyboard.h"
+ 673              		.file 6 "tmk_core/common/keycode.h"
+ 674              		.file 7 "tmk_core/common/action.h"
+ 675              		.file 8 "tmk_core/common/report.h"
+ 676              		.file 9 "tmk_core/common/host.h"
+ 677              		.file 10 "tmk_core/common/debug.h"
+ 678              		.file 11 "quantum/keycode_config.h"
+ 679              		.file 12 "quantum/quantum_keycodes.h"
+ 680              		.file 13 "quantum/keymap.h"
+ 681              		.file 14 "quantum/color.h"
+ 682              		.file 15 "quantum/rgb_matrix_types.h"
+ 683              		.file 16 "quantum/rgb_matrix.h"
+ 684              		.file 17 "tmk_core/common/action_layer.h"
+ 685              		.file 18 "tmk_core/common/timer.h"
+ 686              		.file 19 "tmk_core/common/action_util.h"
+ 687              		.file 20 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 688              		.file 21 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 689              		.file 22 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 690              		.file 23 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 691              		.file 24 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 692              		.file 25 "quantum/quantum.h"
+ 693              		.file 26 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 694              		.file 27 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 695              		.file 28 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 696              		.file 29 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 697              		.file 30 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 698              		.file 31 "tmk_core/protocol/arm_atsam/usb/udi_cdc.h"
+ 699              		.file 32 "tmk_core/protocol/arm_atsam/usb/usb2422.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 keymap.c
+/var/tmp//ccCHZcPT.s:18     .text.matrix_init_user:0000000000000000 $t
+/var/tmp//ccCHZcPT.s:25     .text.matrix_init_user:0000000000000000 matrix_init_user
+/var/tmp//ccCHZcPT.s:39     .text.matrix_scan_user:0000000000000000 $t
+/var/tmp//ccCHZcPT.s:46     .text.matrix_scan_user:0000000000000000 matrix_scan_user
+/var/tmp//ccCHZcPT.s:57     .text.process_record_user:0000000000000000 $t
+/var/tmp//ccCHZcPT.s:64     .text.process_record_user:0000000000000000 process_record_user
+/var/tmp//ccCHZcPT.s:87     .text.process_record_user:0000000000000012 $d
+/var/tmp//ccCHZcPT.s:105    .text.process_record_user:0000000000000036 $t
+/var/tmp//ccCHZcPT.s:473    .text.process_record_user:0000000000000250 $d
+/var/tmp//ccCHZcPT.s:654    .data:0000000000000000 led_instructions
+/var/tmp//ccCHZcPT.s:499    .rodata:0000000000000000 keymaps
+                            *COM*:0000000000000002 keymap_config
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+/var/tmp//ccCHZcPT.s:496    .rodata:0000000000000000 $d
+/var/tmp//ccCHZcPT.s:651    .data:0000000000000000 $d
+/var/tmp//ccCHZcPT.s:661    .bss:0000000000000000 $d
+/var/tmp//ccCHZcPT.s:665    .bss:0000000000000000 key_timer.19104
+
+UNDEFINED SYMBOLS
+I2C3733_Control_Set
+get_mods
+timer_read32
+timer_elapsed32
+reset_keyboard
+gcr_desired
+led_animation_breathing
+gcr_breathe
+led_setups_count
+led_animation_id
+led_animation_speed
+led_lighting_mode
+led_enabled
+led_animation_breathe_cur
+breathe_dir
+led_animation_direction
+usb_gcr_auto
+debug_config

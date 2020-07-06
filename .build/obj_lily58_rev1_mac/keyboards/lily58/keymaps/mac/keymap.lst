@@ -1,0 +1,1017 @@
+   1               		.file	"keymap.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               		.section	.text.update_tri_layer_RGB,"ax",@progbits
+  11               	.global	update_tri_layer_RGB
+  13               	update_tri_layer_RGB:
+  14               	.LFB120:
+  15               		.file 1 "keyboards/lily58/keymaps/mac/keymap.c"
+   1:keyboards/lily58/keymaps/mac/keymap.c **** #include QMK_KEYBOARD_H
+   2:keyboards/lily58/keymaps/mac/keymap.c **** 
+   3:keyboards/lily58/keymaps/mac/keymap.c **** #ifdef PROTOCOL_LUFA
+   4:keyboards/lily58/keymaps/mac/keymap.c ****   #include "lufa.h"
+   5:keyboards/lily58/keymaps/mac/keymap.c ****   #include "split_util.h"
+   6:keyboards/lily58/keymaps/mac/keymap.c **** #endif
+   7:keyboards/lily58/keymaps/mac/keymap.c **** #ifdef SSD1306OLED
+   8:keyboards/lily58/keymaps/mac/keymap.c ****   #include "ssd1306.h"
+   9:keyboards/lily58/keymaps/mac/keymap.c **** #endif
+  10:keyboards/lily58/keymaps/mac/keymap.c **** 
+  11:keyboards/lily58/keymaps/mac/keymap.c **** 
+  12:keyboards/lily58/keymaps/mac/keymap.c **** extern keymap_config_t keymap_config;
+  13:keyboards/lily58/keymaps/mac/keymap.c **** 
+  14:keyboards/lily58/keymaps/mac/keymap.c **** #ifdef RGBLIGHT_ENABLE
+  15:keyboards/lily58/keymaps/mac/keymap.c **** //Following line allows macro to read current RGB settings
+  16:keyboards/lily58/keymaps/mac/keymap.c **** extern rgblight_config_t rgblight_config;
+  17:keyboards/lily58/keymaps/mac/keymap.c **** #endif
+  18:keyboards/lily58/keymaps/mac/keymap.c **** 
+  19:keyboards/lily58/keymaps/mac/keymap.c **** extern uint8_t is_master;
+  20:keyboards/lily58/keymaps/mac/keymap.c **** 
+  21:keyboards/lily58/keymaps/mac/keymap.c **** #define _QWERTY 0
+  22:keyboards/lily58/keymaps/mac/keymap.c **** #define _LOWER 1
+  23:keyboards/lily58/keymaps/mac/keymap.c **** #define _RAISE 2
+  24:keyboards/lily58/keymaps/mac/keymap.c **** #define _ADJUST 3
+  25:keyboards/lily58/keymaps/mac/keymap.c **** 
+  26:keyboards/lily58/keymaps/mac/keymap.c **** enum custom_keycodes {
+  27:keyboards/lily58/keymaps/mac/keymap.c ****   QWERTY = SAFE_RANGE,
+  28:keyboards/lily58/keymaps/mac/keymap.c ****   LOWER,
+  29:keyboards/lily58/keymaps/mac/keymap.c ****   RAISE,
+  30:keyboards/lily58/keymaps/mac/keymap.c ****   ADJUST,
+  31:keyboards/lily58/keymaps/mac/keymap.c **** };
+  32:keyboards/lily58/keymaps/mac/keymap.c **** // Mac
+  33:keyboards/lily58/keymaps/mac/keymap.c **** const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+  34:keyboards/lily58/keymaps/mac/keymap.c **** 	[_QWERTY] = LAYOUT(KC_GESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_BSPC, K
+  35:keyboards/lily58/keymaps/mac/keymap.c **** 	[_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_PERC, KC_F6, KC_F7, KC_F8, KC_P7, KC_P8,
+  36:keyboards/lily58/keymaps/mac/keymap.c **** 	[_RAISE] = LAYOUT(KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_PERC, KC__VOLDOWN, KC__VOLUP, KC
+  37:keyboards/lily58/keymaps/mac/keymap.c **** 	[_ADJUST] = LAYOUT(KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, MAGIC_SWAP_GRAVE_ESC, KC_NO, BL_TOGG,
+  38:keyboards/lily58/keymaps/mac/keymap.c **** };
+  39:keyboards/lily58/keymaps/mac/keymap.c **** 
+  40:keyboards/lily58/keymaps/mac/keymap.c **** int RGB_current_mode;
+  41:keyboards/lily58/keymaps/mac/keymap.c **** 
+  42:keyboards/lily58/keymaps/mac/keymap.c **** // Setting ADJUST layer RGB back to default
+  43:keyboards/lily58/keymaps/mac/keymap.c **** void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
+  16               		.loc 1 43 0
+  17               		.cfi_startproc
+  18               	.LVL0:
+  19 0000 8F92      		push r8
+  20               	.LCFI0:
+  21               		.cfi_def_cfa_offset 3
+  22               		.cfi_offset 8, -2
+  23 0002 9F92      		push r9
+  24               	.LCFI1:
+  25               		.cfi_def_cfa_offset 4
+  26               		.cfi_offset 9, -3
+  27 0004 AF92      		push r10
+  28               	.LCFI2:
+  29               		.cfi_def_cfa_offset 5
+  30               		.cfi_offset 10, -4
+  31 0006 BF92      		push r11
+  32               	.LCFI3:
+  33               		.cfi_def_cfa_offset 6
+  34               		.cfi_offset 11, -5
+  35 0008 CF92      		push r12
+  36               	.LCFI4:
+  37               		.cfi_def_cfa_offset 7
+  38               		.cfi_offset 12, -6
+  39 000a DF92      		push r13
+  40               	.LCFI5:
+  41               		.cfi_def_cfa_offset 8
+  42               		.cfi_offset 13, -7
+  43 000c EF92      		push r14
+  44               	.LCFI6:
+  45               		.cfi_def_cfa_offset 9
+  46               		.cfi_offset 14, -8
+  47 000e FF92      		push r15
+  48               	.LCFI7:
+  49               		.cfi_def_cfa_offset 10
+  50               		.cfi_offset 15, -9
+  51 0010 0F93      		push r16
+  52               	.LCFI8:
+  53               		.cfi_def_cfa_offset 11
+  54               		.cfi_offset 16, -10
+  55 0012 1F93      		push r17
+  56               	.LCFI9:
+  57               		.cfi_def_cfa_offset 12
+  58               		.cfi_offset 17, -11
+  59               	/* prologue: function */
+  60               	/* frame size = 0 */
+  61               	/* stack size = 10 */
+  62               	.L__stack_usage = 10
+  63 0014 C12C      		mov r12,__zero_reg__
+  64 0016 D12C      		mov r13,__zero_reg__
+  65 0018 7601      		movw r14,r12
+  66 001a C394      		inc r12
+  67 001c 9701      		movw r18,r14
+  68 001e 8601      		movw r16,r12
+  69 0020 00C0      		rjmp 2f
+  70               		1:
+  71 0022 000F      		lsl r16
+  72 0024 111F      		rol r17
+  73 0026 221F      		rol r18
+  74 0028 331F      		rol r19
+  75               		2:
+  76 002a 6A95      		dec r22
+  77 002c 02F4      		brpl 1b
+  78 002e 4601      		movw r8,r12
+  79 0030 5701      		movw r10,r14
+  80 0032 00C0      		rjmp 2f
+  81               		1:
+  82 0034 880C      		lsl r8
+  83 0036 991C      		rol r9
+  84 0038 AA1C      		rol r10
+  85 003a BB1C      		rol r11
+  86               		2:
+  87 003c 8A95      		dec r24
+  88 003e 02F4      		brpl 1b
+  89 0040 D501      		movw r26,r10
+  90 0042 C401      		movw r24,r8
+  91               	.LVL1:
+  92 0044 802B      		or r24,r16
+  93 0046 912B      		or r25,r17
+  94 0048 A22B      		or r26,r18
+  95 004a B32B      		or r27,r19
+  44:keyboards/lily58/keymaps/mac/keymap.c ****   if (IS_LAYER_ON(layer1) && IS_LAYER_ON(layer2)) {
+  96               		.loc 1 44 0
+  97 004c 0091 0000 		lds r16,layer_state
+  98 0050 1091 0000 		lds r17,layer_state+1
+  99 0054 2091 0000 		lds r18,layer_state+2
+ 100 0058 3091 0000 		lds r19,layer_state+3
+ 101 005c 0823      		and r16,r24
+ 102 005e 1923      		and r17,r25
+ 103 0060 2A23      		and r18,r26
+ 104 0062 3B23      		and r19,r27
+ 105 0064 8017      		cp r24,r16
+ 106 0066 9107      		cpc r25,r17
+ 107 0068 A207      		cpc r26,r18
+ 108 006a B307      		cpc r27,r19
+ 109 006c 01F4      		brne .L2
+  45:keyboards/lily58/keymaps/mac/keymap.c ****     layer_on(layer3);
+ 110               		.loc 1 45 0
+ 111 006e 842F      		mov r24,r20
+ 112               	/* epilogue start */
+  46:keyboards/lily58/keymaps/mac/keymap.c ****   } else {
+  47:keyboards/lily58/keymaps/mac/keymap.c ****     layer_off(layer3);
+  48:keyboards/lily58/keymaps/mac/keymap.c ****   }
+  49:keyboards/lily58/keymaps/mac/keymap.c **** }
+ 113               		.loc 1 49 0
+ 114 0070 1F91      		pop r17
+ 115 0072 0F91      		pop r16
+ 116 0074 FF90      		pop r15
+ 117 0076 EF90      		pop r14
+ 118 0078 DF90      		pop r13
+ 119 007a CF90      		pop r12
+ 120 007c BF90      		pop r11
+ 121 007e AF90      		pop r10
+ 122 0080 9F90      		pop r9
+ 123 0082 8F90      		pop r8
+  45:keyboards/lily58/keymaps/mac/keymap.c ****     layer_on(layer3);
+ 124               		.loc 1 45 0
+ 125 0084 0C94 0000 		jmp layer_on
+ 126               	.LVL2:
+ 127               	.L2:
+  47:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 128               		.loc 1 47 0
+ 129 0088 842F      		mov r24,r20
+ 130               	/* epilogue start */
+ 131               		.loc 1 49 0
+ 132 008a 1F91      		pop r17
+ 133 008c 0F91      		pop r16
+ 134 008e FF90      		pop r15
+ 135 0090 EF90      		pop r14
+ 136 0092 DF90      		pop r13
+ 137 0094 CF90      		pop r12
+ 138 0096 BF90      		pop r11
+ 139 0098 AF90      		pop r10
+ 140 009a 9F90      		pop r9
+ 141 009c 8F90      		pop r8
+  47:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 142               		.loc 1 47 0
+ 143 009e 0C94 0000 		jmp layer_off
+ 144               	.LVL3:
+ 145               		.cfi_endproc
+ 146               	.LFE120:
+ 148               		.section	.text.matrix_init_user,"ax",@progbits
+ 149               	.global	matrix_init_user
+ 151               	matrix_init_user:
+ 152               	.LFB121:
+  50:keyboards/lily58/keymaps/mac/keymap.c **** 
+  51:keyboards/lily58/keymaps/mac/keymap.c **** void matrix_init_user(void) {
+ 153               		.loc 1 51 0
+ 154               		.cfi_startproc
+ 155               	/* prologue: function */
+ 156               	/* frame size = 0 */
+ 157               	/* stack size = 0 */
+ 158               	.L__stack_usage = 0
+  52:keyboards/lily58/keymaps/mac/keymap.c ****     #ifdef RGBLIGHT_ENABLE
+  53:keyboards/lily58/keymaps/mac/keymap.c ****       RGB_current_mode = rgblight_config.mode;
+ 159               		.loc 1 53 0
+ 160 0000 8091 0000 		lds r24,rgblight_config
+ 161 0004 8695      		lsr r24
+ 162 0006 90E0      		ldi r25,0
+ 163 0008 9093 0000 		sts RGB_current_mode+1,r25
+ 164 000c 8093 0000 		sts RGB_current_mode,r24
+  54:keyboards/lily58/keymaps/mac/keymap.c ****     #endif
+  55:keyboards/lily58/keymaps/mac/keymap.c ****     //SSD1306 OLED init, make sure to add #define SSD1306OLED in config.h
+  56:keyboards/lily58/keymaps/mac/keymap.c ****     #ifdef SSD1306OLED
+  57:keyboards/lily58/keymaps/mac/keymap.c ****         iota_gfx_init(!has_usb());   // turns on the display
+ 165               		.loc 1 57 0
+ 166 0010 0E94 0000 		call has_usb
+ 167               	.LVL4:
+ 168 0014 91E0      		ldi r25,lo8(1)
+ 169 0016 8927      		eor r24,r25
+ 170 0018 0C94 0000 		jmp iota_gfx_init
+ 171               	.LVL5:
+ 172               		.cfi_endproc
+ 173               	.LFE121:
+ 175               		.section	.text.matrix_scan_user,"ax",@progbits
+ 176               	.global	matrix_scan_user
+ 178               	matrix_scan_user:
+ 179               	.LFB122:
+  58:keyboards/lily58/keymaps/mac/keymap.c ****     #endif
+  59:keyboards/lily58/keymaps/mac/keymap.c **** }
+  60:keyboards/lily58/keymaps/mac/keymap.c **** 
+  61:keyboards/lily58/keymaps/mac/keymap.c **** //SSD1306 OLED update loop, make sure to add #define SSD1306OLED in config.h
+  62:keyboards/lily58/keymaps/mac/keymap.c **** #ifdef SSD1306OLED
+  63:keyboards/lily58/keymaps/mac/keymap.c **** 
+  64:keyboards/lily58/keymaps/mac/keymap.c **** // When add source files to SRC in rules.mk, you can use functions.
+  65:keyboards/lily58/keymaps/mac/keymap.c **** const char *read_layer_state(void);
+  66:keyboards/lily58/keymaps/mac/keymap.c **** const char *read_logo(void);
+  67:keyboards/lily58/keymaps/mac/keymap.c **** void set_keylog(uint16_t keycode, keyrecord_t *record);
+  68:keyboards/lily58/keymaps/mac/keymap.c **** const char *read_keylog(void);
+  69:keyboards/lily58/keymaps/mac/keymap.c **** const char *read_keylogs(void);
+  70:keyboards/lily58/keymaps/mac/keymap.c **** 
+  71:keyboards/lily58/keymaps/mac/keymap.c **** // const char *read_mode_icon(bool swap);
+  72:keyboards/lily58/keymaps/mac/keymap.c **** // const char *read_host_led_state(void);
+  73:keyboards/lily58/keymaps/mac/keymap.c **** // void set_timelog(void);
+  74:keyboards/lily58/keymaps/mac/keymap.c **** // const char *read_timelog(void);
+  75:keyboards/lily58/keymaps/mac/keymap.c **** 
+  76:keyboards/lily58/keymaps/mac/keymap.c **** void matrix_scan_user(void) {
+ 180               		.loc 1 76 0
+ 181               		.cfi_startproc
+ 182               	/* prologue: function */
+ 183               	/* frame size = 0 */
+ 184               	/* stack size = 0 */
+ 185               	.L__stack_usage = 0
+  77:keyboards/lily58/keymaps/mac/keymap.c ****    iota_gfx_task();
+ 186               		.loc 1 77 0
+ 187 0000 0C94 0000 		jmp iota_gfx_task
+ 188               	.LVL6:
+ 189               		.cfi_endproc
+ 190               	.LFE122:
+ 192               		.section	.text.matrix_render_user,"ax",@progbits
+ 193               	.global	matrix_render_user
+ 195               	matrix_render_user:
+ 196               	.LFB123:
+  78:keyboards/lily58/keymaps/mac/keymap.c **** }
+  79:keyboards/lily58/keymaps/mac/keymap.c **** 
+  80:keyboards/lily58/keymaps/mac/keymap.c **** void matrix_render_user(struct CharacterMatrix *matrix) {
+ 197               		.loc 1 80 0
+ 198               		.cfi_startproc
+ 199               	.LVL7:
+ 200 0000 CF93      		push r28
+ 201               	.LCFI10:
+ 202               		.cfi_def_cfa_offset 3
+ 203               		.cfi_offset 28, -2
+ 204 0002 DF93      		push r29
+ 205               	.LCFI11:
+ 206               		.cfi_def_cfa_offset 4
+ 207               		.cfi_offset 29, -3
+ 208               	/* prologue: function */
+ 209               	/* frame size = 0 */
+ 210               	/* stack size = 2 */
+ 211               	.L__stack_usage = 2
+ 212 0004 EC01      		movw r28,r24
+  81:keyboards/lily58/keymaps/mac/keymap.c ****   if (is_master) {
+ 213               		.loc 1 81 0
+ 214 0006 8091 0000 		lds r24,is_master
+ 215               	.LVL8:
+ 216 000a 8823      		tst r24
+ 217 000c 01F0      		breq .L6
+  82:keyboards/lily58/keymaps/mac/keymap.c ****     // If you want to change the display of OLED, you need to change here
+  83:keyboards/lily58/keymaps/mac/keymap.c ****     matrix_write_ln(matrix, read_layer_state());
+ 218               		.loc 1 83 0
+ 219 000e 0E94 0000 		call read_layer_state
+ 220               	.LVL9:
+ 221 0012 BC01      		movw r22,r24
+ 222 0014 CE01      		movw r24,r28
+ 223 0016 0E94 0000 		call matrix_write_ln
+ 224               	.LVL10:
+  84:keyboards/lily58/keymaps/mac/keymap.c ****     matrix_write_ln(matrix, read_keylog());
+ 225               		.loc 1 84 0
+ 226 001a 0E94 0000 		call read_keylog
+ 227               	.LVL11:
+ 228 001e BC01      		movw r22,r24
+ 229 0020 CE01      		movw r24,r28
+ 230 0022 0E94 0000 		call matrix_write_ln
+ 231               	.LVL12:
+  85:keyboards/lily58/keymaps/mac/keymap.c ****     matrix_write_ln(matrix, read_keylogs());
+ 232               		.loc 1 85 0
+ 233 0026 0E94 0000 		call read_keylogs
+ 234               	.LVL13:
+ 235 002a BC01      		movw r22,r24
+ 236 002c CE01      		movw r24,r28
+ 237               	/* epilogue start */
+  86:keyboards/lily58/keymaps/mac/keymap.c ****     // matrix_write_ln(matrix, read_mode_icon(keymap_config.swap_lalt_lgui));
+  87:keyboards/lily58/keymaps/mac/keymap.c ****     // matrix_write_ln(matrix, read_host_led_state());
+  88:keyboards/lily58/keymaps/mac/keymap.c ****     // matrix_write_ln(matrix, read_timelog());
+  89:keyboards/lily58/keymaps/mac/keymap.c ****   } else {
+  90:keyboards/lily58/keymaps/mac/keymap.c ****     matrix_write(matrix, read_logo());
+  91:keyboards/lily58/keymaps/mac/keymap.c ****   }
+  92:keyboards/lily58/keymaps/mac/keymap.c **** }
+ 238               		.loc 1 92 0
+ 239 002e DF91      		pop r29
+ 240 0030 CF91      		pop r28
+ 241               	.LVL14:
+  85:keyboards/lily58/keymaps/mac/keymap.c ****     matrix_write_ln(matrix, read_keylogs());
+ 242               		.loc 1 85 0
+ 243 0032 0C94 0000 		jmp matrix_write_ln
+ 244               	.LVL15:
+ 245               	.L6:
+  90:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 246               		.loc 1 90 0
+ 247 0036 0E94 0000 		call read_logo
+ 248               	.LVL16:
+ 249 003a BC01      		movw r22,r24
+ 250 003c CE01      		movw r24,r28
+ 251               	/* epilogue start */
+ 252               		.loc 1 92 0
+ 253 003e DF91      		pop r29
+ 254 0040 CF91      		pop r28
+ 255               	.LVL17:
+  90:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 256               		.loc 1 90 0
+ 257 0042 0C94 0000 		jmp matrix_write
+ 258               	.LVL18:
+ 259               		.cfi_endproc
+ 260               	.LFE123:
+ 262               		.section	.text.matrix_update,"ax",@progbits
+ 263               	.global	matrix_update
+ 265               	matrix_update:
+ 266               	.LFB124:
+  93:keyboards/lily58/keymaps/mac/keymap.c **** 
+  94:keyboards/lily58/keymaps/mac/keymap.c **** void matrix_update(struct CharacterMatrix *dest, const struct CharacterMatrix *source) {
+ 267               		.loc 1 94 0
+ 268               		.cfi_startproc
+ 269               	.LVL19:
+ 270 0000 0F93      		push r16
+ 271               	.LCFI12:
+ 272               		.cfi_def_cfa_offset 3
+ 273               		.cfi_offset 16, -2
+ 274 0002 1F93      		push r17
+ 275               	.LCFI13:
+ 276               		.cfi_def_cfa_offset 4
+ 277               		.cfi_offset 17, -3
+ 278 0004 CF93      		push r28
+ 279               	.LCFI14:
+ 280               		.cfi_def_cfa_offset 5
+ 281               		.cfi_offset 28, -4
+ 282 0006 DF93      		push r29
+ 283               	.LCFI15:
+ 284               		.cfi_def_cfa_offset 6
+ 285               		.cfi_offset 29, -5
+ 286               	/* prologue: function */
+ 287               	/* frame size = 0 */
+ 288               	/* stack size = 4 */
+ 289               	.L__stack_usage = 4
+ 290 0008 EC01      		movw r28,r24
+ 291 000a 8B01      		movw r16,r22
+  95:keyboards/lily58/keymaps/mac/keymap.c ****   if (memcmp(dest->display, source->display, sizeof(dest->display))) {
+ 292               		.loc 1 95 0
+ 293 000c 44E5      		ldi r20,lo8(84)
+ 294 000e 50E0      		ldi r21,0
+ 295 0010 0E94 0000 		call memcmp
+ 296               	.LVL20:
+ 297 0014 892B      		or r24,r25
+ 298 0016 01F0      		breq .L7
+  96:keyboards/lily58/keymaps/mac/keymap.c ****     memcpy(dest->display, source->display, sizeof(dest->display));
+ 299               		.loc 1 96 0
+ 300 0018 84E5      		ldi r24,lo8(84)
+ 301 001a F801      		movw r30,r16
+ 302 001c DE01      		movw r26,r28
+ 303               		0:
+ 304 001e 0190      		ld r0,Z+
+ 305 0020 0D92      		st X+,r0
+ 306 0022 8A95      		dec r24
+ 307 0024 01F4      		brne 0b
+  97:keyboards/lily58/keymaps/mac/keymap.c ****     dest->dirty = true;
+ 308               		.loc 1 97 0
+ 309 0026 CA5A      		subi r28,-86
+ 310 0028 DF4F      		sbci r29,-1
+ 311               	.LVL21:
+ 312 002a 81E0      		ldi r24,lo8(1)
+ 313 002c 8883      		st Y,r24
+ 314               	.LVL22:
+ 315               	.L7:
+ 316               	/* epilogue start */
+  98:keyboards/lily58/keymaps/mac/keymap.c ****   }
+  99:keyboards/lily58/keymaps/mac/keymap.c **** }
+ 317               		.loc 1 99 0
+ 318 002e DF91      		pop r29
+ 319 0030 CF91      		pop r28
+ 320 0032 1F91      		pop r17
+ 321 0034 0F91      		pop r16
+ 322               	.LVL23:
+ 323 0036 0895      		ret
+ 324               		.cfi_endproc
+ 325               	.LFE124:
+ 327               		.section	.text.iota_gfx_task_user,"ax",@progbits
+ 328               	.global	iota_gfx_task_user
+ 330               	iota_gfx_task_user:
+ 331               	.LFB125:
+ 100:keyboards/lily58/keymaps/mac/keymap.c **** 
+ 101:keyboards/lily58/keymaps/mac/keymap.c **** void iota_gfx_task_user(void) {
+ 332               		.loc 1 101 0
+ 333               		.cfi_startproc
+ 334 0000 CF93      		push r28
+ 335               	.LCFI16:
+ 336               		.cfi_def_cfa_offset 3
+ 337               		.cfi_offset 28, -2
+ 338 0002 DF93      		push r29
+ 339               	.LCFI17:
+ 340               		.cfi_def_cfa_offset 4
+ 341               		.cfi_offset 29, -3
+ 342 0004 CDB7      		in r28,__SP_L__
+ 343 0006 DEB7      		in r29,__SP_H__
+ 344               	.LCFI18:
+ 345               		.cfi_def_cfa_register 28
+ 346 0008 C755      		subi r28,87
+ 347 000a D109      		sbc r29,__zero_reg__
+ 348               	.LCFI19:
+ 349               		.cfi_def_cfa_offset 91
+ 350 000c 0FB6      		in __tmp_reg__,__SREG__
+ 351 000e F894      		cli
+ 352 0010 DEBF      		out __SP_H__,r29
+ 353 0012 0FBE      		out __SREG__,__tmp_reg__
+ 354 0014 CDBF      		out __SP_L__,r28
+ 355               	/* prologue: function */
+ 356               	/* frame size = 87 */
+ 357               	/* stack size = 89 */
+ 358               	.L__stack_usage = 89
+ 102:keyboards/lily58/keymaps/mac/keymap.c ****   struct CharacterMatrix matrix;
+ 103:keyboards/lily58/keymaps/mac/keymap.c ****   matrix_clear(&matrix);
+ 359               		.loc 1 103 0
+ 360 0016 CE01      		movw r24,r28
+ 361 0018 0196      		adiw r24,1
+ 362 001a 0E94 0000 		call matrix_clear
+ 363               	.LVL24:
+ 104:keyboards/lily58/keymaps/mac/keymap.c ****   matrix_render_user(&matrix);
+ 364               		.loc 1 104 0
+ 365 001e CE01      		movw r24,r28
+ 366 0020 0196      		adiw r24,1
+ 367 0022 0E94 0000 		call matrix_render_user
+ 368               	.LVL25:
+ 105:keyboards/lily58/keymaps/mac/keymap.c ****   matrix_update(&display, &matrix);
+ 369               		.loc 1 105 0
+ 370 0026 BE01      		movw r22,r28
+ 371 0028 6F5F      		subi r22,-1
+ 372 002a 7F4F      		sbci r23,-1
+ 373 002c 80E0      		ldi r24,lo8(display)
+ 374 002e 90E0      		ldi r25,hi8(display)
+ 375 0030 0E94 0000 		call matrix_update
+ 376               	.LVL26:
+ 377               	/* epilogue start */
+ 106:keyboards/lily58/keymaps/mac/keymap.c **** }
+ 378               		.loc 1 106 0
+ 379 0034 C95A      		subi r28,-87
+ 380 0036 DF4F      		sbci r29,-1
+ 381 0038 0FB6      		in __tmp_reg__,__SREG__
+ 382 003a F894      		cli
+ 383 003c DEBF      		out __SP_H__,r29
+ 384 003e 0FBE      		out __SREG__,__tmp_reg__
+ 385 0040 CDBF      		out __SP_L__,r28
+ 386 0042 DF91      		pop r29
+ 387 0044 CF91      		pop r28
+ 388 0046 0895      		ret
+ 389               		.cfi_endproc
+ 390               	.LFE125:
+ 392               		.section	.text.process_record_user,"ax",@progbits
+ 393               	.global	process_record_user
+ 395               	process_record_user:
+ 396               	.LFB126:
+ 107:keyboards/lily58/keymaps/mac/keymap.c **** #endif//SSD1306OLED
+ 108:keyboards/lily58/keymaps/mac/keymap.c **** 
+ 109:keyboards/lily58/keymaps/mac/keymap.c **** bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+ 397               		.loc 1 109 0
+ 398               		.cfi_startproc
+ 399               	.LVL27:
+ 400 0000 0F93      		push r16
+ 401               	.LCFI20:
+ 402               		.cfi_def_cfa_offset 3
+ 403               		.cfi_offset 16, -2
+ 404 0002 1F93      		push r17
+ 405               	.LCFI21:
+ 406               		.cfi_def_cfa_offset 4
+ 407               		.cfi_offset 17, -3
+ 408 0004 CF93      		push r28
+ 409               	.LCFI22:
+ 410               		.cfi_def_cfa_offset 5
+ 411               		.cfi_offset 28, -4
+ 412 0006 DF93      		push r29
+ 413               	.LCFI23:
+ 414               		.cfi_def_cfa_offset 6
+ 415               		.cfi_offset 29, -5
+ 416               	/* prologue: function */
+ 417               	/* frame size = 0 */
+ 418               	/* stack size = 4 */
+ 419               	.L__stack_usage = 4
+ 420 0008 8C01      		movw r16,r24
+ 421 000a EB01      		movw r28,r22
+ 110:keyboards/lily58/keymaps/mac/keymap.c ****   if (record->event.pressed) {
+ 422               		.loc 1 110 0
+ 423 000c 8A81      		ldd r24,Y+2
+ 424               	.LVL28:
+ 425 000e 8823      		tst r24
+ 426 0010 01F0      		breq .L14
+ 111:keyboards/lily58/keymaps/mac/keymap.c **** #ifdef SSD1306OLED
+ 112:keyboards/lily58/keymaps/mac/keymap.c ****     set_keylog(keycode, record);
+ 427               		.loc 1 112 0
+ 428 0012 C801      		movw r24,r16
+ 429 0014 0E94 0000 		call set_keylog
+ 430               	.LVL29:
+ 431               	.L14:
+ 113:keyboards/lily58/keymaps/mac/keymap.c **** #endif
+ 114:keyboards/lily58/keymaps/mac/keymap.c ****     // set_timelog();
+ 115:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 116:keyboards/lily58/keymaps/mac/keymap.c **** 
+ 117:keyboards/lily58/keymaps/mac/keymap.c ****   switch (keycode) {
+ 432               		.loc 1 117 0
+ 433 0018 0230      		cpi r16,2
+ 434 001a 8DE5      		ldi r24,93
+ 435 001c 1807      		cpc r17,r24
+ 436 001e 01F0      		breq .L16
+ 437 0020 00F4      		brsh .L17
+ 438 0022 0130      		cpi r16,1
+ 439 0024 1D45      		sbci r17,93
+ 440 0026 01F0      		breq .L18
+ 441               	.L24:
+ 118:keyboards/lily58/keymaps/mac/keymap.c ****     case QWERTY:
+ 119:keyboards/lily58/keymaps/mac/keymap.c ****       if (record->event.pressed) {
+ 120:keyboards/lily58/keymaps/mac/keymap.c ****         set_single_persistent_default_layer(_QWERTY);
+ 121:keyboards/lily58/keymaps/mac/keymap.c ****       }
+ 122:keyboards/lily58/keymaps/mac/keymap.c ****       return false;
+ 123:keyboards/lily58/keymaps/mac/keymap.c ****       break;
+ 124:keyboards/lily58/keymaps/mac/keymap.c ****     case LOWER:
+ 125:keyboards/lily58/keymaps/mac/keymap.c ****       if (record->event.pressed) {
+ 126:keyboards/lily58/keymaps/mac/keymap.c ****         layer_on(_LOWER);
+ 127:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 128:keyboards/lily58/keymaps/mac/keymap.c ****       } else {
+ 129:keyboards/lily58/keymaps/mac/keymap.c ****         layer_off(_LOWER);
+ 130:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 131:keyboards/lily58/keymaps/mac/keymap.c ****       }
+ 132:keyboards/lily58/keymaps/mac/keymap.c ****       return false;
+ 133:keyboards/lily58/keymaps/mac/keymap.c ****       break;
+ 134:keyboards/lily58/keymaps/mac/keymap.c ****     case RAISE:
+ 135:keyboards/lily58/keymaps/mac/keymap.c ****       if (record->event.pressed) {
+ 136:keyboards/lily58/keymaps/mac/keymap.c ****         layer_on(_RAISE);
+ 137:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 138:keyboards/lily58/keymaps/mac/keymap.c ****       } else {
+ 139:keyboards/lily58/keymaps/mac/keymap.c ****         layer_off(_RAISE);
+ 140:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 141:keyboards/lily58/keymaps/mac/keymap.c ****       }
+ 142:keyboards/lily58/keymaps/mac/keymap.c ****       return false;
+ 143:keyboards/lily58/keymaps/mac/keymap.c ****       break;
+ 144:keyboards/lily58/keymaps/mac/keymap.c ****     case ADJUST:
+ 145:keyboards/lily58/keymaps/mac/keymap.c ****         if (record->event.pressed) {
+ 146:keyboards/lily58/keymaps/mac/keymap.c ****           layer_on(_ADJUST);
+ 147:keyboards/lily58/keymaps/mac/keymap.c ****         } else {
+ 148:keyboards/lily58/keymaps/mac/keymap.c ****           layer_off(_ADJUST);
+ 149:keyboards/lily58/keymaps/mac/keymap.c ****         }
+ 150:keyboards/lily58/keymaps/mac/keymap.c ****         return false;
+ 151:keyboards/lily58/keymaps/mac/keymap.c ****         break;
+ 152:keyboards/lily58/keymaps/mac/keymap.c ****   }
+ 153:keyboards/lily58/keymaps/mac/keymap.c ****   return true;
+ 442               		.loc 1 153 0
+ 443 0028 C1E0      		ldi r28,lo8(1)
+ 444               	.LVL30:
+ 445 002a 00C0      		rjmp .L13
+ 446               	.LVL31:
+ 447               	.L17:
+ 117:keyboards/lily58/keymaps/mac/keymap.c ****     case QWERTY:
+ 448               		.loc 1 117 0
+ 449 002c 0330      		cpi r16,3
+ 450 002e 8DE5      		ldi r24,93
+ 451 0030 1807      		cpc r17,r24
+ 452 0032 01F0      		breq .L19
+ 453 0034 0430      		cpi r16,4
+ 454 0036 1D45      		sbci r17,93
+ 455 0038 01F4      		brne .L24
+ 145:keyboards/lily58/keymaps/mac/keymap.c ****           layer_on(_ADJUST);
+ 456               		.loc 1 145 0
+ 457 003a CA81      		ldd r28,Y+2
+ 458               	.LVL32:
+ 146:keyboards/lily58/keymaps/mac/keymap.c ****         } else {
+ 459               		.loc 1 146 0
+ 460 003c 83E0      		ldi r24,lo8(3)
+ 145:keyboards/lily58/keymaps/mac/keymap.c ****           layer_on(_ADJUST);
+ 461               		.loc 1 145 0
+ 462 003e CC23      		tst r28
+ 463 0040 01F0      		breq .L23
+ 146:keyboards/lily58/keymaps/mac/keymap.c ****         } else {
+ 464               		.loc 1 146 0
+ 465 0042 0E94 0000 		call layer_on
+ 466               	.LVL33:
+ 467 0046 00C0      		rjmp .L31
+ 468               	.LVL34:
+ 469               	.L18:
+ 119:keyboards/lily58/keymaps/mac/keymap.c ****         set_single_persistent_default_layer(_QWERTY);
+ 470               		.loc 1 119 0
+ 471 0048 CA81      		ldd r28,Y+2
+ 472               	.LVL35:
+ 473 004a CC23      		tst r28
+ 474 004c 01F0      		breq .L13
+ 120:keyboards/lily58/keymaps/mac/keymap.c ****       }
+ 475               		.loc 1 120 0
+ 476 004e 80E0      		ldi r24,0
+ 477 0050 0E94 0000 		call set_single_persistent_default_layer
+ 478               	.LVL36:
+ 479               	.L31:
+ 150:keyboards/lily58/keymaps/mac/keymap.c ****         break;
+ 480               		.loc 1 150 0
+ 481 0054 C0E0      		ldi r28,0
+ 482 0056 00C0      		rjmp .L13
+ 483               	.LVL37:
+ 484               	.L16:
+ 125:keyboards/lily58/keymaps/mac/keymap.c ****         layer_on(_LOWER);
+ 485               		.loc 1 125 0
+ 486 0058 CA81      		ldd r28,Y+2
+ 487               	.LVL38:
+ 126:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 488               		.loc 1 126 0
+ 489 005a 81E0      		ldi r24,lo8(1)
+ 490               	.L34:
+ 135:keyboards/lily58/keymaps/mac/keymap.c ****         layer_on(_RAISE);
+ 491               		.loc 1 135 0
+ 492 005c CC23      		tst r28
+ 493 005e 01F0      		breq .L22
+ 136:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 494               		.loc 1 136 0
+ 495 0060 0E94 0000 		call layer_on
+ 496               	.LVL39:
+ 137:keyboards/lily58/keymaps/mac/keymap.c ****       } else {
+ 497               		.loc 1 137 0
+ 498 0064 43E0      		ldi r20,lo8(3)
+ 499 0066 62E0      		ldi r22,lo8(2)
+ 500 0068 81E0      		ldi r24,lo8(1)
+ 501 006a 0E94 0000 		call update_tri_layer_RGB
+ 502               	.LVL40:
+ 503 006e 00C0      		rjmp .L31
+ 504               	.LVL41:
+ 505               	.L19:
+ 135:keyboards/lily58/keymaps/mac/keymap.c ****         layer_on(_RAISE);
+ 506               		.loc 1 135 0
+ 507 0070 CA81      		ldd r28,Y+2
+ 508               	.LVL42:
+ 136:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 509               		.loc 1 136 0
+ 510 0072 82E0      		ldi r24,lo8(2)
+ 511 0074 00C0      		rjmp .L34
+ 512               	.L22:
+ 139:keyboards/lily58/keymaps/mac/keymap.c ****         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+ 513               		.loc 1 139 0
+ 514 0076 0E94 0000 		call layer_off
+ 515               	.LVL43:
+ 140:keyboards/lily58/keymaps/mac/keymap.c ****       }
+ 516               		.loc 1 140 0
+ 517 007a 43E0      		ldi r20,lo8(3)
+ 518 007c 62E0      		ldi r22,lo8(2)
+ 519 007e 81E0      		ldi r24,lo8(1)
+ 520 0080 0E94 0000 		call update_tri_layer_RGB
+ 521               	.LVL44:
+ 522               	.L13:
+ 154:keyboards/lily58/keymaps/mac/keymap.c **** }
+ 523               		.loc 1 154 0
+ 524 0084 8C2F      		mov r24,r28
+ 525               	/* epilogue start */
+ 526 0086 DF91      		pop r29
+ 527 0088 CF91      		pop r28
+ 528 008a 1F91      		pop r17
+ 529 008c 0F91      		pop r16
+ 530               	.LVL45:
+ 531 008e 0895      		ret
+ 532               	.LVL46:
+ 533               	.L23:
+ 148:keyboards/lily58/keymaps/mac/keymap.c ****         }
+ 534               		.loc 1 148 0
+ 535 0090 0E94 0000 		call layer_off
+ 536               	.LVL47:
+ 537 0094 00C0      		rjmp .L13
+ 538               		.cfi_endproc
+ 539               	.LFE126:
+ 541               		.comm	RGB_current_mode,2,1
+ 542               	.global	keymaps
+ 543               		.section	.progmem.data.keymaps,"a",@progbits
+ 546               	keymaps:
+ 547 0000 165C      		.word	23574
+ 548 0002 1E00      		.word	30
+ 549 0004 1F00      		.word	31
+ 550 0006 2000      		.word	32
+ 551 0008 2100      		.word	33
+ 552 000a 2200      		.word	34
+ 553 000c 2B00      		.word	43
+ 554 000e 1400      		.word	20
+ 555 0010 1A00      		.word	26
+ 556 0012 0800      		.word	8
+ 557 0014 1500      		.word	21
+ 558 0016 1700      		.word	23
+ 559 0018 025D      		.word	23810
+ 560 001a 0400      		.word	4
+ 561 001c 1600      		.word	22
+ 562 001e 0700      		.word	7
+ 563 0020 0900      		.word	9
+ 564 0022 0A00      		.word	10
+ 565 0024 E100      		.word	225
+ 566 0026 1D00      		.word	29
+ 567 0028 1B00      		.word	27
+ 568 002a 0600      		.word	6
+ 569 002c 1900      		.word	25
+ 570 002e 0500      		.word	5
+ 571 0030 0000      		.word	0
+ 572 0032 E000      		.word	224
+ 573 0034 E200      		.word	226
+ 574 0036 E300      		.word	227
+ 575 0038 2C00      		.word	44
+ 576 003a 2F00      		.word	47
+ 577 003c 2A00      		.word	42
+ 578 003e 2700      		.word	39
+ 579 0040 2600      		.word	38
+ 580 0042 2500      		.word	37
+ 581 0044 2400      		.word	36
+ 582 0046 2300      		.word	35
+ 583 0048 3100      		.word	49
+ 584 004a 1300      		.word	19
+ 585 004c 1200      		.word	18
+ 586 004e 0C00      		.word	12
+ 587 0050 1800      		.word	24
+ 588 0052 1C00      		.word	28
+ 589 0054 3400      		.word	52
+ 590 0056 3300      		.word	51
+ 591 0058 0F00      		.word	15
+ 592 005a 0E00      		.word	14
+ 593 005c 0D00      		.word	13
+ 594 005e 0B00      		.word	11
+ 595 0060 2800      		.word	40
+ 596 0062 3800      		.word	56
+ 597 0064 3700      		.word	55
+ 598 0066 3600      		.word	54
+ 599 0068 1000      		.word	16
+ 600 006a 1100      		.word	17
+ 601 006c 0000      		.word	0
+ 602 006e E700      		.word	231
+ 603 0070 E600      		.word	230
+ 604 0072 035D      		.word	23811
+ 605 0074 2800      		.word	40
+ 606 0076 3000      		.word	48
+ 607 0078 0100      		.word	1
+ 608 007a 3A00      		.word	58
+ 609 007c 3B00      		.word	59
+ 610 007e 3C00      		.word	60
+ 611 0080 3D00      		.word	61
+ 612 0082 2202      		.word	546
+ 613 0084 0000      		.word	0
+ 614 0086 1E02      		.word	542
+ 615 0088 1F02      		.word	543
+ 616 008a 2002      		.word	544
+ 617 008c 2102      		.word	545
+ 618 008e 2202      		.word	546
+ 619 0090 0100      		.word	1
+ 620 0092 4B00      		.word	75
+ 621 0094 0000      		.word	0
+ 622 0096 0000      		.word	0
+ 623 0098 0000      		.word	0
+ 624 009a 0000      		.word	0
+ 625 009c 0100      		.word	1
+ 626 009e 4E00      		.word	78
+ 627 00a0 0100      		.word	1
+ 628 00a2 0100      		.word	1
+ 629 00a4 0100      		.word	1
+ 630 00a6 0000      		.word	0
+ 631 00a8 0000      		.word	0
+ 632 00aa 0100      		.word	1
+ 633 00ac 0100      		.word	1
+ 634 00ae 0100      		.word	1
+ 635 00b0 0100      		.word	1
+ 636 00b2 2F02      		.word	559
+ 637 00b4 6100      		.word	97
+ 638 00b6 6000      		.word	96
+ 639 00b8 5F00      		.word	95
+ 640 00ba 4100      		.word	65
+ 641 00bc 4000      		.word	64
+ 642 00be 3F00      		.word	63
+ 643 00c0 5E00      		.word	94
+ 644 00c2 5D00      		.word	93
+ 645 00c4 5C00      		.word	92
+ 646 00c6 2502      		.word	549
+ 647 00c8 2402      		.word	548
+ 648 00ca 2302      		.word	547
+ 649 00cc 5B00      		.word	91
+ 650 00ce 5A00      		.word	90
+ 651 00d0 5900      		.word	89
+ 652 00d2 0000      		.word	0
+ 653 00d4 0000      		.word	0
+ 654 00d6 0000      		.word	0
+ 655 00d8 5800      		.word	88
+ 656 00da 6300      		.word	99
+ 657 00dc 6200      		.word	98
+ 658 00de 0000      		.word	0
+ 659 00e0 0000      		.word	0
+ 660 00e2 0000      		.word	0
+ 661 00e4 0000      		.word	0
+ 662 00e6 0100      		.word	1
+ 663 00e8 0100      		.word	1
+ 664 00ea 0100      		.word	1
+ 665 00ec 0100      		.word	1
+ 666 00ee 3002      		.word	560
+ 667 00f0 0100      		.word	1
+ 668 00f2 0100      		.word	1
+ 669 00f4 0100      		.word	1
+ 670 00f6 0100      		.word	1
+ 671 00f8 0100      		.word	1
+ 672 00fa 2202      		.word	546
+ 673 00fc 0000      		.word	0
+ 674 00fe 0000      		.word	0
+ 675 0100 0000      		.word	0
+ 676 0102 0000      		.word	0
+ 677 0104 0000      		.word	0
+ 678 0106 0000      		.word	0
+ 679 0108 0000      		.word	0
+ 680 010a 0000      		.word	0
+ 681 010c 0000      		.word	0
+ 682 010e 0000      		.word	0
+ 683 0110 0000      		.word	0
+ 684 0112 0000      		.word	0
+ 685 0114 0000      		.word	0
+ 686 0116 0000      		.word	0
+ 687 0118 0000      		.word	0
+ 688 011a 0000      		.word	0
+ 689 011c 0000      		.word	0
+ 690 011e 0000      		.word	0
+ 691 0120 0000      		.word	0
+ 692 0122 0100      		.word	1
+ 693 0124 0100      		.word	1
+ 694 0126 0100      		.word	1
+ 695 0128 0100      		.word	1
+ 696 012a 2F02      		.word	559
+ 697 012c 7F00      		.word	127
+ 698 012e 2E00      		.word	46
+ 699 0130 2D00      		.word	45
+ 700 0132 0000      		.word	0
+ 701 0134 8000      		.word	128
+ 702 0136 8100      		.word	129
+ 703 0138 3102      		.word	561
+ 704 013a 2E02      		.word	558
+ 705 013c 2D02      		.word	557
+ 706 013e 5200      		.word	82
+ 707 0140 BB00      		.word	187
+ 708 0142 BC00      		.word	188
+ 709 0144 2702      		.word	551
+ 710 0146 2602      		.word	550
+ 711 0148 4F00      		.word	79
+ 712 014a 5100      		.word	81
+ 713 014c 5000      		.word	80
+ 714 014e B000      		.word	176
+ 715 0150 3702      		.word	567
+ 716 0152 3602      		.word	566
+ 717 0154 3000      		.word	48
+ 718 0156 2F00      		.word	47
+ 719 0158 2202      		.word	546
+ 720 015a 2102      		.word	545
+ 721 015c 0000      		.word	0
+ 722 015e 0100      		.word	1
+ 723 0160 0100      		.word	1
+ 724 0162 0100      		.word	1
+ 725 0164 0100      		.word	1
+ 726 0166 3002      		.word	560
+ 727 0168 0000      		.word	0
+ 728 016a 0000      		.word	0
+ 729 016c 0000      		.word	0
+ 730 016e 0000      		.word	0
+ 731 0170 0000      		.word	0
+ 732 0172 0000      		.word	0
+ 733 0174 0000      		.word	0
+ 734 0176 0000      		.word	0
+ 735 0178 0000      		.word	0
+ 736 017a 0000      		.word	0
+ 737 017c 0000      		.word	0
+ 738 017e 0000      		.word	0
+ 739 0180 0000      		.word	0
+ 740 0182 0000      		.word	0
+ 741 0184 0000      		.word	0
+ 742 0186 0000      		.word	0
+ 743 0188 0000      		.word	0
+ 744 018a 0000      		.word	0
+ 745 018c 0000      		.word	0
+ 746 018e 0000      		.word	0
+ 747 0190 0000      		.word	0
+ 748 0192 0000      		.word	0
+ 749 0194 0000      		.word	0
+ 750 0196 0000      		.word	0
+ 751 0198 0000      		.word	0
+ 752 019a 0100      		.word	1
+ 753 019c 0100      		.word	1
+ 754 019e 0100      		.word	1
+ 755 01a0 0100      		.word	1
+ 756 01a2 0000      		.word	0
+ 757 01a4 0000      		.word	0
+ 758 01a6 BE5C      		.word	23742
+ 759 01a8 BB5C      		.word	23739
+ 760 01aa BF5C      		.word	23743
+ 761 01ac 0000      		.word	0
+ 762 01ae 075C      		.word	23559
+ 763 01b0 C15C      		.word	23745
+ 764 01b2 BD5C      		.word	23741
+ 765 01b4 BC5C      		.word	23740
+ 766 01b6 C15C      		.word	23745
+ 767 01b8 0000      		.word	0
+ 768 01ba 105C      		.word	23568
+ 769 01bc C95C      		.word	23753
+ 770 01be C75C      		.word	23751
+ 771 01c0 C55C      		.word	23749
+ 772 01c2 C25C      		.word	23746
+ 773 01c4 0000      		.word	0
+ 774 01c6 0000      		.word	0
+ 775 01c8 CA5C      		.word	23754
+ 776 01ca C85C      		.word	23752
+ 777 01cc C65C      		.word	23750
+ 778 01ce C35C      		.word	23747
+ 779 01d0 0000      		.word	0
+ 780 01d2 0000      		.word	0
+ 781 01d4 0000      		.word	0
+ 782 01d6 0100      		.word	1
+ 783 01d8 0100      		.word	1
+ 784 01da 0100      		.word	1
+ 785 01dc 0100      		.word	1
+ 786 01de 0000      		.word	0
+ 787               		.comm	display,87,1
+ 788               		.text
+ 789               	.Letext0:
+ 790               		.file 2 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdint.h"
+ 791               		.file 3 "/usr/local/Cellar/avr-gcc@7/7.4.0/lib/avr-gcc/7/gcc/avr/7.4.0/include/stddef.h"
+ 792               		.file 4 "tmk_core/common/keyboard.h"
+ 793               		.file 5 "tmk_core/common/keycode.h"
+ 794               		.file 6 "tmk_core/common/action.h"
+ 795               		.file 7 "lib/lufa/LUFA/Drivers/USB/Core/AVR8/../StdRequestType.h"
+ 796               		.file 8 "lib/lufa/LUFA/Drivers/USB/Core/AVR8/../DeviceStandardReq.h"
+ 797               		.file 9 "lib/lufa/LUFA/Drivers/USB/Core/USBTask.h"
+ 798               		.file 10 "lib/lufa/LUFA/Drivers/USB/Core/HostStandardReq.h"
+ 799               		.file 11 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdio.h"
+ 800               		.file 12 "tmk_core/common/report.h"
+ 801               		.file 13 "tmk_core/common/host_driver.h"
+ 802               		.file 14 "tmk_core/common/host.h"
+ 803               		.file 15 "tmk_core/common/debug.h"
+ 804               		.file 16 "quantum/keycode_config.h"
+ 805               		.file 17 "quantum/quantum_keycodes.h"
+ 806               		.file 18 "quantum/keymap.h"
+ 807               		.file 19 "./quantum/color.h"
+ 808               		.file 20 "quantum/rgblight.h"
+ 809               		.file 21 "tmk_core/common/action_layer.h"
+ 810               		.file 22 "tmk_core/common/timer.h"
+ 811               		.file 23 "tmk_core/common/action_util.h"
+ 812               		.file 24 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdlib.h"
+ 813               		.file 25 "quantum/quantum.h"
+ 814               		.file 26 "tmk_core/protocol/lufa/lufa.h"
+ 815               		.file 27 "keyboards/lily58/split_util.h"
+ 816               		.file 28 "keyboards/lily58/ssd1306.h"
+ 817               		.file 29 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 keymap.c
+/var/tmp//cc9kVV02.s:2      *ABS*:000000000000003e __SP_H__
+/var/tmp//cc9kVV02.s:3      *ABS*:000000000000003d __SP_L__
+/var/tmp//cc9kVV02.s:4      *ABS*:000000000000003f __SREG__
+/var/tmp//cc9kVV02.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/tmp//cc9kVV02.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/tmp//cc9kVV02.s:13     .text.update_tri_layer_RGB:0000000000000000 update_tri_layer_RGB
+/var/tmp//cc9kVV02.s:151    .text.matrix_init_user:0000000000000000 matrix_init_user
+                            *COM*:0000000000000002 RGB_current_mode
+/var/tmp//cc9kVV02.s:178    .text.matrix_scan_user:0000000000000000 matrix_scan_user
+/var/tmp//cc9kVV02.s:195    .text.matrix_render_user:0000000000000000 matrix_render_user
+/var/tmp//cc9kVV02.s:265    .text.matrix_update:0000000000000000 matrix_update
+/var/tmp//cc9kVV02.s:330    .text.iota_gfx_task_user:0000000000000000 iota_gfx_task_user
+                            *COM*:0000000000000057 display
+/var/tmp//cc9kVV02.s:395    .text.process_record_user:0000000000000000 process_record_user
+/var/tmp//cc9kVV02.s:546    .progmem.data.keymaps:0000000000000000 keymaps
+
+UNDEFINED SYMBOLS
+layer_state
+layer_on
+layer_off
+rgblight_config
+has_usb
+iota_gfx_init
+iota_gfx_task
+is_master
+read_layer_state
+matrix_write_ln
+read_keylog
+read_keylogs
+read_logo
+matrix_write
+memcmp
+matrix_clear
+set_keylog
+set_single_persistent_default_layer
+__do_clear_bss

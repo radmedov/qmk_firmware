@@ -1,0 +1,718 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"keymap.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.matrix_init_user,"ax",%progbits
+  18              		.align	1
+  19              		.global	matrix_init_user
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	matrix_init_user:
+  26              	.LFB131:
+  27              		.file 1 "keyboards/massdrop/alt/keymaps/default/keymap.c"
+   1:keyboards/massdrop/alt/keymaps/default/keymap.c **** #include QMK_KEYBOARD_H
+   2:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+   3:keyboards/massdrop/alt/keymaps/default/keymap.c **** enum alt_keycodes {
+   4:keyboards/massdrop/alt/keymaps/default/keymap.c ****     U_T_AUTO = SAFE_RANGE, //USB Extra Port Toggle Auto Detect / Always Active
+   5:keyboards/massdrop/alt/keymaps/default/keymap.c ****     U_T_AGCR,              //USB Toggle Automatic GCR control
+   6:keyboards/massdrop/alt/keymaps/default/keymap.c ****     DBG_TOG,               //DEBUG Toggle On / Off
+   7:keyboards/massdrop/alt/keymaps/default/keymap.c ****     DBG_MTRX,              //DEBUG Toggle Matrix Prints
+   8:keyboards/massdrop/alt/keymaps/default/keymap.c ****     DBG_KBD,               //DEBUG Toggle Keyboard Prints
+   9:keyboards/massdrop/alt/keymaps/default/keymap.c ****     DBG_MOU,               //DEBUG Toggle Mouse Prints
+  10:keyboards/massdrop/alt/keymaps/default/keymap.c ****     MD_BOOT,               //Restart into bootloader after hold timeout
+  11:keyboards/massdrop/alt/keymaps/default/keymap.c **** };
+  12:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  13:keyboards/massdrop/alt/keymaps/default/keymap.c **** #define TG_NKRO MAGIC_TOGGLE_NKRO //Toggle 6KRO / NKRO mode
+  14:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  15:keyboards/massdrop/alt/keymaps/default/keymap.c **** keymap_config_t keymap_config;
+  16:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  17:keyboards/massdrop/alt/keymaps/default/keymap.c **** const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+  18:keyboards/massdrop/alt/keymaps/default/keymap.c ****     [0] = LAYOUT(
+  19:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    K
+  20:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    K
+  21:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    K
+  22:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  K
+  23:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             K
+  24:keyboards/massdrop/alt/keymaps/default/keymap.c ****     ),
+  25:keyboards/massdrop/alt/keymaps/default/keymap.c ****     [1] = LAYOUT(
+  26:keyboards/massdrop/alt/keymaps/default/keymap.c ****         KC_GRV,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   K
+  27:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, RGB_SPD, RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, _______, U_T_AUTO,U_T_AGCR,_______, K
+  28:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, RGB_RMOD,RGB_VAD, RGB_MOD, RGB_HUD, RGB_SAD, _______, _______, _______, _______, _
+  29:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, RGB_TOG, _______, _______, _______, MD_BOOT, TG_NKRO, DBG_TOG, _______, _______, _
+  30:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______,                            _______,                            _
+  31:keyboards/massdrop/alt/keymaps/default/keymap.c ****     ),
+  32:keyboards/massdrop/alt/keymaps/default/keymap.c ****     /*
+  33:keyboards/massdrop/alt/keymaps/default/keymap.c ****     [X] = LAYOUT(
+  34:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  35:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  36:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  37:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _
+  38:keyboards/massdrop/alt/keymaps/default/keymap.c ****         _______, _______, _______,                            _______,                            _
+  39:keyboards/massdrop/alt/keymaps/default/keymap.c ****     ),
+  40:keyboards/massdrop/alt/keymaps/default/keymap.c ****     */
+  41:keyboards/massdrop/alt/keymaps/default/keymap.c **** };
+  42:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  43:keyboards/massdrop/alt/keymaps/default/keymap.c **** // Runs just one time when the keyboard initializes.
+  44:keyboards/massdrop/alt/keymaps/default/keymap.c **** void matrix_init_user(void) {
+  28              		.loc 1 44 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  45:keyboards/massdrop/alt/keymaps/default/keymap.c **** };
+  33              		.loc 1 45 0
+  34 0000 7047     		bx	lr
+  35              		.cfi_endproc
+  36              	.LFE131:
+  38              		.section	.text.matrix_scan_user,"ax",%progbits
+  39              		.align	1
+  40              		.global	matrix_scan_user
+  41              		.syntax unified
+  42              		.thumb
+  43              		.thumb_func
+  44              		.fpu fpv4-sp-d16
+  46              	matrix_scan_user:
+  47              	.LFB135:
+  48              		.cfi_startproc
+  49              		@ args = 0, pretend = 0, frame = 0
+  50              		@ frame_needed = 0, uses_anonymous_args = 0
+  51              		@ link register save eliminated.
+  52 0000 7047     		bx	lr
+  53              		.cfi_endproc
+  54              	.LFE135:
+  56              		.section	.text.process_record_user,"ax",%progbits
+  57              		.align	1
+  58              		.global	process_record_user
+  59              		.syntax unified
+  60              		.thumb
+  61              		.thumb_func
+  62              		.fpu fpv4-sp-d16
+  64              	process_record_user:
+  65              	.LFB133:
+  46:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  47:keyboards/massdrop/alt/keymaps/default/keymap.c **** // Runs constantly in the background, in a loop.
+  48:keyboards/massdrop/alt/keymaps/default/keymap.c **** void matrix_scan_user(void) {
+  49:keyboards/massdrop/alt/keymaps/default/keymap.c **** };
+  50:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  51:keyboards/massdrop/alt/keymaps/default/keymap.c **** #define MODS_SHIFT  (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
+  52:keyboards/massdrop/alt/keymaps/default/keymap.c **** #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTRL))
+  53:keyboards/massdrop/alt/keymaps/default/keymap.c **** #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
+  54:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  55:keyboards/massdrop/alt/keymaps/default/keymap.c **** bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  66              		.loc 1 55 0
+  67              		.cfi_startproc
+  68              		@ args = 0, pretend = 0, frame = 0
+  69              		@ frame_needed = 0, uses_anonymous_args = 0
+  70              	.LVL0:
+  71              		.loc 1 55 0
+  72 0000 38B5     		push	{r3, r4, r5, lr}
+  73              		.cfi_def_cfa_offset 16
+  74              		.cfi_offset 3, -16
+  75              		.cfi_offset 4, -12
+  76              		.cfi_offset 5, -8
+  77              		.cfi_offset 14, -4
+  56:keyboards/massdrop/alt/keymaps/default/keymap.c ****     static uint32_t key_timer;
+  57:keyboards/massdrop/alt/keymaps/default/keymap.c **** 
+  58:keyboards/massdrop/alt/keymaps/default/keymap.c ****     switch (keycode) {
+  78              		.loc 1 58 0
+  79 0002 45F60353 		movw	r3, #23811
+  80 0006 9842     		cmp	r0, r3
+  81 0008 56D0     		beq	.L5
+  82 000a 0BD8     		bhi	.L6
+  83 000c 45F60153 		movw	r3, #23809
+  84 0010 9842     		cmp	r0, r3
+  85 0012 1CD0     		beq	.L7
+  86 0014 38D8     		bhi	.L8
+  87 0016 45F6C243 		movw	r3, #23746
+  88 001a 9842     		cmp	r0, r3
+  89 001c 00F08680 		beq	.L9
+  90              	.L33:
+  59:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case U_T_AUTO:
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
+  61:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+  62:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  63:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  64:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case U_T_AGCR:
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed && MODS_SHIFT && MODS_CTRL) {
+  66:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+  67:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  68:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  69:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case DBG_TOG:
+  70:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+  71:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_enable, "Debug mode");
+  72:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  73:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  74:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case DBG_MTRX:
+  75:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+  76:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_matrix, "Debug matrix");
+  77:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  78:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  79:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case DBG_KBD:
+  80:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+  81:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_keyboard, "Debug keyboard");
+  82:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  83:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  84:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case DBG_MOU:
+  85:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+  86:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_mouse, "Debug mouse");
+  87:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  88:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  89:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case MD_BOOT:
+  90:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+  91:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 key_timer = timer_read32();
+  92:keyboards/massdrop/alt/keymaps/default/keymap.c ****             } else {
+  93:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 if (timer_elapsed32(key_timer) >= 500) {
+  94:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     reset_keyboard();
+  95:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 }
+  96:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+  97:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+  98:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case RGB_TOG:
+  99:keyboards/massdrop/alt/keymaps/default/keymap.c ****             if (record->event.pressed) {
+ 100:keyboards/massdrop/alt/keymaps/default/keymap.c ****               switch (rgb_matrix_get_flags()) {
+ 101:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 case LED_FLAG_ALL: {
+ 102:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_flags(LED_FLAG_KEYLIGHT);
+ 103:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_color_all(0, 0, 0);
+ 104:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 105:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   break;
+ 106:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 case LED_FLAG_KEYLIGHT: {
+ 107:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_flags(LED_FLAG_UNDERGLOW);
+ 108:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_color_all(0, 0, 0);
+ 109:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 110:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   break;
+ 111:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 case LED_FLAG_UNDERGLOW: {
+ 112:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_flags(LED_FLAG_NONE);
+ 113:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_disable_noeeprom();
+ 114:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 115:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   break;
+ 116:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 default: {
+ 117:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_flags(LED_FLAG_ALL);
+ 118:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_enable_noeeprom();
+ 119:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 120:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   break;
+ 121:keyboards/massdrop/alt/keymaps/default/keymap.c ****               }
+ 122:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 123:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return false;
+ 124:keyboards/massdrop/alt/keymaps/default/keymap.c ****         default:
+ 125:keyboards/massdrop/alt/keymaps/default/keymap.c ****             return true; //Process all other keycodes normally
+  91              		.loc 1 125 0
+  92 0020 0124     		movs	r4, #1
+  93 0022 2AE0     		b	.L4
+  94              	.L6:
+  58:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case U_T_AUTO:
+  95              		.loc 1 58 0
+  96 0024 45F60553 		movw	r3, #23813
+  97 0028 9842     		cmp	r0, r3
+  98 002a 5ED0     		beq	.L10
+  99 002c 51D3     		bcc	.L11
+ 100 002e 45F60653 		movw	r3, #23814
+ 101 0032 9842     		cmp	r0, r3
+ 102 0034 65D0     		beq	.L12
+ 103 0036 45F60753 		movw	r3, #23815
+ 104 003a 9842     		cmp	r0, r3
+ 105 003c F0D1     		bne	.L33
+  90:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 key_timer = timer_read32();
+ 106              		.loc 1 90 0
+ 107 003e 8C78     		ldrb	r4, [r1, #2]	@ zero_extendqisi2
+ 108 0040 4B4D     		ldr	r5, .L62
+ 109 0042 002C     		cmp	r4, #0
+ 110 0044 69D0     		beq	.L28
+  91:keyboards/massdrop/alt/keymaps/default/keymap.c ****             } else {
+ 111              		.loc 1 91 0
+ 112 0046 FFF7FEFF 		bl	timer_read32
+ 113              	.LVL1:
+ 114 004a 2860     		str	r0, [r5]
+ 115 004c 01E0     		b	.L58
+ 116              	.LVL2:
+ 117              	.L7:
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+ 118              		.loc 1 60 0
+ 119 004e 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 120 0050 0BB9     		cbnz	r3, .L14
+ 121              	.LVL3:
+ 122              	.L58:
+  73:keyboards/massdrop/alt/keymaps/default/keymap.c ****         case DBG_MTRX:
+ 123              		.loc 1 73 0
+ 124 0052 0024     		movs	r4, #0
+ 125 0054 11E0     		b	.L4
+ 126              	.LVL4:
+ 127              	.L14:
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+ 128              		.loc 1 60 0 discriminator 1
+ 129 0056 FFF7FEFF 		bl	get_mods
+ 130              	.LVL5:
+ 131 005a 8207     		lsls	r2, r0, #30
+ 132 005c 0FD5     		bpl	.L15
+ 133              	.L18:
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+ 134              		.loc 1 60 0 is_stmt 0
+ 135 005e FFF7FEFF 		bl	get_mods
+ 136              	.LVL6:
+ 137 0062 C307     		lsls	r3, r0, #31
+ 138 0064 03D4     		bmi	.L16
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+ 139              		.loc 1 60 0 discriminator 5
+ 140 0066 FFF7FEFF 		bl	get_mods
+ 141              	.LVL7:
+ 142 006a C406     		lsls	r4, r0, #27
+ 143 006c F1D5     		bpl	.L58
+ 144              	.L16:
+  61:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 145              		.loc 1 61 0 is_stmt 1
+ 146 006e 414B     		ldr	r3, .L62+4
+ 147              	.L59:
+  66:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 148              		.loc 1 66 0
+ 149 0070 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+ 150 0072 0022     		movs	r2, #0
+ 151 0074 F4B9     		cbnz	r4, .L26
+  66:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 152              		.loc 1 66 0 is_stmt 0 discriminator 2
+ 153 0076 0122     		movs	r2, #1
+ 154 0078 1A70     		strb	r2, [r3]
+ 155              	.L4:
+ 126:keyboards/massdrop/alt/keymaps/default/keymap.c ****     }
+ 127:keyboards/massdrop/alt/keymaps/default/keymap.c **** }
+ 156              		.loc 1 127 0 is_stmt 1
+ 157 007a 2046     		mov	r0, r4
+ 158 007c 38BD     		pop	{r3, r4, r5, pc}
+ 159              	.L15:
+  60:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_extra_manual, "USB extra port manual mode");
+ 160              		.loc 1 60 0 discriminator 3
+ 161 007e FFF7FEFF 		bl	get_mods
+ 162              	.LVL8:
+ 163 0082 8506     		lsls	r5, r0, #26
+ 164 0084 EBD4     		bmi	.L18
+ 165 0086 E4E7     		b	.L58
+ 166              	.LVL9:
+ 167              	.L8:
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 168              		.loc 1 65 0
+ 169 0088 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 170 008a 002B     		cmp	r3, #0
+ 171 008c E1D0     		beq	.L58
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 172              		.loc 1 65 0 is_stmt 0 discriminator 1
+ 173 008e FFF7FEFF 		bl	get_mods
+ 174              	.LVL10:
+ 175 0092 8007     		lsls	r0, r0, #30
+ 176 0094 09D5     		bpl	.L22
+ 177              	.L25:
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 178              		.loc 1 65 0
+ 179 0096 FFF7FEFF 		bl	get_mods
+ 180              	.LVL11:
+ 181 009a C107     		lsls	r1, r0, #31
+ 182 009c 03D4     		bmi	.L23
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 183              		.loc 1 65 0 discriminator 5
+ 184 009e FFF7FEFF 		bl	get_mods
+ 185              	.LVL12:
+ 186 00a2 C306     		lsls	r3, r0, #27
+ 187 00a4 D5D5     		bpl	.L58
+ 188              	.L23:
+  66:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 189              		.loc 1 66 0 is_stmt 1
+ 190 00a6 344B     		ldr	r3, .L62+8
+ 191 00a8 E2E7     		b	.L59
+ 192              	.L22:
+  65:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(usb_gcr_auto, "USB GCR auto mode");
+ 193              		.loc 1 65 0 discriminator 3
+ 194 00aa FFF7FEFF 		bl	get_mods
+ 195              	.LVL13:
+ 196 00ae 8206     		lsls	r2, r0, #26
+ 197 00b0 F1D4     		bmi	.L25
+ 198 00b2 CEE7     		b	.L58
+ 199              	.L26:
+  66:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 200              		.loc 1 66 0 discriminator 1
+ 201 00b4 1A70     		strb	r2, [r3]
+ 202 00b6 CCE7     		b	.L58
+ 203              	.LVL14:
+ 204              	.L5:
+  70:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_enable, "Debug mode");
+ 205              		.loc 1 70 0
+ 206 00b8 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 207 00ba 002B     		cmp	r3, #0
+ 208 00bc C9D0     		beq	.L58
+  71:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 209              		.loc 1 71 0
+ 210 00be 2F49     		ldr	r1, .L62+12
+ 211              	.LVL15:
+ 212 00c0 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 213 00c2 C3F30002 		ubfx	r2, r3, #0, #1
+ 214 00c6 82F00102 		eor	r2, r2, #1
+ 215 00ca 62F30003 		bfi	r3, r2, #0, #1
+ 216              	.L60:
+ 217 00ce 0B70     		strb	r3, [r1]
+ 218 00d0 BFE7     		b	.L58
+ 219              	.LVL16:
+ 220              	.L11:
+  75:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_matrix, "Debug matrix");
+ 221              		.loc 1 75 0
+ 222 00d2 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 223 00d4 002B     		cmp	r3, #0
+ 224 00d6 BCD0     		beq	.L58
+  76:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 225              		.loc 1 76 0
+ 226 00d8 2849     		ldr	r1, .L62+12
+ 227              	.LVL17:
+ 228 00da 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 229 00dc C3F34002 		ubfx	r2, r3, #1, #1
+ 230 00e0 82F00102 		eor	r2, r2, #1
+ 231 00e4 62F34103 		bfi	r3, r2, #1, #1
+ 232 00e8 F1E7     		b	.L60
+ 233              	.LVL18:
+ 234              	.L10:
+  80:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_keyboard, "Debug keyboard");
+ 235              		.loc 1 80 0
+ 236 00ea 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 237 00ec 002B     		cmp	r3, #0
+ 238 00ee B0D0     		beq	.L58
+  81:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 239              		.loc 1 81 0
+ 240 00f0 2249     		ldr	r1, .L62+12
+ 241              	.LVL19:
+ 242 00f2 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 243 00f4 C3F38002 		ubfx	r2, r3, #2, #1
+ 244 00f8 82F00102 		eor	r2, r2, #1
+ 245 00fc 62F38203 		bfi	r3, r2, #2, #1
+ 246 0100 E5E7     		b	.L60
+ 247              	.LVL20:
+ 248              	.L12:
+  85:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 TOGGLE_FLAG_AND_PRINT(debug_mouse, "Debug mouse");
+ 249              		.loc 1 85 0
+ 250 0102 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 251 0104 002B     		cmp	r3, #0
+ 252 0106 A4D0     		beq	.L58
+  86:keyboards/massdrop/alt/keymaps/default/keymap.c ****             }
+ 253              		.loc 1 86 0
+ 254 0108 1C49     		ldr	r1, .L62+12
+ 255              	.LVL21:
+ 256 010a 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 257 010c C3F3C002 		ubfx	r2, r3, #3, #1
+ 258 0110 82F00102 		eor	r2, r2, #1
+ 259 0114 62F3C303 		bfi	r3, r2, #3, #1
+ 260 0118 D9E7     		b	.L60
+ 261              	.LVL22:
+ 262              	.L28:
+  93:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     reset_keyboard();
+ 263              		.loc 1 93 0
+ 264 011a 2868     		ldr	r0, [r5]
+ 265              	.LVL23:
+ 266 011c FFF7FEFF 		bl	timer_elapsed32
+ 267              	.LVL24:
+ 268 0120 B0F5FA7F 		cmp	r0, #500
+ 269 0124 95D3     		bcc	.L58
+  94:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 }
+ 270              		.loc 1 94 0
+ 271 0126 FFF7FEFF 		bl	reset_keyboard
+ 272              	.LVL25:
+ 273 012a A6E7     		b	.L4
+ 274              	.LVL26:
+ 275              	.L9:
+  99:keyboards/massdrop/alt/keymaps/default/keymap.c ****               switch (rgb_matrix_get_flags()) {
+ 276              		.loc 1 99 0
+ 277 012c 8B78     		ldrb	r3, [r1, #2]	@ zero_extendqisi2
+ 278 012e 002B     		cmp	r3, #0
+ 279 0130 8FD0     		beq	.L58
+ 100:keyboards/massdrop/alt/keymaps/default/keymap.c ****                 case LED_FLAG_ALL: {
+ 280              		.loc 1 100 0
+ 281 0132 FFF7FEFF 		bl	rgb_matrix_get_flags
+ 282              	.LVL27:
+ 283 0136 0428     		cmp	r0, #4
+ 284 0138 12D0     		beq	.L30
+ 285 013a FF28     		cmp	r0, #255
+ 286 013c 07D0     		beq	.L31
+ 287 013e 0228     		cmp	r0, #2
+ 288 0140 10D1     		bne	.L56
+ 112:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_disable_noeeprom();
+ 289              		.loc 1 112 0
+ 290 0142 0020     		movs	r0, #0
+ 291 0144 FFF7FEFF 		bl	rgb_matrix_set_flags
+ 292              	.LVL28:
+ 113:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 293              		.loc 1 113 0
+ 294 0148 FFF7FEFF 		bl	rgb_matrix_disable_noeeprom
+ 295              	.LVL29:
+ 296 014c 81E7     		b	.L58
+ 297              	.L31:
+ 102:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_color_all(0, 0, 0);
+ 298              		.loc 1 102 0
+ 299 014e 0420     		movs	r0, #4
+ 300              	.L61:
+ 107:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_color_all(0, 0, 0);
+ 301              		.loc 1 107 0
+ 302 0150 FFF7FEFF 		bl	rgb_matrix_set_flags
+ 303              	.LVL30:
+ 108:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 304              		.loc 1 108 0
+ 305 0154 0022     		movs	r2, #0
+ 306 0156 1146     		mov	r1, r2
+ 307 0158 1046     		mov	r0, r2
+ 308 015a FFF7FEFF 		bl	rgb_matrix_set_color_all
+ 309              	.LVL31:
+ 310 015e 78E7     		b	.L58
+ 311              	.L30:
+ 107:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_set_color_all(0, 0, 0);
+ 312              		.loc 1 107 0
+ 313 0160 0220     		movs	r0, #2
+ 314 0162 F5E7     		b	.L61
+ 315              	.L56:
+ 117:keyboards/massdrop/alt/keymaps/default/keymap.c ****                     rgb_matrix_enable_noeeprom();
+ 316              		.loc 1 117 0
+ 317 0164 FF20     		movs	r0, #255
+ 318 0166 FFF7FEFF 		bl	rgb_matrix_set_flags
+ 319              	.LVL32:
+ 118:keyboards/massdrop/alt/keymaps/default/keymap.c ****                   }
+ 320              		.loc 1 118 0
+ 321 016a FFF7FEFF 		bl	rgb_matrix_enable_noeeprom
+ 322              	.LVL33:
+ 323 016e 70E7     		b	.L58
+ 324              	.L63:
+ 325              		.align	2
+ 326              	.L62:
+ 327 0170 00000000 		.word	.LANCHOR0
+ 328 0174 00000000 		.word	usb_extra_manual
+ 329 0178 00000000 		.word	usb_gcr_auto
+ 330 017c 00000000 		.word	debug_config
+ 331              		.cfi_endproc
+ 332              	.LFE133:
+ 334              		.global	keymaps
+ 335              		.comm	keymap_config,2,2
+ 336              		.comm	dmac_desc_wb,16,16
+ 337              		.comm	dmac_desc,16,16
+ 338              		.section	.rodata
+ 339              		.align	1
+ 342              	keymaps:
+ 343 0000 2900     		.short	41
+ 344 0002 1E00     		.short	30
+ 345 0004 1F00     		.short	31
+ 346 0006 2000     		.short	32
+ 347 0008 2100     		.short	33
+ 348 000a 2200     		.short	34
+ 349 000c 2300     		.short	35
+ 350 000e 2400     		.short	36
+ 351 0010 2500     		.short	37
+ 352 0012 2600     		.short	38
+ 353 0014 2700     		.short	39
+ 354 0016 2D00     		.short	45
+ 355 0018 2E00     		.short	46
+ 356 001a 2A00     		.short	42
+ 357 001c 4C00     		.short	76
+ 358 001e 2B00     		.short	43
+ 359 0020 1400     		.short	20
+ 360 0022 1A00     		.short	26
+ 361 0024 0800     		.short	8
+ 362 0026 1500     		.short	21
+ 363 0028 1700     		.short	23
+ 364 002a 1C00     		.short	28
+ 365 002c 1800     		.short	24
+ 366 002e 0C00     		.short	12
+ 367 0030 1200     		.short	18
+ 368 0032 1300     		.short	19
+ 369 0034 2F00     		.short	47
+ 370 0036 3000     		.short	48
+ 371 0038 3100     		.short	49
+ 372 003a 4A00     		.short	74
+ 373 003c 3900     		.short	57
+ 374 003e 0400     		.short	4
+ 375 0040 1600     		.short	22
+ 376 0042 0700     		.short	7
+ 377 0044 0900     		.short	9
+ 378 0046 0A00     		.short	10
+ 379 0048 0B00     		.short	11
+ 380 004a 0D00     		.short	13
+ 381 004c 0E00     		.short	14
+ 382 004e 0F00     		.short	15
+ 383 0050 3300     		.short	51
+ 384 0052 3400     		.short	52
+ 385 0054 0000     		.short	0
+ 386 0056 2800     		.short	40
+ 387 0058 4B00     		.short	75
+ 388 005a E100     		.short	225
+ 389 005c 0000     		.short	0
+ 390 005e 1D00     		.short	29
+ 391 0060 1B00     		.short	27
+ 392 0062 0600     		.short	6
+ 393 0064 1900     		.short	25
+ 394 0066 0500     		.short	5
+ 395 0068 1100     		.short	17
+ 396 006a 1000     		.short	16
+ 397 006c 3600     		.short	54
+ 398 006e 3700     		.short	55
+ 399 0070 3800     		.short	56
+ 400 0072 E500     		.short	229
+ 401 0074 5200     		.short	82
+ 402 0076 4E00     		.short	78
+ 403 0078 E000     		.short	224
+ 404 007a E300     		.short	227
+ 405 007c E200     		.short	226
+ 406 007e 0000     		.short	0
+ 407 0080 0000     		.short	0
+ 408 0082 0000     		.short	0
+ 409 0084 2C00     		.short	44
+ 410 0086 0000     		.short	0
+ 411 0088 0000     		.short	0
+ 412 008a 0000     		.short	0
+ 413 008c E600     		.short	230
+ 414 008e 0151     		.short	20737
+ 415 0090 5000     		.short	80
+ 416 0092 5100     		.short	81
+ 417 0094 4F00     		.short	79
+ 418 0096 3500     		.short	53
+ 419 0098 3A00     		.short	58
+ 420 009a 3B00     		.short	59
+ 421 009c 3C00     		.short	60
+ 422 009e 3D00     		.short	61
+ 423 00a0 3E00     		.short	62
+ 424 00a2 3F00     		.short	63
+ 425 00a4 4000     		.short	64
+ 426 00a6 4100     		.short	65
+ 427 00a8 4200     		.short	66
+ 428 00aa 4300     		.short	67
+ 429 00ac 4400     		.short	68
+ 430 00ae 4500     		.short	69
+ 431 00b0 0100     		.short	1
+ 432 00b2 A800     		.short	168
+ 433 00b4 0100     		.short	1
+ 434 00b6 CC5C     		.short	23756
+ 435 00b8 C95C     		.short	23753
+ 436 00ba CB5C     		.short	23755
+ 437 00bc C55C     		.short	23749
+ 438 00be C75C     		.short	23751
+ 439 00c0 0100     		.short	1
+ 440 00c2 015D     		.short	23809
+ 441 00c4 025D     		.short	23810
+ 442 00c6 0100     		.short	1
+ 443 00c8 4600     		.short	70
+ 444 00ca 4700     		.short	71
+ 445 00cc 4800     		.short	72
+ 446 00ce 0100     		.short	1
+ 447 00d0 4D00     		.short	77
+ 448 00d2 0100     		.short	1
+ 449 00d4 C45C     		.short	23748
+ 450 00d6 CA5C     		.short	23754
+ 451 00d8 C35C     		.short	23747
+ 452 00da C65C     		.short	23750
+ 453 00dc C85C     		.short	23752
+ 454 00de 0100     		.short	1
+ 455 00e0 0100     		.short	1
+ 456 00e2 0100     		.short	1
+ 457 00e4 0100     		.short	1
+ 458 00e6 0100     		.short	1
+ 459 00e8 0100     		.short	1
+ 460 00ea 0000     		.short	0
+ 461 00ec 0100     		.short	1
+ 462 00ee A900     		.short	169
+ 463 00f0 0100     		.short	1
+ 464 00f2 0000     		.short	0
+ 465 00f4 C25C     		.short	23746
+ 466 00f6 0100     		.short	1
+ 467 00f8 0100     		.short	1
+ 468 00fa 0100     		.short	1
+ 469 00fc 075D     		.short	23815
+ 470 00fe 145C     		.short	23572
+ 471 0100 035D     		.short	23811
+ 472 0102 0100     		.short	1
+ 473 0104 0100     		.short	1
+ 474 0106 0100     		.short	1
+ 475 0108 0100     		.short	1
+ 476 010a 4B00     		.short	75
+ 477 010c AA00     		.short	170
+ 478 010e 0100     		.short	1
+ 479 0110 0100     		.short	1
+ 480 0112 0100     		.short	1
+ 481 0114 0000     		.short	0
+ 482 0116 0000     		.short	0
+ 483 0118 0000     		.short	0
+ 484 011a 0100     		.short	1
+ 485 011c 0000     		.short	0
+ 486 011e 0000     		.short	0
+ 487 0120 0000     		.short	0
+ 488 0122 0100     		.short	1
+ 489 0124 0100     		.short	1
+ 490 0126 4A00     		.short	74
+ 491 0128 4E00     		.short	78
+ 492 012a 4D00     		.short	77
+ 493              		.bss
+ 494              		.align	2
+ 495              		.set	.LANCHOR0,. + 0
+ 498              	key_timer.19057:
+ 499 0000 00000000 		.space	4
+ 500              		.text
+ 501              	.Letext0:
+ 502              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 503              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 504              		.file 4 "tmk_core/protocol/arm_atsam/clks.h"
+ 505              		.file 5 "tmk_core/common/keyboard.h"
+ 506              		.file 6 "tmk_core/common/keycode.h"
+ 507              		.file 7 "tmk_core/common/action.h"
+ 508              		.file 8 "tmk_core/common/report.h"
+ 509              		.file 9 "tmk_core/common/host.h"
+ 510              		.file 10 "tmk_core/common/debug.h"
+ 511              		.file 11 "quantum/keycode_config.h"
+ 512              		.file 12 "quantum/quantum_keycodes.h"
+ 513              		.file 13 "quantum/keymap.h"
+ 514              		.file 14 "quantum/color.h"
+ 515              		.file 15 "quantum/rgb_matrix_types.h"
+ 516              		.file 16 "quantum/rgb_matrix.h"
+ 517              		.file 17 "tmk_core/common/action_layer.h"
+ 518              		.file 18 "tmk_core/common/timer.h"
+ 519              		.file 19 "tmk_core/common/action_util.h"
+ 520              		.file 20 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 521              		.file 21 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 522              		.file 22 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 523              		.file 23 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 524              		.file 24 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 525              		.file 25 "quantum/quantum.h"
+ 526              		.file 26 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 527              		.file 27 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 528              		.file 28 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 529              		.file 29 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 530              		.file 30 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 531              		.file 31 "tmk_core/protocol/arm_atsam/usb/udi_cdc.h"
+ 532              		.file 32 "tmk_core/protocol/arm_atsam/usb/usb2422.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 keymap.c
+/var/tmp//ccpZPO7l.s:18     .text.matrix_init_user:0000000000000000 $t
+/var/tmp//ccpZPO7l.s:25     .text.matrix_init_user:0000000000000000 matrix_init_user
+/var/tmp//ccpZPO7l.s:39     .text.matrix_scan_user:0000000000000000 $t
+/var/tmp//ccpZPO7l.s:46     .text.matrix_scan_user:0000000000000000 matrix_scan_user
+/var/tmp//ccpZPO7l.s:57     .text.process_record_user:0000000000000000 $t
+/var/tmp//ccpZPO7l.s:64     .text.process_record_user:0000000000000000 process_record_user
+/var/tmp//ccpZPO7l.s:327    .text.process_record_user:0000000000000170 $d
+/var/tmp//ccpZPO7l.s:342    .rodata:0000000000000000 keymaps
+                            *COM*:0000000000000002 keymap_config
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+/var/tmp//ccpZPO7l.s:339    .rodata:0000000000000000 $d
+/var/tmp//ccpZPO7l.s:494    .bss:0000000000000000 $d
+/var/tmp//ccpZPO7l.s:498    .bss:0000000000000000 key_timer.19057
+
+UNDEFINED SYMBOLS
+timer_read32
+get_mods
+timer_elapsed32
+reset_keyboard
+rgb_matrix_get_flags
+rgb_matrix_set_flags
+rgb_matrix_disable_noeeprom
+rgb_matrix_set_color_all
+rgb_matrix_enable_noeeprom
+usb_extra_manual
+usb_gcr_auto
+debug_config

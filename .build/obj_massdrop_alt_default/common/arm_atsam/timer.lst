@@ -1,0 +1,334 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"timer.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.set_time,"ax",%progbits
+  18              		.align	1
+  19              		.global	set_time
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	set_time:
+  26              	.LFB125:
+  27              		.file 1 "tmk_core/common/arm_atsam/timer.c"
+   1:tmk_core/common/arm_atsam/timer.c **** #include "samd51j18a.h"
+   2:tmk_core/common/arm_atsam/timer.c **** #include "timer.h"
+   3:tmk_core/common/arm_atsam/timer.c **** #include "tmk_core/protocol/arm_atsam/clks.h"
+   4:tmk_core/common/arm_atsam/timer.c **** 
+   5:tmk_core/common/arm_atsam/timer.c **** void set_time(uint64_t tset) { ms_clk = tset; }
+  28              		.loc 1 5 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  34              		.loc 1 5 0
+  35 0000 014B     		ldr	r3, .L2
+  36 0002 C3E90001 		strd	r0, [r3]
+  37 0006 7047     		bx	lr
+  38              	.L3:
+  39              		.align	2
+  40              	.L2:
+  41 0008 00000000 		.word	ms_clk
+  42              		.cfi_endproc
+  43              	.LFE125:
+  45              		.section	.text.timer_read,"ax",%progbits
+  46              		.align	1
+  47              		.global	timer_read
+  48              		.syntax unified
+  49              		.thumb
+  50              		.thumb_func
+  51              		.fpu fpv4-sp-d16
+  53              	timer_read:
+  54              	.LFB127:
+   6:tmk_core/common/arm_atsam/timer.c **** 
+   7:tmk_core/common/arm_atsam/timer.c **** void timer_init(void) { timer_clear(); }
+   8:tmk_core/common/arm_atsam/timer.c **** 
+   9:tmk_core/common/arm_atsam/timer.c **** uint16_t timer_read(void) { return (uint16_t)ms_clk; }
+  55              		.loc 1 9 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              		.loc 1 9 0
+  61 0000 024B     		ldr	r3, .L5
+  62 0002 D3E90001 		ldrd	r0, [r3]
+  63 0006 80B2     		uxth	r0, r0
+  64 0008 7047     		bx	lr
+  65              	.L6:
+  66 000a 00BF     		.align	2
+  67              	.L5:
+  68 000c 00000000 		.word	ms_clk
+  69              		.cfi_endproc
+  70              	.LFE127:
+  72              		.section	.text.timer_read32,"ax",%progbits
+  73              		.align	1
+  74              		.global	timer_read32
+  75              		.syntax unified
+  76              		.thumb
+  77              		.thumb_func
+  78              		.fpu fpv4-sp-d16
+  80              	timer_read32:
+  81              	.LFB128:
+  10:tmk_core/common/arm_atsam/timer.c **** 
+  11:tmk_core/common/arm_atsam/timer.c **** uint32_t timer_read32(void) { return (uint32_t)ms_clk; }
+  82              		.loc 1 11 0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 0
+  85              		@ frame_needed = 0, uses_anonymous_args = 0
+  86              		@ link register save eliminated.
+  87              		.loc 1 11 0
+  88 0000 014B     		ldr	r3, .L8
+  89 0002 D3E90001 		ldrd	r0, [r3]
+  90 0006 7047     		bx	lr
+  91              	.L9:
+  92              		.align	2
+  93              	.L8:
+  94 0008 00000000 		.word	ms_clk
+  95              		.cfi_endproc
+  96              	.LFE128:
+  98              		.section	.text.timer_read64,"ax",%progbits
+  99              		.align	1
+ 100              		.global	timer_read64
+ 101              		.syntax unified
+ 102              		.thumb
+ 103              		.thumb_func
+ 104              		.fpu fpv4-sp-d16
+ 106              	timer_read64:
+ 107              	.LFB129:
+  12:tmk_core/common/arm_atsam/timer.c **** 
+  13:tmk_core/common/arm_atsam/timer.c **** uint64_t timer_read64(void) { return ms_clk; }
+ 108              		.loc 1 13 0
+ 109              		.cfi_startproc
+ 110              		@ args = 0, pretend = 0, frame = 0
+ 111              		@ frame_needed = 0, uses_anonymous_args = 0
+ 112              		@ link register save eliminated.
+ 113              		.loc 1 13 0
+ 114 0000 014B     		ldr	r3, .L11
+ 115 0002 D3E90001 		ldrd	r0, [r3]
+ 116 0006 7047     		bx	lr
+ 117              	.L12:
+ 118              		.align	2
+ 119              	.L11:
+ 120 0008 00000000 		.word	ms_clk
+ 121              		.cfi_endproc
+ 122              	.LFE129:
+ 124              		.section	.text.timer_elapsed,"ax",%progbits
+ 125              		.align	1
+ 126              		.global	timer_elapsed
+ 127              		.syntax unified
+ 128              		.thumb
+ 129              		.thumb_func
+ 130              		.fpu fpv4-sp-d16
+ 132              	timer_elapsed:
+ 133              	.LFB130:
+  14:tmk_core/common/arm_atsam/timer.c **** 
+  15:tmk_core/common/arm_atsam/timer.c **** uint16_t timer_elapsed(uint16_t tlast) { return TIMER_DIFF_16(timer_read(), tlast); }
+ 134              		.loc 1 15 0
+ 135              		.cfi_startproc
+ 136              		@ args = 0, pretend = 0, frame = 0
+ 137              		@ frame_needed = 0, uses_anonymous_args = 0
+ 138              	.LVL1:
+ 139 0000 30B5     		push	{r4, r5, lr}
+ 140              		.cfi_def_cfa_offset 12
+ 141              		.cfi_offset 4, -12
+ 142              		.cfi_offset 5, -8
+ 143              		.cfi_offset 14, -4
+ 144              	.LBB8:
+ 145              	.LBB9:
+   9:tmk_core/common/arm_atsam/timer.c **** 
+ 146              		.loc 1 9 0
+ 147 0002 084B     		ldr	r3, .L17
+ 148 0004 D3E90045 		ldrd	r4, [r3]
+ 149              	.LBE9:
+ 150              	.LBE8:
+ 151              		.loc 1 15 0
+ 152 0008 A4B2     		uxth	r4, r4
+ 153 000a A042     		cmp	r0, r4
+ 154 000c 04D8     		bhi	.L14
+ 155              	.LBB10:
+ 156              	.LBB11:
+   9:tmk_core/common/arm_atsam/timer.c **** 
+ 157              		.loc 1 9 0
+ 158 000e D3E90045 		ldrd	r4, [r3]
+ 159              	.LBE11:
+ 160              	.LBE10:
+ 161              		.loc 1 15 0
+ 162 0012 201A     		subs	r0, r4, r0
+ 163              	.LVL2:
+ 164              	.L16:
+ 165 0014 80B2     		uxth	r0, r0
+ 166 0016 30BD     		pop	{r4, r5, pc}
+ 167              	.LVL3:
+ 168              	.L14:
+ 169              	.LBB12:
+ 170              	.LBB13:
+   9:tmk_core/common/arm_atsam/timer.c **** 
+ 171              		.loc 1 9 0
+ 172 0018 D3E90023 		ldrd	r2, [r3]
+ 173              	.LBE13:
+ 174              	.LBE12:
+ 175              		.loc 1 15 0
+ 176 001c 013A     		subs	r2, r2, #1
+ 177 001e 101A     		subs	r0, r2, r0
+ 178              	.LVL4:
+ 179 0020 F8E7     		b	.L16
+ 180              	.L18:
+ 181 0022 00BF     		.align	2
+ 182              	.L17:
+ 183 0024 00000000 		.word	ms_clk
+ 184              		.cfi_endproc
+ 185              	.LFE130:
+ 187              		.section	.text.timer_elapsed32,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	timer_elapsed32
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 193              		.fpu fpv4-sp-d16
+ 195              	timer_elapsed32:
+ 196              	.LFB131:
+  16:tmk_core/common/arm_atsam/timer.c **** 
+  17:tmk_core/common/arm_atsam/timer.c **** uint32_t timer_elapsed32(uint32_t tlast) { return TIMER_DIFF_32(timer_read32(), tlast); }
+ 197              		.loc 1 17 0
+ 198              		.cfi_startproc
+ 199              		@ args = 0, pretend = 0, frame = 0
+ 200              		@ frame_needed = 0, uses_anonymous_args = 0
+ 201              	.LVL5:
+ 202 0000 30B5     		push	{r4, r5, lr}
+ 203              		.cfi_def_cfa_offset 12
+ 204              		.cfi_offset 4, -12
+ 205              		.cfi_offset 5, -8
+ 206              		.cfi_offset 14, -4
+ 207              	.LBB20:
+ 208              	.LBB21:
+  11:tmk_core/common/arm_atsam/timer.c **** 
+ 209              		.loc 1 11 0
+ 210 0002 054B     		ldr	r3, .L23
+ 211 0004 D3E90045 		ldrd	r4, [r3]
+ 212              	.LBE21:
+ 213              	.LBE20:
+ 214              	.LBB22:
+ 215              	.LBB23:
+ 216 0008 D3E90023 		ldrd	r2, [r3]
+ 217              	.LBE23:
+ 218              	.LBE22:
+ 219              		.loc 1 17 0
+ 220 000c A042     		cmp	r0, r4
+ 221 000e 88BF     		it	hi
+ 222 0010 02F1FF32 		addhi	r2, r2, #-1
+ 223 0014 101A     		subs	r0, r2, r0
+ 224              	.LVL6:
+ 225 0016 30BD     		pop	{r4, r5, pc}
+ 226              	.L24:
+ 227              		.align	2
+ 228              	.L23:
+ 229 0018 00000000 		.word	ms_clk
+ 230              		.cfi_endproc
+ 231              	.LFE131:
+ 233              		.section	.text.timer_clear,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	timer_clear
+ 236              		.syntax unified
+ 237              		.thumb
+ 238              		.thumb_func
+ 239              		.fpu fpv4-sp-d16
+ 241              	timer_clear:
+ 242              	.LFB132:
+  18:tmk_core/common/arm_atsam/timer.c **** 
+  19:tmk_core/common/arm_atsam/timer.c **** void timer_clear(void) { set_time(0); }
+ 243              		.loc 1 19 0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              		@ link register save eliminated.
+ 248              	.LVL7:
+ 249              	.LBB26:
+ 250              	.LBB27:
+   5:tmk_core/common/arm_atsam/timer.c **** 
+ 251              		.loc 1 5 0
+ 252 0000 024B     		ldr	r3, .L26
+ 253 0002 0020     		movs	r0, #0
+ 254 0004 0021     		movs	r1, #0
+ 255 0006 C3E90001 		strd	r0, [r3]
+ 256              	.LVL8:
+ 257              	.LBE27:
+ 258              	.LBE26:
+ 259              		.loc 1 19 0
+ 260 000a 7047     		bx	lr
+ 261              	.L27:
+ 262              		.align	2
+ 263              	.L26:
+ 264 000c 00000000 		.word	ms_clk
+ 265              		.cfi_endproc
+ 266              	.LFE132:
+ 268              		.section	.text.timer_init,"ax",%progbits
+ 269              		.align	1
+ 270              		.global	timer_init
+ 271              		.syntax unified
+ 272              		.thumb
+ 273              		.thumb_func
+ 274              		.fpu fpv4-sp-d16
+ 276              	timer_init:
+ 277              	.LFB126:
+   7:tmk_core/common/arm_atsam/timer.c **** 
+ 278              		.loc 1 7 0
+ 279              		.cfi_startproc
+ 280              		@ args = 0, pretend = 0, frame = 0
+ 281              		@ frame_needed = 0, uses_anonymous_args = 0
+ 282              		@ link register save eliminated.
+   7:tmk_core/common/arm_atsam/timer.c **** 
+ 283              		.loc 1 7 0
+ 284 0000 FFF7FEBF 		b	timer_clear
+ 285              	.LVL9:
+ 286              		.cfi_endproc
+ 287              	.LFE126:
+ 289              		.text
+ 290              	.Letext0:
+ 291              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 292              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 293              		.file 4 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 294              		.file 5 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 295              		.file 6 "tmk_core/common/timer.h"
+ 296              		.file 7 "./tmk_core/protocol/arm_atsam/clks.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 timer.c
+/var/tmp//ccILQOCg.s:18     .text.set_time:0000000000000000 $t
+/var/tmp//ccILQOCg.s:25     .text.set_time:0000000000000000 set_time
+/var/tmp//ccILQOCg.s:41     .text.set_time:0000000000000008 $d
+/var/tmp//ccILQOCg.s:46     .text.timer_read:0000000000000000 $t
+/var/tmp//ccILQOCg.s:53     .text.timer_read:0000000000000000 timer_read
+/var/tmp//ccILQOCg.s:68     .text.timer_read:000000000000000c $d
+/var/tmp//ccILQOCg.s:73     .text.timer_read32:0000000000000000 $t
+/var/tmp//ccILQOCg.s:80     .text.timer_read32:0000000000000000 timer_read32
+/var/tmp//ccILQOCg.s:94     .text.timer_read32:0000000000000008 $d
+/var/tmp//ccILQOCg.s:99     .text.timer_read64:0000000000000000 $t
+/var/tmp//ccILQOCg.s:106    .text.timer_read64:0000000000000000 timer_read64
+/var/tmp//ccILQOCg.s:120    .text.timer_read64:0000000000000008 $d
+/var/tmp//ccILQOCg.s:125    .text.timer_elapsed:0000000000000000 $t
+/var/tmp//ccILQOCg.s:132    .text.timer_elapsed:0000000000000000 timer_elapsed
+/var/tmp//ccILQOCg.s:183    .text.timer_elapsed:0000000000000024 $d
+/var/tmp//ccILQOCg.s:188    .text.timer_elapsed32:0000000000000000 $t
+/var/tmp//ccILQOCg.s:195    .text.timer_elapsed32:0000000000000000 timer_elapsed32
+/var/tmp//ccILQOCg.s:229    .text.timer_elapsed32:0000000000000018 $d
+/var/tmp//ccILQOCg.s:234    .text.timer_clear:0000000000000000 $t
+/var/tmp//ccILQOCg.s:241    .text.timer_clear:0000000000000000 timer_clear
+/var/tmp//ccILQOCg.s:264    .text.timer_clear:000000000000000c $d
+/var/tmp//ccILQOCg.s:269    .text.timer_init:0000000000000000 $t
+/var/tmp//ccILQOCg.s:276    .text.timer_init:0000000000000000 timer_init
+
+UNDEFINED SYMBOLS
+ms_clk

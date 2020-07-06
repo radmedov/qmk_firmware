@@ -1,0 +1,1760 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"stm32_dma.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.Vector6C,"ax",%progbits
+  16              		.align	1
+  17              		.global	Vector6C
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	Vector6C:
+  24              	.LFB279:
+  25              		.file 1 "lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c"
+   1:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*
+   2:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
+   3:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+   4:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     Licensed under the Apache License, Version 2.0 (the "License");
+   5:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     you may not use this file except in compliance with the License.
+   6:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     You may obtain a copy of the License at
+   7:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+   8:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****         http://www.apache.org/licenses/LICENSE-2.0
+   9:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  10:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     Unless required by applicable law or agreed to in writing, software
+  11:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     distributed under the License is distributed on an "AS IS" BASIS,
+  12:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  13:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     See the License for the specific language governing permissions and
+  14:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     limitations under the License.
+  15:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** */
+  16:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  17:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+  18:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @file    DMAv1/stm32_dma.c
+  19:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA helper driver code.
+  20:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+  21:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @addtogroup STM32_DMA
+  22:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @details DMA sharing helper driver. In the STM32 the DMA streams are a
+  23:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          shared resource, this driver allows to allocate and free DMA
+  24:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          streams at runtime in order to allow all the other device
+  25:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          drivers to coordinate the access to the resource.
+  26:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @note    The DMA ISR handlers are all declared into this module because
+  27:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          sharing, the various device drivers can associate a callback to
+  28:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          ISRs when allocating streams.
+  29:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @{
+  30:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+  31:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  32:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #include "hal.h"
+  33:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  34:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* The following macro is only defined if some driver requiring DMA services
+  35:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****    has been enabled.*/
+  36:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA_REQUIRED) || defined(__DOXYGEN__)
+  37:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  38:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+  39:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver local definitions.                                                 */
+  40:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+  41:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  42:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+  43:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Mask of the DMA1 streams in @p dma_streams_mask.
+  44:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+  45:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define STM32_DMA1_STREAMS_MASK     ((1U << STM32_DMA1_NUM_CHANNELS) - 1U)
+  46:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  47:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+  48:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Mask of the DMA2 streams in @p dma_streams_mask.
+  49:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+  50:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define STM32_DMA2_STREAMS_MASK     (((1U << STM32_DMA2_NUM_CHANNELS) -     \
+  51:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****                                      1U) << STM32_DMA1_NUM_CHANNELS)
+  52:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  53:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+  54:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Post-reset value of the stream CCR register.
+  55:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+  56:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define STM32_DMA_CCR_RESET_VALUE   0x00000000U
+  57:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  58:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA_SUPPORTS_CSELR == TRUE
+  59:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  60:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(DMA1_CSELR)
+  61:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA1_CSELR             &DMA1_CSELR->CSELR
+  62:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #else
+  63:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA1_CSELR             &DMA1->CSELR
+  64:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  65:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  66:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(DMA2_CSELR)
+  67:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA2_CSELR             &DMA2_CSELR->CSELR
+  68:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #else
+  69:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA2_CSELR             &DMA2->CSELR
+  70:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  71:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  72:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #else /* !defined(DMA1_CSELR) */
+  73:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  74:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA1_CSELR             NULL
+  75:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define ADDR_DMA2_CSELR             NULL
+  76:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  77:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif /* !defined(DMA1_CSELR) */
+  78:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  79:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*
+  80:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * Default ISR collision masks.
+  81:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+  82:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH1_CMASK)
+  83:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH1_CMASK              0x00000001U
+  84:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  85:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  86:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH2_CMASK)
+  87:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH2_CMASK              0x00000002U
+  88:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  89:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  90:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH3_CMASK)
+  91:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH3_CMASK              0x00000004U
+  92:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  93:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  94:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH4_CMASK)
+  95:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH4_CMASK              0x00000008U
+  96:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+  97:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+  98:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH5_CMASK)
+  99:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH5_CMASK              0x00000010U
+ 100:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 101:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 102:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH6_CMASK)
+ 103:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH6_CMASK              0x00000020U
+ 104:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 105:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 106:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA1_CH7_CMASK)
+ 107:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA1_CH7_CMASK              0x00000040U
+ 108:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 109:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 110:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH1_CMASK)
+ 111:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH1_CMASK              0x00000080U
+ 112:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 113:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 114:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH2_CMASK)
+ 115:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH2_CMASK              0x00000100U
+ 116:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 117:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 118:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH3_CMASK)
+ 119:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH3_CMASK              0x00000200U
+ 120:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 121:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 122:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH4_CMASK)
+ 123:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH4_CMASK              0x00000400U
+ 124:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 125:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 126:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH5_CMASK)
+ 127:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH5_CMASK              0x00000800U
+ 128:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 129:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 130:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH6_CMASK)
+ 131:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH6_CMASK              0x00001000U
+ 132:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 133:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 134:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if !defined(DMA2_CH7_CMASK)
+ 135:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #define DMA2_CH7_CMASK              0x00002000U
+ 136:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 137:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 138:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 139:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver exported variables.                                                */
+ 140:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 141:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 142:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 143:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA streams descriptors.
+ 144:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @details This table keeps the association between an unique stream
+ 145:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          identifier and the involved physical registers.
+ 146:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @note    Don't use this array directly, use the appropriate wrapper macros
+ 147:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          instead: @p STM32_DMA1_STREAM1, @p STM32_DMA1_STREAM2 etc.
+ 148:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 149:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** const stm32_dma_stream_t _stm32_dma_streams[STM32_DMA_STREAMS] = {
+ 150:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel1, DMA1_CH1_CMASK, ADDR_DMA1_CSELR,  0,  0, STM32_DMA1_CH1_NUMBER},
+ 151:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel2, DMA1_CH2_CMASK, ADDR_DMA1_CSELR,  4,  1, STM32_DMA1_CH2_NUMBER},
+ 152:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel3, DMA1_CH3_CMASK, ADDR_DMA1_CSELR,  8,  2, STM32_DMA1_CH3_NUMBER},
+ 153:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel4, DMA1_CH4_CMASK, ADDR_DMA1_CSELR, 12,  3, STM32_DMA1_CH4_NUMBER},
+ 154:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel5, DMA1_CH5_CMASK, ADDR_DMA1_CSELR, 16,  4, STM32_DMA1_CH5_NUMBER},
+ 155:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA1_NUM_CHANNELS > 5
+ 156:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel6, DMA1_CH6_CMASK, ADDR_DMA1_CSELR, 20,  5, STM32_DMA1_CH6_NUMBER},
+ 157:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA1_NUM_CHANNELS > 6
+ 158:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA1, DMA1_Channel7, DMA1_CH7_CMASK, ADDR_DMA1_CSELR, 24,  6, STM32_DMA1_CH7_NUMBER},
+ 159:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 0
+ 160:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel1, DMA2_CH1_CMASK, ADDR_DMA2_CSELR,  0,  7, STM32_DMA2_CH1_NUMBER},
+ 161:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel2, DMA2_CH2_CMASK, ADDR_DMA2_CSELR,  4,  8, STM32_DMA2_CH2_NUMBER},
+ 162:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel3, DMA2_CH3_CMASK, ADDR_DMA2_CSELR,  8,  9, STM32_DMA2_CH3_NUMBER},
+ 163:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel4, DMA2_CH4_CMASK, ADDR_DMA2_CSELR, 12, 10, STM32_DMA2_CH4_NUMBER},
+ 164:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel5, DMA2_CH5_CMASK, ADDR_DMA2_CSELR, 16, 11, STM32_DMA2_CH5_NUMBER},
+ 165:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 5
+ 166:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel6, DMA2_CH6_CMASK, ADDR_DMA2_CSELR, 20, 12, STM32_DMA2_CH6_NUMBER},
+ 167:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 6
+ 168:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   {DMA2, DMA2_Channel7, DMA2_CH7_CMASK, ADDR_DMA2_CSELR, 24, 13, STM32_DMA2_CH7_NUMBER},
+ 169:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 170:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 171:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 172:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 173:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 174:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** };
+ 175:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 176:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 177:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA IRQ redirectors.
+ 178:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 179:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** dma_isr_redir_t _stm32_dma_isr_redir[STM32_DMA_STREAMS];
+ 180:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 181:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 182:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver local variables and types.                                         */
+ 183:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 184:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 185:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 186:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Masks regarding the allocated streams.
+ 187:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 188:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** static struct {
+ 189:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /**
+ 190:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****    * @brief   Mask of the enabled streams.
+ 191:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****    */
+ 192:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   uint32_t      streams_mask;
+ 193:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /**
+ 194:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****    * @brief   Mask of the enabled stream ISRs.
+ 195:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****    */
+ 196:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   uint32_t      isr_mask;
+ 197:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** } dma;
+ 198:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 199:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 200:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver local functions.                                                   */
+ 201:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 202:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 203:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 204:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver interrupt handlers.                                                */
+ 205:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 206:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 207:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH1_HANDLER) || defined(__DOXYGEN__)
+ 208:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 209:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 1 shared ISR.
+ 210:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 211:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 212:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 213:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH1_HANDLER) {
+  26              		.loc 1 213 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 08B5     		push	{r3, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 3, -8
+  34              		.cfi_offset 14, -4
+  35              	.LBB2:
+ 214:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 215:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 216:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 217:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM1);
+  36              		.loc 1 217 0
+  37 0002 094B     		ldr	r3, .L8
+  38 0004 094A     		ldr	r2, .L8+4
+  39 0006 1968     		ldr	r1, [r3]
+  40 0008 1268     		ldr	r2, [r2]
+  41 000a 01F00E01 		and	r1, r1, #14
+  42              	.LVL1:
+  43 000e 0A42     		tst	r2, r1
+  44 0010 05D0     		beq	.L3
+  45              		.loc 1 217 0 is_stmt 0 discriminator 1
+  46 0012 074A     		ldr	r2, .L8+8
+  47 0014 5960     		str	r1, [r3, #4]
+  48 0016 1368     		ldr	r3, [r2]
+  49 0018 0BB1     		cbz	r3, .L3
+  50              		.loc 1 217 0 discriminator 2
+  51 001a 5068     		ldr	r0, [r2, #4]
+  52 001c 9847     		blx	r3
+  53              	.LVL2:
+  54              	.L3:
+  55              	.LBE2:
+ 218:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 219:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 220:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+  56              		.loc 1 220 0 is_stmt 1
+  57 001e BDE80840 		pop	{r3, lr}
+  58              		.cfi_restore 14
+  59              		.cfi_restore 3
+  60              		.cfi_def_cfa_offset 0
+ 219:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+  61              		.loc 1 219 0
+  62 0022 FFF7FEBF 		b	_port_irq_epilogue
+  63              	.LVL3:
+  64              	.L9:
+  65 0026 00BF     		.align	2
+  66              	.L8:
+  67 0028 00000240 		.word	1073872896
+  68 002c 08000240 		.word	1073872904
+  69 0030 00000000 		.word	.LANCHOR0
+  70              		.cfi_endproc
+  71              	.LFE279:
+  73              		.section	.text.Vector70,"ax",%progbits
+  74              		.align	1
+  75              		.global	Vector70
+  76              		.syntax unified
+  77              		.thumb
+  78              		.thumb_func
+  79              		.fpu softvfp
+  81              	Vector70:
+  82              	.LFB280:
+ 221:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 222:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 223:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH2_HANDLER) || defined(__DOXYGEN__)
+ 224:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 225:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 2 shared ISR.
+ 226:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 227:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 228:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 229:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH2_HANDLER) {
+  83              		.loc 1 229 0
+  84              		.cfi_startproc
+  85              		@ args = 0, pretend = 0, frame = 0
+  86              		@ frame_needed = 0, uses_anonymous_args = 0
+  87              	.LVL4:
+  88 0000 08B5     		push	{r3, lr}
+  89              		.cfi_def_cfa_offset 8
+  90              		.cfi_offset 3, -8
+  91              		.cfi_offset 14, -4
+  92              	.LBB3:
+ 230:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 231:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 232:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 233:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM2);
+  93              		.loc 1 233 0
+  94 0002 0A4B     		ldr	r3, .L17
+  95 0004 0A4A     		ldr	r2, .L17+4
+  96 0006 1968     		ldr	r1, [r3]
+  97 0008 1268     		ldr	r2, [r2]
+  98 000a 0909     		lsrs	r1, r1, #4
+  99 000c 01F00E01 		and	r1, r1, #14
+ 100              	.LVL5:
+ 101 0010 0A42     		tst	r2, r1
+ 102 0012 06D0     		beq	.L12
+ 103              		.loc 1 233 0 is_stmt 0 discriminator 1
+ 104 0014 0A01     		lsls	r2, r1, #4
+ 105 0016 5A60     		str	r2, [r3, #4]
+ 106 0018 064A     		ldr	r2, .L17+8
+ 107 001a 9368     		ldr	r3, [r2, #8]
+ 108 001c 0BB1     		cbz	r3, .L12
+ 109              		.loc 1 233 0 discriminator 2
+ 110 001e D068     		ldr	r0, [r2, #12]
+ 111 0020 9847     		blx	r3
+ 112              	.LVL6:
+ 113              	.L12:
+ 114              	.LBE3:
+ 234:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 235:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 236:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 115              		.loc 1 236 0 is_stmt 1
+ 116 0022 BDE80840 		pop	{r3, lr}
+ 117              		.cfi_restore 14
+ 118              		.cfi_restore 3
+ 119              		.cfi_def_cfa_offset 0
+ 235:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 120              		.loc 1 235 0
+ 121 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 122              	.LVL7:
+ 123              	.L18:
+ 124 002a 00BF     		.align	2
+ 125              	.L17:
+ 126 002c 00000240 		.word	1073872896
+ 127 0030 1C000240 		.word	1073872924
+ 128 0034 00000000 		.word	.LANCHOR0
+ 129              		.cfi_endproc
+ 130              	.LFE280:
+ 132              		.section	.text.Vector74,"ax",%progbits
+ 133              		.align	1
+ 134              		.global	Vector74
+ 135              		.syntax unified
+ 136              		.thumb
+ 137              		.thumb_func
+ 138              		.fpu softvfp
+ 140              	Vector74:
+ 141              	.LFB281:
+ 237:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 238:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 239:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH3_HANDLER) || defined(__DOXYGEN__)
+ 240:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 241:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 3 shared ISR.
+ 242:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 243:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 244:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 245:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH3_HANDLER) {
+ 142              		.loc 1 245 0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146              	.LVL8:
+ 147 0000 08B5     		push	{r3, lr}
+ 148              		.cfi_def_cfa_offset 8
+ 149              		.cfi_offset 3, -8
+ 150              		.cfi_offset 14, -4
+ 151              	.LBB4:
+ 246:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 247:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 248:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 249:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM3);
+ 152              		.loc 1 249 0
+ 153 0002 0A4B     		ldr	r3, .L26
+ 154 0004 0A4A     		ldr	r2, .L26+4
+ 155 0006 1968     		ldr	r1, [r3]
+ 156 0008 1268     		ldr	r2, [r2]
+ 157 000a 090A     		lsrs	r1, r1, #8
+ 158 000c 01F00E01 		and	r1, r1, #14
+ 159              	.LVL9:
+ 160 0010 0A42     		tst	r2, r1
+ 161 0012 06D0     		beq	.L21
+ 162              		.loc 1 249 0 is_stmt 0 discriminator 1
+ 163 0014 0A02     		lsls	r2, r1, #8
+ 164 0016 5A60     		str	r2, [r3, #4]
+ 165 0018 064A     		ldr	r2, .L26+8
+ 166 001a 1369     		ldr	r3, [r2, #16]
+ 167 001c 0BB1     		cbz	r3, .L21
+ 168              		.loc 1 249 0 discriminator 2
+ 169 001e 5069     		ldr	r0, [r2, #20]
+ 170 0020 9847     		blx	r3
+ 171              	.LVL10:
+ 172              	.L21:
+ 173              	.LBE4:
+ 250:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 251:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 252:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 174              		.loc 1 252 0 is_stmt 1
+ 175 0022 BDE80840 		pop	{r3, lr}
+ 176              		.cfi_restore 14
+ 177              		.cfi_restore 3
+ 178              		.cfi_def_cfa_offset 0
+ 251:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 179              		.loc 1 251 0
+ 180 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 181              	.LVL11:
+ 182              	.L27:
+ 183 002a 00BF     		.align	2
+ 184              	.L26:
+ 185 002c 00000240 		.word	1073872896
+ 186 0030 30000240 		.word	1073872944
+ 187 0034 00000000 		.word	.LANCHOR0
+ 188              		.cfi_endproc
+ 189              	.LFE281:
+ 191              		.section	.text.Vector78,"ax",%progbits
+ 192              		.align	1
+ 193              		.global	Vector78
+ 194              		.syntax unified
+ 195              		.thumb
+ 196              		.thumb_func
+ 197              		.fpu softvfp
+ 199              	Vector78:
+ 200              	.LFB282:
+ 253:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 254:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 255:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH4_HANDLER) || defined(__DOXYGEN__)
+ 256:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 257:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 4 shared ISR.
+ 258:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 259:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 260:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 261:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH4_HANDLER) {
+ 201              		.loc 1 261 0
+ 202              		.cfi_startproc
+ 203              		@ args = 0, pretend = 0, frame = 0
+ 204              		@ frame_needed = 0, uses_anonymous_args = 0
+ 205              	.LVL12:
+ 206 0000 08B5     		push	{r3, lr}
+ 207              		.cfi_def_cfa_offset 8
+ 208              		.cfi_offset 3, -8
+ 209              		.cfi_offset 14, -4
+ 210              	.LBB5:
+ 262:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 263:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 264:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 265:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM4);
+ 211              		.loc 1 265 0
+ 212 0002 0A4B     		ldr	r3, .L35
+ 213 0004 0A4A     		ldr	r2, .L35+4
+ 214 0006 1968     		ldr	r1, [r3]
+ 215 0008 1268     		ldr	r2, [r2]
+ 216 000a 090B     		lsrs	r1, r1, #12
+ 217 000c 01F00E01 		and	r1, r1, #14
+ 218              	.LVL13:
+ 219 0010 0A42     		tst	r2, r1
+ 220 0012 06D0     		beq	.L30
+ 221              		.loc 1 265 0 is_stmt 0 discriminator 1
+ 222 0014 0A03     		lsls	r2, r1, #12
+ 223 0016 5A60     		str	r2, [r3, #4]
+ 224 0018 064A     		ldr	r2, .L35+8
+ 225 001a 9369     		ldr	r3, [r2, #24]
+ 226 001c 0BB1     		cbz	r3, .L30
+ 227              		.loc 1 265 0 discriminator 2
+ 228 001e D069     		ldr	r0, [r2, #28]
+ 229 0020 9847     		blx	r3
+ 230              	.LVL14:
+ 231              	.L30:
+ 232              	.LBE5:
+ 266:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 267:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 268:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 233              		.loc 1 268 0 is_stmt 1
+ 234 0022 BDE80840 		pop	{r3, lr}
+ 235              		.cfi_restore 14
+ 236              		.cfi_restore 3
+ 237              		.cfi_def_cfa_offset 0
+ 267:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 238              		.loc 1 267 0
+ 239 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 240              	.LVL15:
+ 241              	.L36:
+ 242 002a 00BF     		.align	2
+ 243              	.L35:
+ 244 002c 00000240 		.word	1073872896
+ 245 0030 44000240 		.word	1073872964
+ 246 0034 00000000 		.word	.LANCHOR0
+ 247              		.cfi_endproc
+ 248              	.LFE282:
+ 250              		.section	.text.Vector7C,"ax",%progbits
+ 251              		.align	1
+ 252              		.global	Vector7C
+ 253              		.syntax unified
+ 254              		.thumb
+ 255              		.thumb_func
+ 256              		.fpu softvfp
+ 258              	Vector7C:
+ 259              	.LFB283:
+ 269:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 270:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 271:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH5_HANDLER) || defined(__DOXYGEN__)
+ 272:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 273:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 5 shared ISR.
+ 274:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 275:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 276:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 277:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH5_HANDLER) {
+ 260              		.loc 1 277 0
+ 261              		.cfi_startproc
+ 262              		@ args = 0, pretend = 0, frame = 0
+ 263              		@ frame_needed = 0, uses_anonymous_args = 0
+ 264              	.LVL16:
+ 265 0000 08B5     		push	{r3, lr}
+ 266              		.cfi_def_cfa_offset 8
+ 267              		.cfi_offset 3, -8
+ 268              		.cfi_offset 14, -4
+ 269              	.LBB6:
+ 278:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 279:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 280:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 281:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM5);
+ 270              		.loc 1 281 0
+ 271 0002 0A4B     		ldr	r3, .L44
+ 272 0004 0A4A     		ldr	r2, .L44+4
+ 273 0006 1968     		ldr	r1, [r3]
+ 274 0008 1268     		ldr	r2, [r2]
+ 275 000a 090C     		lsrs	r1, r1, #16
+ 276 000c 01F00E01 		and	r1, r1, #14
+ 277              	.LVL17:
+ 278 0010 0A42     		tst	r2, r1
+ 279 0012 06D0     		beq	.L39
+ 280              		.loc 1 281 0 is_stmt 0 discriminator 1
+ 281 0014 0A04     		lsls	r2, r1, #16
+ 282 0016 5A60     		str	r2, [r3, #4]
+ 283 0018 064A     		ldr	r2, .L44+8
+ 284 001a 136A     		ldr	r3, [r2, #32]
+ 285 001c 0BB1     		cbz	r3, .L39
+ 286              		.loc 1 281 0 discriminator 2
+ 287 001e 506A     		ldr	r0, [r2, #36]
+ 288 0020 9847     		blx	r3
+ 289              	.LVL18:
+ 290              	.L39:
+ 291              	.LBE6:
+ 282:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 283:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 284:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 292              		.loc 1 284 0 is_stmt 1
+ 293 0022 BDE80840 		pop	{r3, lr}
+ 294              		.cfi_restore 14
+ 295              		.cfi_restore 3
+ 296              		.cfi_def_cfa_offset 0
+ 283:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 297              		.loc 1 283 0
+ 298 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 299              	.LVL19:
+ 300              	.L45:
+ 301 002a 00BF     		.align	2
+ 302              	.L44:
+ 303 002c 00000240 		.word	1073872896
+ 304 0030 58000240 		.word	1073872984
+ 305 0034 00000000 		.word	.LANCHOR0
+ 306              		.cfi_endproc
+ 307              	.LFE283:
+ 309              		.section	.text.Vector80,"ax",%progbits
+ 310              		.align	1
+ 311              		.global	Vector80
+ 312              		.syntax unified
+ 313              		.thumb
+ 314              		.thumb_func
+ 315              		.fpu softvfp
+ 317              	Vector80:
+ 318              	.LFB284:
+ 285:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 286:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 287:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH6_HANDLER) || defined(__DOXYGEN__)
+ 288:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 289:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 6 shared ISR.
+ 290:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 291:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 292:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 293:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH6_HANDLER) {
+ 319              		.loc 1 293 0
+ 320              		.cfi_startproc
+ 321              		@ args = 0, pretend = 0, frame = 0
+ 322              		@ frame_needed = 0, uses_anonymous_args = 0
+ 323              	.LVL20:
+ 324 0000 08B5     		push	{r3, lr}
+ 325              		.cfi_def_cfa_offset 8
+ 326              		.cfi_offset 3, -8
+ 327              		.cfi_offset 14, -4
+ 328              	.LBB7:
+ 294:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 295:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 296:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 297:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM6);
+ 329              		.loc 1 297 0
+ 330 0002 0A4B     		ldr	r3, .L53
+ 331 0004 0A4A     		ldr	r2, .L53+4
+ 332 0006 1968     		ldr	r1, [r3]
+ 333 0008 1268     		ldr	r2, [r2]
+ 334 000a 090D     		lsrs	r1, r1, #20
+ 335 000c 01F00E01 		and	r1, r1, #14
+ 336              	.LVL21:
+ 337 0010 0A42     		tst	r2, r1
+ 338 0012 06D0     		beq	.L48
+ 339              		.loc 1 297 0 is_stmt 0 discriminator 1
+ 340 0014 0A05     		lsls	r2, r1, #20
+ 341 0016 5A60     		str	r2, [r3, #4]
+ 342 0018 064A     		ldr	r2, .L53+8
+ 343 001a 936A     		ldr	r3, [r2, #40]
+ 344 001c 0BB1     		cbz	r3, .L48
+ 345              		.loc 1 297 0 discriminator 2
+ 346 001e D06A     		ldr	r0, [r2, #44]
+ 347 0020 9847     		blx	r3
+ 348              	.LVL22:
+ 349              	.L48:
+ 350              	.LBE7:
+ 298:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 299:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 300:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 351              		.loc 1 300 0 is_stmt 1
+ 352 0022 BDE80840 		pop	{r3, lr}
+ 353              		.cfi_restore 14
+ 354              		.cfi_restore 3
+ 355              		.cfi_def_cfa_offset 0
+ 299:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 356              		.loc 1 299 0
+ 357 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 358              	.LVL23:
+ 359              	.L54:
+ 360 002a 00BF     		.align	2
+ 361              	.L53:
+ 362 002c 00000240 		.word	1073872896
+ 363 0030 6C000240 		.word	1073873004
+ 364 0034 00000000 		.word	.LANCHOR0
+ 365              		.cfi_endproc
+ 366              	.LFE284:
+ 368              		.section	.text.Vector84,"ax",%progbits
+ 369              		.align	1
+ 370              		.global	Vector84
+ 371              		.syntax unified
+ 372              		.thumb
+ 373              		.thumb_func
+ 374              		.fpu softvfp
+ 376              	Vector84:
+ 377              	.LFB285:
+ 301:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 302:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 303:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA1_CH7_HANDLER) || defined(__DOXYGEN__)
+ 304:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 305:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA1 stream 7 shared ISR.
+ 306:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 307:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 308:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 309:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA1_CH7_HANDLER) {
+ 378              		.loc 1 309 0
+ 379              		.cfi_startproc
+ 380              		@ args = 0, pretend = 0, frame = 0
+ 381              		@ frame_needed = 0, uses_anonymous_args = 0
+ 382              	.LVL24:
+ 383 0000 08B5     		push	{r3, lr}
+ 384              		.cfi_def_cfa_offset 8
+ 385              		.cfi_offset 3, -8
+ 386              		.cfi_offset 14, -4
+ 387              	.LBB8:
+ 310:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 311:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 312:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 313:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA1_STREAM7);
+ 388              		.loc 1 313 0
+ 389 0002 0A4B     		ldr	r3, .L62
+ 390 0004 0A4A     		ldr	r2, .L62+4
+ 391 0006 1968     		ldr	r1, [r3]
+ 392 0008 1268     		ldr	r2, [r2]
+ 393 000a 090E     		lsrs	r1, r1, #24
+ 394 000c 01F00E01 		and	r1, r1, #14
+ 395              	.LVL25:
+ 396 0010 0A42     		tst	r2, r1
+ 397 0012 06D0     		beq	.L57
+ 398              		.loc 1 313 0 is_stmt 0 discriminator 1
+ 399 0014 0A06     		lsls	r2, r1, #24
+ 400 0016 5A60     		str	r2, [r3, #4]
+ 401 0018 064A     		ldr	r2, .L62+8
+ 402 001a 136B     		ldr	r3, [r2, #48]
+ 403 001c 0BB1     		cbz	r3, .L57
+ 404              		.loc 1 313 0 discriminator 2
+ 405 001e 506B     		ldr	r0, [r2, #52]
+ 406 0020 9847     		blx	r3
+ 407              	.LVL26:
+ 408              	.L57:
+ 409              	.LBE8:
+ 314:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 315:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 316:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 410              		.loc 1 316 0 is_stmt 1
+ 411 0022 BDE80840 		pop	{r3, lr}
+ 412              		.cfi_restore 14
+ 413              		.cfi_restore 3
+ 414              		.cfi_def_cfa_offset 0
+ 315:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 415              		.loc 1 315 0
+ 416 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 417              	.LVL27:
+ 418              	.L63:
+ 419 002a 00BF     		.align	2
+ 420              	.L62:
+ 421 002c 00000240 		.word	1073872896
+ 422 0030 80000240 		.word	1073873024
+ 423 0034 00000000 		.word	.LANCHOR0
+ 424              		.cfi_endproc
+ 425              	.LFE285:
+ 427              		.section	.text.Vector120,"ax",%progbits
+ 428              		.align	1
+ 429              		.global	Vector120
+ 430              		.syntax unified
+ 431              		.thumb
+ 432              		.thumb_func
+ 433              		.fpu softvfp
+ 435              	Vector120:
+ 436              	.LFB286:
+ 317:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 318:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 319:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH1_HANDLER) || defined(__DOXYGEN__)
+ 320:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 321:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 1 shared ISR.
+ 322:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 323:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 324:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 325:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH1_HANDLER) {
+ 437              		.loc 1 325 0
+ 438              		.cfi_startproc
+ 439              		@ args = 0, pretend = 0, frame = 0
+ 440              		@ frame_needed = 0, uses_anonymous_args = 0
+ 441              	.LVL28:
+ 442 0000 08B5     		push	{r3, lr}
+ 443              		.cfi_def_cfa_offset 8
+ 444              		.cfi_offset 3, -8
+ 445              		.cfi_offset 14, -4
+ 446              	.LBB9:
+ 326:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 327:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 328:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 329:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM1);
+ 447              		.loc 1 329 0
+ 448 0002 094B     		ldr	r3, .L71
+ 449 0004 094A     		ldr	r2, .L71+4
+ 450 0006 1968     		ldr	r1, [r3]
+ 451 0008 1268     		ldr	r2, [r2]
+ 452 000a 01F00E01 		and	r1, r1, #14
+ 453              	.LVL29:
+ 454 000e 0A42     		tst	r2, r1
+ 455 0010 05D0     		beq	.L66
+ 456              		.loc 1 329 0 is_stmt 0 discriminator 1
+ 457 0012 074A     		ldr	r2, .L71+8
+ 458 0014 5960     		str	r1, [r3, #4]
+ 459 0016 936B     		ldr	r3, [r2, #56]
+ 460 0018 0BB1     		cbz	r3, .L66
+ 461              		.loc 1 329 0 discriminator 2
+ 462 001a D06B     		ldr	r0, [r2, #60]
+ 463 001c 9847     		blx	r3
+ 464              	.LVL30:
+ 465              	.L66:
+ 466              	.LBE9:
+ 330:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 331:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 332:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 467              		.loc 1 332 0 is_stmt 1
+ 468 001e BDE80840 		pop	{r3, lr}
+ 469              		.cfi_restore 14
+ 470              		.cfi_restore 3
+ 471              		.cfi_def_cfa_offset 0
+ 331:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 472              		.loc 1 331 0
+ 473 0022 FFF7FEBF 		b	_port_irq_epilogue
+ 474              	.LVL31:
+ 475              	.L72:
+ 476 0026 00BF     		.align	2
+ 477              	.L71:
+ 478 0028 00040240 		.word	1073873920
+ 479 002c 08040240 		.word	1073873928
+ 480 0030 00000000 		.word	.LANCHOR0
+ 481              		.cfi_endproc
+ 482              	.LFE286:
+ 484              		.section	.text.Vector124,"ax",%progbits
+ 485              		.align	1
+ 486              		.global	Vector124
+ 487              		.syntax unified
+ 488              		.thumb
+ 489              		.thumb_func
+ 490              		.fpu softvfp
+ 492              	Vector124:
+ 493              	.LFB287:
+ 333:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 334:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 335:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH2_HANDLER) || defined(__DOXYGEN__)
+ 336:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 337:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 2 shared ISR.
+ 338:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 339:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 340:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 341:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH2_HANDLER) {
+ 494              		.loc 1 341 0
+ 495              		.cfi_startproc
+ 496              		@ args = 0, pretend = 0, frame = 0
+ 497              		@ frame_needed = 0, uses_anonymous_args = 0
+ 498              	.LVL32:
+ 499 0000 08B5     		push	{r3, lr}
+ 500              		.cfi_def_cfa_offset 8
+ 501              		.cfi_offset 3, -8
+ 502              		.cfi_offset 14, -4
+ 503              	.LBB10:
+ 342:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 343:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 344:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 345:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM2);
+ 504              		.loc 1 345 0
+ 505 0002 0A4B     		ldr	r3, .L80
+ 506 0004 0A4A     		ldr	r2, .L80+4
+ 507 0006 1968     		ldr	r1, [r3]
+ 508 0008 1268     		ldr	r2, [r2]
+ 509 000a 0909     		lsrs	r1, r1, #4
+ 510 000c 01F00E01 		and	r1, r1, #14
+ 511              	.LVL33:
+ 512 0010 0A42     		tst	r2, r1
+ 513 0012 06D0     		beq	.L75
+ 514              		.loc 1 345 0 is_stmt 0 discriminator 1
+ 515 0014 0A01     		lsls	r2, r1, #4
+ 516 0016 5A60     		str	r2, [r3, #4]
+ 517 0018 064A     		ldr	r2, .L80+8
+ 518 001a 136C     		ldr	r3, [r2, #64]
+ 519 001c 0BB1     		cbz	r3, .L75
+ 520              		.loc 1 345 0 discriminator 2
+ 521 001e 506C     		ldr	r0, [r2, #68]
+ 522 0020 9847     		blx	r3
+ 523              	.LVL34:
+ 524              	.L75:
+ 525              	.LBE10:
+ 346:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 347:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 348:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 526              		.loc 1 348 0 is_stmt 1
+ 527 0022 BDE80840 		pop	{r3, lr}
+ 528              		.cfi_restore 14
+ 529              		.cfi_restore 3
+ 530              		.cfi_def_cfa_offset 0
+ 347:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 531              		.loc 1 347 0
+ 532 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 533              	.LVL35:
+ 534              	.L81:
+ 535 002a 00BF     		.align	2
+ 536              	.L80:
+ 537 002c 00040240 		.word	1073873920
+ 538 0030 1C040240 		.word	1073873948
+ 539 0034 00000000 		.word	.LANCHOR0
+ 540              		.cfi_endproc
+ 541              	.LFE287:
+ 543              		.section	.text.Vector128,"ax",%progbits
+ 544              		.align	1
+ 545              		.global	Vector128
+ 546              		.syntax unified
+ 547              		.thumb
+ 548              		.thumb_func
+ 549              		.fpu softvfp
+ 551              	Vector128:
+ 552              	.LFB288:
+ 349:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 350:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 351:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH3_HANDLER) || defined(__DOXYGEN__)
+ 352:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 353:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 3 shared ISR.
+ 354:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 355:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 356:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 357:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH3_HANDLER) {
+ 553              		.loc 1 357 0
+ 554              		.cfi_startproc
+ 555              		@ args = 0, pretend = 0, frame = 0
+ 556              		@ frame_needed = 0, uses_anonymous_args = 0
+ 557              	.LVL36:
+ 558 0000 08B5     		push	{r3, lr}
+ 559              		.cfi_def_cfa_offset 8
+ 560              		.cfi_offset 3, -8
+ 561              		.cfi_offset 14, -4
+ 562              	.LBB11:
+ 358:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 359:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 360:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 361:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM3);
+ 563              		.loc 1 361 0
+ 564 0002 0A4B     		ldr	r3, .L89
+ 565 0004 0A4A     		ldr	r2, .L89+4
+ 566 0006 1968     		ldr	r1, [r3]
+ 567 0008 1268     		ldr	r2, [r2]
+ 568 000a 090A     		lsrs	r1, r1, #8
+ 569 000c 01F00E01 		and	r1, r1, #14
+ 570              	.LVL37:
+ 571 0010 0A42     		tst	r2, r1
+ 572 0012 06D0     		beq	.L84
+ 573              		.loc 1 361 0 is_stmt 0 discriminator 1
+ 574 0014 0A02     		lsls	r2, r1, #8
+ 575 0016 5A60     		str	r2, [r3, #4]
+ 576 0018 064A     		ldr	r2, .L89+8
+ 577 001a 936C     		ldr	r3, [r2, #72]
+ 578 001c 0BB1     		cbz	r3, .L84
+ 579              		.loc 1 361 0 discriminator 2
+ 580 001e D06C     		ldr	r0, [r2, #76]
+ 581 0020 9847     		blx	r3
+ 582              	.LVL38:
+ 583              	.L84:
+ 584              	.LBE11:
+ 362:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 363:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 364:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 585              		.loc 1 364 0 is_stmt 1
+ 586 0022 BDE80840 		pop	{r3, lr}
+ 587              		.cfi_restore 14
+ 588              		.cfi_restore 3
+ 589              		.cfi_def_cfa_offset 0
+ 363:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 590              		.loc 1 363 0
+ 591 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 592              	.LVL39:
+ 593              	.L90:
+ 594 002a 00BF     		.align	2
+ 595              	.L89:
+ 596 002c 00040240 		.word	1073873920
+ 597 0030 30040240 		.word	1073873968
+ 598 0034 00000000 		.word	.LANCHOR0
+ 599              		.cfi_endproc
+ 600              	.LFE288:
+ 602              		.section	.text.Vector12C,"ax",%progbits
+ 603              		.align	1
+ 604              		.global	Vector12C
+ 605              		.syntax unified
+ 606              		.thumb
+ 607              		.thumb_func
+ 608              		.fpu softvfp
+ 610              	Vector12C:
+ 611              	.LFB289:
+ 365:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 366:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 367:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH4_HANDLER) || defined(__DOXYGEN__)
+ 368:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 369:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 4 shared ISR.
+ 370:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 371:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 372:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 373:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH4_HANDLER) {
+ 612              		.loc 1 373 0
+ 613              		.cfi_startproc
+ 614              		@ args = 0, pretend = 0, frame = 0
+ 615              		@ frame_needed = 0, uses_anonymous_args = 0
+ 616              	.LVL40:
+ 617 0000 08B5     		push	{r3, lr}
+ 618              		.cfi_def_cfa_offset 8
+ 619              		.cfi_offset 3, -8
+ 620              		.cfi_offset 14, -4
+ 621              	.LBB12:
+ 374:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 375:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 376:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 377:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM4);
+ 622              		.loc 1 377 0
+ 623 0002 0A4B     		ldr	r3, .L98
+ 624 0004 0A4A     		ldr	r2, .L98+4
+ 625 0006 1968     		ldr	r1, [r3]
+ 626 0008 1268     		ldr	r2, [r2]
+ 627 000a 090B     		lsrs	r1, r1, #12
+ 628 000c 01F00E01 		and	r1, r1, #14
+ 629              	.LVL41:
+ 630 0010 0A42     		tst	r2, r1
+ 631 0012 06D0     		beq	.L93
+ 632              		.loc 1 377 0 is_stmt 0 discriminator 1
+ 633 0014 0A03     		lsls	r2, r1, #12
+ 634 0016 5A60     		str	r2, [r3, #4]
+ 635 0018 064A     		ldr	r2, .L98+8
+ 636 001a 136D     		ldr	r3, [r2, #80]
+ 637 001c 0BB1     		cbz	r3, .L93
+ 638              		.loc 1 377 0 discriminator 2
+ 639 001e 506D     		ldr	r0, [r2, #84]
+ 640 0020 9847     		blx	r3
+ 641              	.LVL42:
+ 642              	.L93:
+ 643              	.LBE12:
+ 378:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 379:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 380:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 644              		.loc 1 380 0 is_stmt 1
+ 645 0022 BDE80840 		pop	{r3, lr}
+ 646              		.cfi_restore 14
+ 647              		.cfi_restore 3
+ 648              		.cfi_def_cfa_offset 0
+ 379:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 649              		.loc 1 379 0
+ 650 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 651              	.LVL43:
+ 652              	.L99:
+ 653 002a 00BF     		.align	2
+ 654              	.L98:
+ 655 002c 00040240 		.word	1073873920
+ 656 0030 44040240 		.word	1073873988
+ 657 0034 00000000 		.word	.LANCHOR0
+ 658              		.cfi_endproc
+ 659              	.LFE289:
+ 661              		.section	.text.Vector130,"ax",%progbits
+ 662              		.align	1
+ 663              		.global	Vector130
+ 664              		.syntax unified
+ 665              		.thumb
+ 666              		.thumb_func
+ 667              		.fpu softvfp
+ 669              	Vector130:
+ 670              	.LFB290:
+ 381:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 382:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 383:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH5_HANDLER) || defined(__DOXYGEN__)
+ 384:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 385:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 5 shared ISR.
+ 386:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 387:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 388:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 389:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH5_HANDLER) {
+ 671              		.loc 1 389 0
+ 672              		.cfi_startproc
+ 673              		@ args = 0, pretend = 0, frame = 0
+ 674              		@ frame_needed = 0, uses_anonymous_args = 0
+ 675              	.LVL44:
+ 676 0000 08B5     		push	{r3, lr}
+ 677              		.cfi_def_cfa_offset 8
+ 678              		.cfi_offset 3, -8
+ 679              		.cfi_offset 14, -4
+ 680              	.LBB13:
+ 390:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 391:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 392:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 393:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM5);
+ 681              		.loc 1 393 0
+ 682 0002 0A4B     		ldr	r3, .L107
+ 683 0004 0A4A     		ldr	r2, .L107+4
+ 684 0006 1968     		ldr	r1, [r3]
+ 685 0008 1268     		ldr	r2, [r2]
+ 686 000a 090C     		lsrs	r1, r1, #16
+ 687 000c 01F00E01 		and	r1, r1, #14
+ 688              	.LVL45:
+ 689 0010 0A42     		tst	r2, r1
+ 690 0012 06D0     		beq	.L102
+ 691              		.loc 1 393 0 is_stmt 0 discriminator 1
+ 692 0014 0A04     		lsls	r2, r1, #16
+ 693 0016 5A60     		str	r2, [r3, #4]
+ 694 0018 064A     		ldr	r2, .L107+8
+ 695 001a 936D     		ldr	r3, [r2, #88]
+ 696 001c 0BB1     		cbz	r3, .L102
+ 697              		.loc 1 393 0 discriminator 2
+ 698 001e D06D     		ldr	r0, [r2, #92]
+ 699 0020 9847     		blx	r3
+ 700              	.LVL46:
+ 701              	.L102:
+ 702              	.LBE13:
+ 394:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 395:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 396:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 703              		.loc 1 396 0 is_stmt 1
+ 704 0022 BDE80840 		pop	{r3, lr}
+ 705              		.cfi_restore 14
+ 706              		.cfi_restore 3
+ 707              		.cfi_def_cfa_offset 0
+ 395:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 708              		.loc 1 395 0
+ 709 0026 FFF7FEBF 		b	_port_irq_epilogue
+ 710              	.LVL47:
+ 711              	.L108:
+ 712 002a 00BF     		.align	2
+ 713              	.L107:
+ 714 002c 00040240 		.word	1073873920
+ 715 0030 58040240 		.word	1073874008
+ 716 0034 00000000 		.word	.LANCHOR0
+ 717              		.cfi_endproc
+ 718              	.LFE290:
+ 720              		.section	.text.dmaInit,"ax",%progbits
+ 721              		.align	1
+ 722              		.global	dmaInit
+ 723              		.syntax unified
+ 724              		.thumb
+ 725              		.thumb_func
+ 726              		.fpu softvfp
+ 728              	dmaInit:
+ 729              	.LFB291:
+ 397:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 398:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 399:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH6_HANDLER) || defined(__DOXYGEN__)
+ 400:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 401:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 6 shared ISR.
+ 402:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 403:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 404:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 405:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH6_HANDLER) {
+ 406:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 407:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 408:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 409:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM6);
+ 410:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 411:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 412:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 413:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 414:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 415:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if defined(STM32_DMA2_CH7_HANDLER) || defined(__DOXYGEN__)
+ 416:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 417:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   DMA2 stream 7 shared ISR.
+ 418:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 419:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @isr
+ 420:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 421:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** OSAL_IRQ_HANDLER(STM32_DMA2_CH7_HANDLER) {
+ 422:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 423:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_PROLOGUE();
+ 424:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 425:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaServeInterrupt(STM32_DMA2_STREAM7);
+ 426:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 427:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   OSAL_IRQ_EPILOGUE();
+ 428:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 429:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 430:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 431:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 432:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /* Driver exported functions.                                                */
+ 433:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /*===========================================================================*/
+ 434:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 435:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 436:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   STM32 DMA helper initialization.
+ 437:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 438:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @init
+ 439:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 440:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** void dmaInit(void) {
+ 730              		.loc 1 440 0
+ 731              		.cfi_startproc
+ 732              		@ args = 0, pretend = 0, frame = 0
+ 733              		@ frame_needed = 0, uses_anonymous_args = 0
+ 441:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   int i;
+ 442:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 443:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.streams_mask = 0U;
+ 734              		.loc 1 443 0
+ 735 0000 0C4A     		ldr	r2, .L112
+ 444:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.isr_mask = 0U;
+ 445:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   for (i = 0; i < STM32_DMA_STREAMS; i++) {
+ 446:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_streams[i].channel->CCR = 0U;
+ 447:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_isr_redir[i].dma_func = NULL;
+ 736              		.loc 1 447 0
+ 737 0002 0D49     		ldr	r1, .L112+4
+ 440:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   int i;
+ 738              		.loc 1 440 0
+ 739 0004 30B5     		push	{r4, r5, lr}
+ 740              		.cfi_def_cfa_offset 12
+ 741              		.cfi_offset 4, -12
+ 742              		.cfi_offset 5, -8
+ 743              		.cfi_offset 14, -4
+ 443:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.isr_mask = 0U;
+ 744              		.loc 1 443 0
+ 745 0006 0023     		movs	r3, #0
+ 446:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_isr_redir[i].dma_func = NULL;
+ 746              		.loc 1 446 0
+ 747 0008 0C4C     		ldr	r4, .L112+8
+ 444:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   for (i = 0; i < STM32_DMA_STREAMS; i++) {
+ 748              		.loc 1 444 0
+ 749 000a C2E90033 		strd	r3, r3, [r2]
+ 750              	.LVL48:
+ 446:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_isr_redir[i].dma_func = NULL;
+ 751              		.loc 1 446 0
+ 752 000e 1425     		movs	r5, #20
+ 753 0010 1A46     		mov	r2, r3
+ 754              	.LVL49:
+ 755              	.L110:
+ 446:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_isr_redir[i].dma_func = NULL;
+ 756              		.loc 1 446 0 is_stmt 0 discriminator 3
+ 757 0012 05FB0340 		mla	r0, r5, r3, r4
+ 758 0016 4068     		ldr	r0, [r0, #4]
+ 759 0018 0260     		str	r2, [r0]
+ 760              		.loc 1 447 0 is_stmt 1 discriminator 3
+ 761 001a 41F83320 		str	r2, [r1, r3, lsl #3]
+ 445:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     _stm32_dma_streams[i].channel->CCR = 0U;
+ 762              		.loc 1 445 0 discriminator 3
+ 763 001e 0133     		adds	r3, r3, #1
+ 764              	.LVL50:
+ 765 0020 0C2B     		cmp	r3, #12
+ 766 0022 F6D1     		bne	.L110
+ 448:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 449:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   DMA1->IFCR = 0xFFFFFFFFU;
+ 767              		.loc 1 449 0
+ 768 0024 064A     		ldr	r2, .L112+12
+ 769 0026 4FF0FF33 		mov	r3, #-1
+ 770              	.LVL51:
+ 771 002a 5360     		str	r3, [r2, #4]
+ 450:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 0
+ 451:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   DMA2->IFCR = 0xFFFFFFFFU;
+ 772              		.loc 1 451 0
+ 773 002c C2F80434 		str	r3, [r2, #1028]
+ 452:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 453:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 774              		.loc 1 453 0
+ 775 0030 30BD     		pop	{r4, r5, pc}
+ 776              	.L113:
+ 777 0032 00BF     		.align	2
+ 778              	.L112:
+ 779 0034 00000000 		.word	.LANCHOR1
+ 780 0038 00000000 		.word	.LANCHOR0
+ 781 003c 00000000 		.word	.LANCHOR2
+ 782 0040 00000240 		.word	1073872896
+ 783              		.cfi_endproc
+ 784              	.LFE291:
+ 786              		.section	.text.dmaStreamAllocate,"ax",%progbits
+ 787              		.align	1
+ 788              		.global	dmaStreamAllocate
+ 789              		.syntax unified
+ 790              		.thumb
+ 791              		.thumb_func
+ 792              		.fpu softvfp
+ 794              	dmaStreamAllocate:
+ 795              	.LFB292:
+ 454:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 455:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 456:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Allocates a DMA stream.
+ 457:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @details The stream is allocated and, if required, the DMA clock enabled.
+ 458:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          The function also enables the IRQ vector associated to the stream
+ 459:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          and initializes its priority.
+ 460:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @pre     The stream must not be already in use or an error is returned.
+ 461:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @post    The stream is allocated and the default ISR handler redirected
+ 462:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          to the specified function.
+ 463:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @post    The stream ISR vector is enabled and its priority configured.
+ 464:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @post    The stream must be freed using @p dmaStreamRelease() before it can
+ 465:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          be reused with another peripheral.
+ 466:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @post    The stream is in its post-reset state.
+ 467:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @note    This function can be invoked in both ISR or thread context.
+ 468:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 469:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @param[in] dmastp    pointer to a stm32_dma_stream_t structure
+ 470:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @param[in] priority  IRQ priority for the DMA stream
+ 471:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @param[in] func      handling function pointer, can be @p NULL
+ 472:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @param[in] param     a parameter to be passed to the handling function
+ 473:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @return              The operation status.
+ 474:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @retval false        no error, stream taken.
+ 475:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @retval true         error, stream already taken.
+ 476:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 477:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @special
+ 478:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 479:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** bool dmaStreamAllocate(const stm32_dma_stream_t *dmastp,
+ 480:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****                        uint32_t priority,
+ 481:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****                        stm32_dmaisr_t func,
+ 482:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****                        void *param) {
+ 796              		.loc 1 482 0
+ 797              		.cfi_startproc
+ 798              		@ args = 0, pretend = 0, frame = 0
+ 799              		@ frame_needed = 0, uses_anonymous_args = 0
+ 800              	.LVL52:
+ 801 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 802              		.cfi_def_cfa_offset 24
+ 803              		.cfi_offset 3, -24
+ 804              		.cfi_offset 4, -20
+ 805              		.cfi_offset 5, -16
+ 806              		.cfi_offset 6, -12
+ 807              		.cfi_offset 7, -8
+ 808              		.cfi_offset 14, -4
+ 483:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 484:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   osalDbgCheck(dmastp != NULL);
+ 485:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 486:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Checks if the stream is already taken.*/
+ 487:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & (1U << dmastp->selfindex)) != 0U)
+ 809              		.loc 1 487 0
+ 810 0002 214C     		ldr	r4, .L124
+ 811 0004 477C     		ldrb	r7, [r0, #17]	@ zero_extendqisi2
+ 812 0006 2668     		ldr	r6, [r4]
+ 482:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 813              		.loc 1 482 0
+ 814 0008 0546     		mov	r5, r0
+ 815              		.loc 1 487 0
+ 816 000a 0120     		movs	r0, #1
+ 817              	.LVL53:
+ 818 000c 00FA07FC 		lsl	ip, r0, r7
+ 819 0010 1CEA060F 		tst	ip, r6
+ 820 0014 36D1     		bne	.L115
+ 488:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     return true;
+ 489:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 490:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Installs the DMA handler.*/
+ 491:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   _stm32_dma_isr_redir[dmastp->selfindex].dma_func  = func;
+ 821              		.loc 1 491 0
+ 822 0016 1D48     		ldr	r0, .L124+4
+ 823 0018 40F83720 		str	r2, [r0, r7, lsl #3]
+ 492:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   _stm32_dma_isr_redir[dmastp->selfindex].dma_param = param;
+ 824              		.loc 1 492 0
+ 825 001c 00EBC700 		add	r0, r0, r7, lsl #3
+ 826 0020 4360     		str	r3, [r0, #4]
+ 493:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 494:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Enabling DMA clocks required by the current streams set.*/
+ 495:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & STM32_DMA1_STREAMS_MASK) == 0U) {
+ 827              		.loc 1 495 0
+ 828 0022 7306     		lsls	r3, r6, #25
+ 829              	.LVL54:
+ 496:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     rccEnableDMA1(false);
+ 830              		.loc 1 496 0
+ 831 0024 01BF     		itttt	eq
+ 832 0026 1A48     		ldreq	r0, .L124+8
+ 833              	.LVL55:
+ 834 0028 4369     		ldreq	r3, [r0, #20]
+ 835 002a 43F00103 		orreq	r3, r3, #1
+ 836 002e 4361     		streq	r3, [r0, #20]
+ 497:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 498:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 0
+ 499:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & STM32_DMA2_STREAMS_MASK) == 0U) {
+ 837              		.loc 1 499 0
+ 838 0030 16F4786F 		tst	r6, #3968
+ 500:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     rccEnableDMA2(false);
+ 839              		.loc 1 500 0
+ 840 0034 08BF     		it	eq
+ 841 0036 1648     		ldreq	r0, .L124+8
+ 501:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 502:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 503:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 504:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Putting the stream in a safe state.*/
+ 505:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmaStreamDisable(dmastp);
+ 842              		.loc 1 505 0
+ 843 0038 2E68     		ldr	r6, [r5]
+ 500:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     rccEnableDMA2(false);
+ 844              		.loc 1 500 0
+ 845 003a 02BF     		ittt	eq
+ 846 003c 4369     		ldreq	r3, [r0, #20]
+ 847 003e 43F00203 		orreq	r3, r3, #2
+ 848 0042 4361     		streq	r3, [r0, #20]
+ 849              		.loc 1 505 0
+ 850 0044 6B68     		ldr	r3, [r5, #4]
+ 851 0046 1868     		ldr	r0, [r3]
+ 852 0048 20F00F00 		bic	r0, r0, #15
+ 853 004c 1860     		str	r0, [r3]
+ 854 004e 2F7C     		ldrb	r7, [r5, #16]	@ zero_extendqisi2
+ 855              	.LVL56:
+ 856 0050 0E20     		movs	r0, #14
+ 857 0052 B840     		lsls	r0, r0, r7
+ 858 0054 7060     		str	r0, [r6, #4]
+ 506:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dmastp->channel->CCR = STM32_DMA_CCR_RESET_VALUE;
+ 859              		.loc 1 506 0
+ 860 0056 0020     		movs	r0, #0
+ 861 0058 1860     		str	r0, [r3]
+ 507:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 508:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Enables the associated IRQ vector if not already enabled and if a
+ 509:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****      callback is defined.*/
+ 510:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if (func != NULL) {
+ 862              		.loc 1 510 0
+ 863 005a 62B1     		cbz	r2, .L118
+ 511:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     if ((dma.isr_mask & dmastp->cmask) == 0U) {
+ 864              		.loc 1 511 0
+ 865 005c 6268     		ldr	r2, [r4, #4]
+ 866              	.LVL57:
+ 867 005e AB68     		ldr	r3, [r5, #8]
+ 868 0060 1A42     		tst	r2, r3
+ 869 0062 02D1     		bne	.L119
+ 512:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****       nvicEnableVector(dmastp->vector, priority);
+ 870              		.loc 1 512 0
+ 871 0064 A87C     		ldrb	r0, [r5, #18]	@ zero_extendqisi2
+ 872 0066 FFF7FEFF 		bl	nvicEnableVector
+ 873              	.LVL58:
+ 874              	.L119:
+ 513:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     }
+ 514:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     dma.isr_mask |= (1U << dmastp->selfindex);
+ 875              		.loc 1 514 0
+ 876 006a 6A7C     		ldrb	r2, [r5, #17]	@ zero_extendqisi2
+ 877 006c 0123     		movs	r3, #1
+ 878 006e 9340     		lsls	r3, r3, r2
+ 879 0070 6268     		ldr	r2, [r4, #4]
+ 880 0072 1343     		orrs	r3, r3, r2
+ 881 0074 6360     		str	r3, [r4, #4]
+ 882              	.L118:
+ 515:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 516:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 517:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Marks the stream as allocated.*/
+ 518:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.streams_mask |= (1U << dmastp->selfindex);
+ 883              		.loc 1 518 0
+ 884 0076 6A7C     		ldrb	r2, [r5, #17]	@ zero_extendqisi2
+ 885 0078 0123     		movs	r3, #1
+ 886 007a 9340     		lsls	r3, r3, r2
+ 887 007c 2268     		ldr	r2, [r4]
+ 888 007e 1343     		orrs	r3, r3, r2
+ 889 0080 2360     		str	r3, [r4]
+ 519:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 520:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   return false;
+ 890              		.loc 1 520 0
+ 891 0082 0020     		movs	r0, #0
+ 892              	.L115:
+ 521:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 893              		.loc 1 521 0
+ 894 0084 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 895              	.LVL59:
+ 896              	.L125:
+ 897 0086 00BF     		.align	2
+ 898              	.L124:
+ 899 0088 00000000 		.word	.LANCHOR1
+ 900 008c 00000000 		.word	.LANCHOR0
+ 901 0090 00100240 		.word	1073876992
+ 902              		.cfi_endproc
+ 903              	.LFE292:
+ 905              		.section	.text.dmaStreamRelease,"ax",%progbits
+ 906              		.align	1
+ 907              		.global	dmaStreamRelease
+ 908              		.syntax unified
+ 909              		.thumb
+ 910              		.thumb_func
+ 911              		.fpu softvfp
+ 913              	dmaStreamRelease:
+ 914              	.LFB293:
+ 522:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 523:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** /**
+ 524:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @brief   Releases a DMA stream.
+ 525:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @details The stream is freed and, if required, the DMA clock disabled.
+ 526:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          Trying to release a unallocated stream is an illegal operation
+ 527:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *          and is trapped if assertions are enabled.
+ 528:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @pre     The stream must have been allocated using @p dmaStreamAllocate().
+ 529:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @post    The stream is again available.
+ 530:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @note    This function can be invoked in both ISR or thread context.
+ 531:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 532:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @param[in] dmastp    pointer to a stm32_dma_stream_t structure
+ 533:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  *
+ 534:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  * @special
+ 535:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****  */
+ 536:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** void dmaStreamRelease(const stm32_dma_stream_t *dmastp) {
+ 915              		.loc 1 536 0
+ 916              		.cfi_startproc
+ 917              		@ args = 0, pretend = 0, frame = 0
+ 918              		@ frame_needed = 0, uses_anonymous_args = 0
+ 919              	.LVL60:
+ 920 0000 38B5     		push	{r3, r4, r5, lr}
+ 921              		.cfi_def_cfa_offset 16
+ 922              		.cfi_offset 3, -16
+ 923              		.cfi_offset 4, -12
+ 924              		.cfi_offset 5, -8
+ 925              		.cfi_offset 14, -4
+ 537:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 538:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   osalDbgCheck(dmastp != NULL);
+ 539:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 540:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Check if the streams is not taken.*/
+ 541:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   osalDbgAssert((dma.streams_mask & (1 << dmastp->selfindex)) != 0U,
+ 542:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****                 "not allocated");
+ 543:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 544:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Marks the stream as not allocated.*/
+ 545:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.streams_mask &= ~(1U << dmastp->selfindex);
+ 926              		.loc 1 545 0
+ 927 0002 154C     		ldr	r4, .L130
+ 928 0004 437C     		ldrb	r3, [r0, #17]	@ zero_extendqisi2
+ 929 0006 2168     		ldr	r1, [r4]
+ 930 0008 0122     		movs	r2, #1
+ 536:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 931              		.loc 1 536 0
+ 932 000a 0546     		mov	r5, r0
+ 933              		.loc 1 545 0
+ 934 000c 9A40     		lsls	r2, r2, r3
+ 546:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.isr_mask &= ~(1U << dmastp->selfindex);
+ 935              		.loc 1 546 0
+ 936 000e 6068     		ldr	r0, [r4, #4]
+ 937              	.LVL61:
+ 545:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.isr_mask &= ~(1U << dmastp->selfindex);
+ 938              		.loc 1 545 0
+ 939 0010 D243     		mvns	r2, r2
+ 940 0012 1140     		ands	r1, r1, r2
+ 941              		.loc 1 546 0
+ 942 0014 0240     		ands	r2, r2, r0
+ 943 0016 6260     		str	r2, [r4, #4]
+ 547:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 548:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Disables the associated IRQ vector if it is no more in use.*/
+ 549:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & dmastp->cmask) == 0U) {
+ 944              		.loc 1 549 0
+ 945 0018 AA68     		ldr	r2, [r5, #8]
+ 545:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   dma.isr_mask &= ~(1U << dmastp->selfindex);
+ 946              		.loc 1 545 0
+ 947 001a 2160     		str	r1, [r4]
+ 948              		.loc 1 549 0
+ 949 001c 1142     		tst	r1, r2
+ 950 001e 02D1     		bne	.L127
+ 550:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     nvicDisableVector(dmastp->vector);
+ 951              		.loc 1 550 0
+ 952 0020 A87C     		ldrb	r0, [r5, #18]	@ zero_extendqisi2
+ 953 0022 FFF7FEFF 		bl	nvicDisableVector
+ 954              	.LVL62:
+ 955              	.L127:
+ 551:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 552:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 553:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Removes the DMA handler.*/
+ 554:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   _stm32_dma_isr_redir[dmastp->selfindex].dma_func  = NULL;
+ 956              		.loc 1 554 0
+ 957 0026 697C     		ldrb	r1, [r5, #17]	@ zero_extendqisi2
+ 958 0028 0C4B     		ldr	r3, .L130+4
+ 959 002a 0022     		movs	r2, #0
+ 960 002c 43F83120 		str	r2, [r3, r1, lsl #3]
+ 555:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   _stm32_dma_isr_redir[dmastp->selfindex].dma_param = NULL;
+ 961              		.loc 1 555 0
+ 962 0030 03EBC103 		add	r3, r3, r1, lsl #3
+ 963 0034 5A60     		str	r2, [r3, #4]
+ 556:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** 
+ 557:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   /* Shutting down clocks that are no more required, if any.*/
+ 558:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & STM32_DMA1_STREAMS_MASK) == 0U) {
+ 964              		.loc 1 558 0
+ 965 0036 2268     		ldr	r2, [r4]
+ 966 0038 5306     		lsls	r3, r2, #25
+ 559:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     rccDisableDMA1(false);
+ 967              		.loc 1 559 0
+ 968 003a 01BF     		itttt	eq
+ 969 003c 0849     		ldreq	r1, .L130+8
+ 970 003e 4B69     		ldreq	r3, [r1, #20]
+ 971 0040 23F00103 		biceq	r3, r3, #1
+ 972 0044 4B61     		streq	r3, [r1, #20]
+ 560:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 561:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #if STM32_DMA2_NUM_CHANNELS > 0
+ 562:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   if ((dma.streams_mask & STM32_DMA2_STREAMS_MASK) == 0U) {
+ 973              		.loc 1 562 0
+ 974 0046 12F4786F 		tst	r2, #3968
+ 563:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****     rccDisableDMA2(false);
+ 975              		.loc 1 563 0
+ 976 004a 01BF     		itttt	eq
+ 977 004c 044A     		ldreq	r2, .L130+8
+ 978 004e 5369     		ldreq	r3, [r2, #20]
+ 979 0050 23F00203 		biceq	r3, r3, #2
+ 980 0054 5361     		streq	r3, [r2, #20]
+ 564:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c ****   }
+ 565:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** #endif
+ 566:lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.c **** }
+ 981              		.loc 1 566 0
+ 982 0056 38BD     		pop	{r3, r4, r5, pc}
+ 983              	.LVL63:
+ 984              	.L131:
+ 985              		.align	2
+ 986              	.L130:
+ 987 0058 00000000 		.word	.LANCHOR1
+ 988 005c 00000000 		.word	.LANCHOR0
+ 989 0060 00100240 		.word	1073876992
+ 990              		.cfi_endproc
+ 991              	.LFE293:
+ 993              		.global	_stm32_dma_isr_redir
+ 994              		.global	_stm32_dma_streams
+ 995              		.section	.bss._stm32_dma_isr_redir,"aw",%nobits
+ 996              		.align	2
+ 997              		.set	.LANCHOR0,. + 0
+ 1000              	_stm32_dma_isr_redir:
+ 1001 0000 00000000 		.space	96
+ 1001      00000000 
+ 1001      00000000 
+ 1001      00000000 
+ 1001      00000000 
+ 1002              		.section	.bss.dma,"aw",%nobits
+ 1003              		.align	2
+ 1004              		.set	.LANCHOR1,. + 0
+ 1007              	dma:
+ 1008 0000 00000000 		.space	8
+ 1008      00000000 
+ 1009              		.section	.rodata._stm32_dma_streams,"a",%progbits
+ 1010              		.align	2
+ 1011              		.set	.LANCHOR2,. + 0
+ 1014              	_stm32_dma_streams:
+ 1015 0000 00000240 		.word	1073872896
+ 1016 0004 08000240 		.word	1073872904
+ 1017 0008 01000000 		.word	1
+ 1018 000c 00000000 		.word	0
+ 1019 0010 00       		.byte	0
+ 1020 0011 00       		.byte	0
+ 1021 0012 0B       		.byte	11
+ 1022 0013 00       		.space	1
+ 1023 0014 00000240 		.word	1073872896
+ 1024 0018 1C000240 		.word	1073872924
+ 1025 001c 02000000 		.word	2
+ 1026 0020 00000000 		.word	0
+ 1027 0024 04       		.byte	4
+ 1028 0025 01       		.byte	1
+ 1029 0026 0C       		.byte	12
+ 1030 0027 00       		.space	1
+ 1031 0028 00000240 		.word	1073872896
+ 1032 002c 30000240 		.word	1073872944
+ 1033 0030 04000000 		.word	4
+ 1034 0034 00000000 		.word	0
+ 1035 0038 08       		.byte	8
+ 1036 0039 02       		.byte	2
+ 1037 003a 0D       		.byte	13
+ 1038 003b 00       		.space	1
+ 1039 003c 00000240 		.word	1073872896
+ 1040 0040 44000240 		.word	1073872964
+ 1041 0044 08000000 		.word	8
+ 1042 0048 00000000 		.word	0
+ 1043 004c 0C       		.byte	12
+ 1044 004d 03       		.byte	3
+ 1045 004e 0E       		.byte	14
+ 1046 004f 00       		.space	1
+ 1047 0050 00000240 		.word	1073872896
+ 1048 0054 58000240 		.word	1073872984
+ 1049 0058 10000000 		.word	16
+ 1050 005c 00000000 		.word	0
+ 1051 0060 10       		.byte	16
+ 1052 0061 04       		.byte	4
+ 1053 0062 0F       		.byte	15
+ 1054 0063 00       		.space	1
+ 1055 0064 00000240 		.word	1073872896
+ 1056 0068 6C000240 		.word	1073873004
+ 1057 006c 20000000 		.word	32
+ 1058 0070 00000000 		.word	0
+ 1059 0074 14       		.byte	20
+ 1060 0075 05       		.byte	5
+ 1061 0076 10       		.byte	16
+ 1062 0077 00       		.space	1
+ 1063 0078 00000240 		.word	1073872896
+ 1064 007c 80000240 		.word	1073873024
+ 1065 0080 40000000 		.word	64
+ 1066 0084 00000000 		.word	0
+ 1067 0088 18       		.byte	24
+ 1068 0089 06       		.byte	6
+ 1069 008a 11       		.byte	17
+ 1070 008b 00       		.space	1
+ 1071 008c 00040240 		.word	1073873920
+ 1072 0090 08040240 		.word	1073873928
+ 1073 0094 80000000 		.word	128
+ 1074 0098 00000000 		.word	0
+ 1075 009c 00       		.byte	0
+ 1076 009d 07       		.byte	7
+ 1077 009e 38       		.byte	56
+ 1078 009f 00       		.space	1
+ 1079 00a0 00040240 		.word	1073873920
+ 1080 00a4 1C040240 		.word	1073873948
+ 1081 00a8 00010000 		.word	256
+ 1082 00ac 00000000 		.word	0
+ 1083 00b0 04       		.byte	4
+ 1084 00b1 08       		.byte	8
+ 1085 00b2 39       		.byte	57
+ 1086 00b3 00       		.space	1
+ 1087 00b4 00040240 		.word	1073873920
+ 1088 00b8 30040240 		.word	1073873968
+ 1089 00bc 00020000 		.word	512
+ 1090 00c0 00000000 		.word	0
+ 1091 00c4 08       		.byte	8
+ 1092 00c5 09       		.byte	9
+ 1093 00c6 3A       		.byte	58
+ 1094 00c7 00       		.space	1
+ 1095 00c8 00040240 		.word	1073873920
+ 1096 00cc 44040240 		.word	1073873988
+ 1097 00d0 00040000 		.word	1024
+ 1098 00d4 00000000 		.word	0
+ 1099 00d8 0C       		.byte	12
+ 1100 00d9 0A       		.byte	10
+ 1101 00da 3B       		.byte	59
+ 1102 00db 00       		.space	1
+ 1103 00dc 00040240 		.word	1073873920
+ 1104 00e0 58040240 		.word	1073874008
+ 1105 00e4 00080000 		.word	2048
+ 1106 00e8 00000000 		.word	0
+ 1107 00ec 10       		.byte	16
+ 1108 00ed 0B       		.byte	11
+ 1109 00ee 3C       		.byte	60
+ 1110 00ef 00       		.space	1
+ 1111              		.text
+ 1112              	.Letext0:
+ 1113              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 1114              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 1115              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 1116              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 1117              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 1118              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 1119              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 1120              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 1121              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 1122              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 1123              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 1124              		.file 13 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 1125              		.file 14 "./lib/chibios/os/rt/include/chtm.h"
+ 1126              		.file 15 "./lib/chibios/os/rt/include/chsem.h"
+ 1127              		.file 16 "./lib/chibios/os/rt/include/chmtx.h"
+ 1128              		.file 17 "./lib/chibios/os/rt/include/chsys.h"
+ 1129              		.file 18 "./lib/chibios/os/rt/include/chregistry.h"
+ 1130              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 1131              		.file 20 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 1132              		.file 21 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 1133              		.file 22 "./lib/chibios/os/hal/include/hal_dac.h"
+ 1134              		.file 23 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 1135              		.file 24 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 1136              		.file 25 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 1137              		.file 26 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 1138              		.file 27 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 1139              		.file 28 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 1140              		.file 29 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 1141              		.file 30 "./lib/chibios/os/hal/include/hal_usb.h"
+ 1142              		.file 31 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 1143              		.file 32 "./lib/chibios/os/hal/ports/common/ARMCMx/nvic.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 stm32_dma.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:16     .text.Vector6C:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:23     .text.Vector6C:0000000000000000 Vector6C
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:67     .text.Vector6C:0000000000000028 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:74     .text.Vector70:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:81     .text.Vector70:0000000000000000 Vector70
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:126    .text.Vector70:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:133    .text.Vector74:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:140    .text.Vector74:0000000000000000 Vector74
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:185    .text.Vector74:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:192    .text.Vector78:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:199    .text.Vector78:0000000000000000 Vector78
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:244    .text.Vector78:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:251    .text.Vector7C:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:258    .text.Vector7C:0000000000000000 Vector7C
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:303    .text.Vector7C:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:310    .text.Vector80:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:317    .text.Vector80:0000000000000000 Vector80
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:362    .text.Vector80:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:369    .text.Vector84:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:376    .text.Vector84:0000000000000000 Vector84
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:421    .text.Vector84:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:428    .text.Vector120:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:435    .text.Vector120:0000000000000000 Vector120
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:478    .text.Vector120:0000000000000028 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:485    .text.Vector124:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:492    .text.Vector124:0000000000000000 Vector124
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:537    .text.Vector124:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:544    .text.Vector128:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:551    .text.Vector128:0000000000000000 Vector128
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:596    .text.Vector128:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:603    .text.Vector12C:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:610    .text.Vector12C:0000000000000000 Vector12C
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:655    .text.Vector12C:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:662    .text.Vector130:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:669    .text.Vector130:0000000000000000 Vector130
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:714    .text.Vector130:000000000000002c $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:721    .text.dmaInit:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:728    .text.dmaInit:0000000000000000 dmaInit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:779    .text.dmaInit:0000000000000034 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:787    .text.dmaStreamAllocate:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:794    .text.dmaStreamAllocate:0000000000000000 dmaStreamAllocate
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:899    .text.dmaStreamAllocate:0000000000000088 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:906    .text.dmaStreamRelease:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:913    .text.dmaStreamRelease:0000000000000000 dmaStreamRelease
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:987    .text.dmaStreamRelease:0000000000000058 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:1000   .bss._stm32_dma_isr_redir:0000000000000000 _stm32_dma_isr_redir
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:1014   .rodata._stm32_dma_streams:0000000000000000 _stm32_dma_streams
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:996    .bss._stm32_dma_isr_redir:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:1003   .bss.dma:0000000000000000 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:1007   .bss.dma:0000000000000000 dma
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccfj0jX2.s:1010   .rodata._stm32_dma_streams:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+_port_irq_epilogue
+nvicEnableVector
+nvicDisableVector

@@ -1,0 +1,335 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"color.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.hsv_to_rgb,"ax",%progbits
+  18              		.align	1
+  19              		.global	hsv_to_rgb
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	hsv_to_rgb:
+  26              	.LFB0:
+  27              		.file 1 "quantum/color.c"
+   1:quantum/color.c **** /* Copyright 2017 Jason Williams
+   2:quantum/color.c ****  *
+   3:quantum/color.c ****  * This program is free software: you can redistribute it and/or modify
+   4:quantum/color.c ****  * it under the terms of the GNU General Public License as published by
+   5:quantum/color.c ****  * the Free Software Foundation, either version 2 of the License, or
+   6:quantum/color.c ****  * (at your option) any later version.
+   7:quantum/color.c ****  *
+   8:quantum/color.c ****  * This program is distributed in the hope that it will be useful,
+   9:quantum/color.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  10:quantum/color.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  11:quantum/color.c ****  * GNU General Public License for more details.
+  12:quantum/color.c ****  *
+  13:quantum/color.c ****  * You should have received a copy of the GNU General Public License
+  14:quantum/color.c ****  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  15:quantum/color.c ****  */
+  16:quantum/color.c **** 
+  17:quantum/color.c **** #include "color.h"
+  18:quantum/color.c **** #include "led_tables.h"
+  19:quantum/color.c **** #include "progmem.h"
+  20:quantum/color.c **** 
+  21:quantum/color.c **** RGB hsv_to_rgb(HSV hsv) {
+  28              		.loc 1 21 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 16
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 30B5     		push	{r4, r5, lr}
+  33              		.cfi_def_cfa_offset 12
+  34              		.cfi_offset 4, -12
+  35              		.cfi_offset 5, -8
+  36              		.cfi_offset 14, -4
+  37 0002 85B0     		sub	sp, sp, #20
+  38              		.cfi_def_cfa_offset 32
+  39 0004 C0F30722 		ubfx	r2, r0, #8, #8
+  40              	.LVL0:
+  41              		.loc 1 21 0
+  42 0008 0190     		str	r0, [sp, #4]
+  43              	.LVL1:
+  44 000a 2F4B     		ldr	r3, .L13
+  45 000c C0F30740 		ubfx	r0, r0, #16, #8
+  46 0010 195C     		ldrb	r1, [r3, r0]	@ zero_extendqisi2
+  22:quantum/color.c ****     RGB      rgb;
+  23:quantum/color.c ****     uint8_t  region, remainder, p, q, t;
+  24:quantum/color.c ****     uint16_t h, s, v;
+  25:quantum/color.c **** 
+  26:quantum/color.c ****     if (hsv.s == 0) {
+  47              		.loc 1 26 0
+  48 0012 A2B9     		cbnz	r2, .L2
+  49              	.LVL2:
+  27:quantum/color.c **** #ifdef USE_CIE1931_CURVE
+  28:quantum/color.c ****         rgb.r = rgb.g = rgb.b = pgm_read_byte(&CIE1931_CURVE[hsv.v]);
+  29:quantum/color.c **** #else
+  30:quantum/color.c ****         rgb.r = hsv.v;
+  31:quantum/color.c ****         rgb.g = hsv.v;
+  32:quantum/color.c ****         rgb.b = hsv.v;
+  33:quantum/color.c **** #endif
+  34:quantum/color.c ****         return rgb;
+  50              		.loc 1 34 0
+  51 0014 8DF80C10 		strb	r1, [sp, #12]
+  52 0018 8DF80D10 		strb	r1, [sp, #13]
+  53 001c 8DF80E10 		strb	r1, [sp, #14]
+  54              	.LVL3:
+  55              	.L3:
+  56 0020 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+  57 0024 0020     		movs	r0, #0
+  58 0026 63F30700 		bfi	r0, r3, #0, #8
+  59 002a 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+  60 002e 63F30F20 		bfi	r0, r3, #8, #8
+  61 0032 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+  62 0036 63F31740 		bfi	r0, r3, #16, #8
+  35:quantum/color.c ****     }
+  36:quantum/color.c **** 
+  37:quantum/color.c ****     h = hsv.h;
+  38:quantum/color.c ****     s = hsv.s;
+  39:quantum/color.c **** #ifdef USE_CIE1931_CURVE
+  40:quantum/color.c ****     v = pgm_read_byte(&CIE1931_CURVE[hsv.v]);
+  41:quantum/color.c **** #else
+  42:quantum/color.c ****     v = hsv.v;
+  43:quantum/color.c **** #endif
+  44:quantum/color.c **** 
+  45:quantum/color.c ****     region    = h * 6 / 255;
+  46:quantum/color.c ****     remainder = (h * 2 - region * 85) * 3;
+  47:quantum/color.c **** 
+  48:quantum/color.c ****     p = (v * (255 - s)) >> 8;
+  49:quantum/color.c ****     q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+  50:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+  51:quantum/color.c **** 
+  52:quantum/color.c ****     switch (region) {
+  53:quantum/color.c ****         case 6:
+  54:quantum/color.c ****         case 0:
+  55:quantum/color.c ****             rgb.r = v;
+  56:quantum/color.c ****             rgb.g = t;
+  57:quantum/color.c ****             rgb.b = p;
+  58:quantum/color.c ****             break;
+  59:quantum/color.c ****         case 1:
+  60:quantum/color.c ****             rgb.r = q;
+  61:quantum/color.c ****             rgb.g = v;
+  62:quantum/color.c ****             rgb.b = p;
+  63:quantum/color.c ****             break;
+  64:quantum/color.c ****         case 2:
+  65:quantum/color.c ****             rgb.r = p;
+  66:quantum/color.c ****             rgb.g = v;
+  67:quantum/color.c ****             rgb.b = t;
+  68:quantum/color.c ****             break;
+  69:quantum/color.c ****         case 3:
+  70:quantum/color.c ****             rgb.r = p;
+  71:quantum/color.c ****             rgb.g = q;
+  72:quantum/color.c ****             rgb.b = v;
+  73:quantum/color.c ****             break;
+  74:quantum/color.c ****         case 4:
+  75:quantum/color.c ****             rgb.r = t;
+  76:quantum/color.c ****             rgb.g = p;
+  77:quantum/color.c ****             rgb.b = v;
+  78:quantum/color.c ****             break;
+  79:quantum/color.c ****         default:
+  80:quantum/color.c ****             rgb.r = v;
+  81:quantum/color.c ****             rgb.g = p;
+  82:quantum/color.c ****             rgb.b = q;
+  83:quantum/color.c ****             break;
+  84:quantum/color.c ****     }
+  85:quantum/color.c **** 
+  86:quantum/color.c ****     return rgb;
+  87:quantum/color.c **** }
+  63              		.loc 1 87 0
+  64 003a 05B0     		add	sp, sp, #20
+  65              		.cfi_remember_state
+  66              		.cfi_def_cfa_offset 12
+  67              		@ sp needed
+  68 003c 30BD     		pop	{r4, r5, pc}
+  69              	.LVL4:
+  70              	.L2:
+  71              		.cfi_restore_state
+  37:quantum/color.c ****     s = hsv.s;
+  72              		.loc 1 37 0
+  73 003e 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+  74              	.LVL5:
+  45:quantum/color.c ****     remainder = (h * 2 - region * 85) * 3;
+  75              		.loc 1 45 0
+  76 0042 03EB4304 		add	r4, r3, r3, lsl #1
+  77 0046 FF20     		movs	r0, #255
+  78 0048 6400     		lsls	r4, r4, #1
+  79 004a 94FBF0F4 		sdiv	r4, r4, r0
+  80              	.LVL6:
+  46:quantum/color.c **** 
+  81              		.loc 1 46 0
+  82 004e 6FF05400 		mvn	r0, #84
+  83 0052 6043     		muls	r0, r4, r0
+  84 0054 00EB4300 		add	r0, r0, r3, lsl #1
+  85 0058 00EB4000 		add	r0, r0, r0, lsl #1
+  86 005c C0B2     		uxtb	r0, r0
+  87              	.LVL7:
+  49:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+  88              		.loc 1 49 0
+  89 005e 12FB00F3 		smulbb	r3, r2, r0
+  90              	.LVL8:
+  50:quantum/color.c **** 
+  91              		.loc 1 50 0
+  92 0062 C0F1FF00 		rsb	r0, r0, #255
+  93              	.LVL9:
+  48:quantum/color.c ****     q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+  94              		.loc 1 48 0
+  95 0066 C2F1FF05 		rsb	r5, r2, #255
+  50:quantum/color.c **** 
+  96              		.loc 1 50 0
+  97 006a 4243     		muls	r2, r0, r2
+  98              	.LVL10:
+  49:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+  99              		.loc 1 49 0
+ 100 006c 1B12     		asrs	r3, r3, #8
+  50:quantum/color.c **** 
+ 101              		.loc 1 50 0
+ 102 006e 1212     		asrs	r2, r2, #8
+  49:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+ 103              		.loc 1 49 0
+ 104 0070 C3F1FF03 		rsb	r3, r3, #255
+  50:quantum/color.c **** 
+ 105              		.loc 1 50 0
+ 106 0074 C2F1FF02 		rsb	r2, r2, #255
+  48:quantum/color.c ****     q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+ 107              		.loc 1 48 0
+ 108 0078 4D43     		muls	r5, r1, r5
+  49:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+ 109              		.loc 1 49 0
+ 110 007a 4B43     		muls	r3, r1, r3
+  50:quantum/color.c **** 
+ 111              		.loc 1 50 0
+ 112 007c 4A43     		muls	r2, r1, r2
+  48:quantum/color.c ****     q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+ 113              		.loc 1 48 0
+ 114 007e C5F30725 		ubfx	r5, r5, #8, #8
+ 115              	.LVL11:
+  49:quantum/color.c ****     t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+ 116              		.loc 1 49 0
+ 117 0082 C3F30723 		ubfx	r3, r3, #8, #8
+ 118              	.LVL12:
+  50:quantum/color.c **** 
+ 119              		.loc 1 50 0
+ 120 0086 C2F30722 		ubfx	r2, r2, #8, #8
+ 121              	.LVL13:
+  52:quantum/color.c ****         case 6:
+ 122              		.loc 1 52 0
+ 123 008a 062C     		cmp	r4, #6
+ 124 008c 17D8     		bhi	.L4
+ 125 008e DFE804F0 		tbb	[pc, r4]
+ 126              	.L6:
+ 127 0092 04       		.byte	(.L5-.L6)/2
+ 128 0093 06       		.byte	(.L7-.L6)/2
+ 129 0094 0F       		.byte	(.L11-.L6)/2
+ 130 0095 0D       		.byte	(.L9-.L6)/2
+ 131 0096 12       		.byte	(.L10-.L6)/2
+ 132 0097 16       		.byte	(.L4-.L6)/2
+ 133 0098 04       		.byte	(.L5-.L6)/2
+ 134 0099 00       		.p2align 1
+ 135              	.L5:
+  55:quantum/color.c ****             rgb.g = t;
+ 136              		.loc 1 55 0
+ 137 009a 0B46     		mov	r3, r1
+ 138              	.LVL14:
+  56:quantum/color.c ****             rgb.b = p;
+ 139              		.loc 1 56 0
+ 140 009c 1146     		mov	r1, r2
+ 141              	.LVL15:
+ 142              	.L7:
+  86:quantum/color.c **** }
+ 143              		.loc 1 86 0
+ 144 009e 8DF80C10 		strb	r1, [sp, #12]
+ 145 00a2 8DF80D30 		strb	r3, [sp, #13]
+ 146 00a6 8DF80E50 		strb	r5, [sp, #14]
+ 147 00aa B9E7     		b	.L3
+ 148              	.LVL16:
+ 149              	.L9:
+  73:quantum/color.c ****         case 4:
+ 150              		.loc 1 73 0
+ 151 00ac 0A46     		mov	r2, r1
+ 152              	.LVL17:
+  71:quantum/color.c ****             rgb.b = v;
+ 153              		.loc 1 71 0
+ 154 00ae 1946     		mov	r1, r3
+ 155              	.LVL18:
+ 156              	.L11:
+  70:quantum/color.c ****             rgb.g = q;
+ 157              		.loc 1 70 0
+ 158 00b0 2B46     		mov	r3, r5
+ 159              	.LVL19:
+ 160              	.L12:
+  72:quantum/color.c ****             break;
+ 161              		.loc 1 72 0
+ 162 00b2 1546     		mov	r5, r2
+ 163              	.LVL20:
+  73:quantum/color.c ****         case 4:
+ 164              		.loc 1 73 0
+ 165 00b4 F3E7     		b	.L7
+ 166              	.LVL21:
+ 167              	.L10:
+  75:quantum/color.c ****             rgb.g = p;
+ 168              		.loc 1 75 0
+ 169 00b6 1346     		mov	r3, r2
+ 170              	.LVL22:
+  78:quantum/color.c ****         default:
+ 171              		.loc 1 78 0
+ 172 00b8 0A46     		mov	r2, r1
+ 173              	.LVL23:
+  76:quantum/color.c ****             rgb.b = v;
+ 174              		.loc 1 76 0
+ 175 00ba 2946     		mov	r1, r5
+ 176 00bc F9E7     		b	.L12
+ 177              	.LVL24:
+ 178              	.L4:
+  83:quantum/color.c ****     }
+ 179              		.loc 1 83 0
+ 180 00be 0A46     		mov	r2, r1
+ 181              	.LVL25:
+  81:quantum/color.c ****             rgb.b = q;
+ 182              		.loc 1 81 0
+ 183 00c0 2946     		mov	r1, r5
+ 184              	.LVL26:
+  82:quantum/color.c ****             break;
+ 185              		.loc 1 82 0
+ 186 00c2 1D46     		mov	r5, r3
+ 187              	.LVL27:
+  80:quantum/color.c ****             rgb.g = p;
+ 188              		.loc 1 80 0
+ 189 00c4 1346     		mov	r3, r2
+ 190              	.LVL28:
+  83:quantum/color.c ****     }
+ 191              		.loc 1 83 0
+ 192 00c6 EAE7     		b	.L7
+ 193              	.L14:
+ 194              		.align	2
+ 195              	.L13:
+ 196 00c8 00000000 		.word	CIE1931_CURVE
+ 197              		.cfi_endproc
+ 198              	.LFE0:
+ 200              		.text
+ 201              	.Letext0:
+ 202              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 203              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 204              		.file 4 "quantum/color.h"
+ 205              		.file 5 "quantum/led_tables.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 color.c
+/var/tmp//ccZzQYQb.s:18     .text.hsv_to_rgb:0000000000000000 $t
+/var/tmp//ccZzQYQb.s:25     .text.hsv_to_rgb:0000000000000000 hsv_to_rgb
+/var/tmp//ccZzQYQb.s:127    .text.hsv_to_rgb:0000000000000092 $d
+/var/tmp//ccZzQYQb.s:196    .text.hsv_to_rgb:00000000000000c8 $d
+/var/tmp//ccZzQYQb.s:134    .text.hsv_to_rgb:0000000000000099 $d
+/var/tmp//ccZzQYQb.s:134    .text.hsv_to_rgb:000000000000009a $t
+
+UNDEFINED SYMBOLS
+CIE1931_CURVE

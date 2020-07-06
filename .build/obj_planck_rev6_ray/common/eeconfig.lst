@@ -1,0 +1,975 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"eeconfig.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.eeconfig_enable,"ax",%progbits
+  16              		.align	1
+  17              		.global	eeconfig_enable
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	eeconfig_enable:
+  24              	.LFB283:
+  25              		.file 1 "tmk_core/common/eeconfig.c"
+   1:tmk_core/common/eeconfig.c **** #include <stdint.h>
+   2:tmk_core/common/eeconfig.c **** #include <stdbool.h>
+   3:tmk_core/common/eeconfig.c **** #include "eeprom.h"
+   4:tmk_core/common/eeconfig.c **** #include "eeconfig.h"
+   5:tmk_core/common/eeconfig.c **** 
+   6:tmk_core/common/eeconfig.c **** #ifdef STM32_EEPROM_ENABLE
+   7:tmk_core/common/eeconfig.c **** #    include "hal.h"
+   8:tmk_core/common/eeconfig.c **** #    include "eeprom_stm32.h"
+   9:tmk_core/common/eeconfig.c **** #endif
+  10:tmk_core/common/eeconfig.c **** 
+  11:tmk_core/common/eeconfig.c **** extern uint32_t default_layer_state;
+  12:tmk_core/common/eeconfig.c **** /** \brief eeconfig enable
+  13:tmk_core/common/eeconfig.c ****  *
+  14:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  15:tmk_core/common/eeconfig.c ****  */
+  16:tmk_core/common/eeconfig.c **** __attribute__((weak)) void eeconfig_init_user(void) {
+  17:tmk_core/common/eeconfig.c ****     // Reset user EEPROM value to blank, rather than to a set value
+  18:tmk_core/common/eeconfig.c ****     eeconfig_update_user(0);
+  19:tmk_core/common/eeconfig.c **** }
+  20:tmk_core/common/eeconfig.c **** 
+  21:tmk_core/common/eeconfig.c **** __attribute__((weak)) void eeconfig_init_kb(void) {
+  22:tmk_core/common/eeconfig.c ****     // Reset Keyboard EEPROM value to blank, rather than to a set value
+  23:tmk_core/common/eeconfig.c ****     eeconfig_update_kb(0);
+  24:tmk_core/common/eeconfig.c **** 
+  25:tmk_core/common/eeconfig.c ****     eeconfig_init_user();
+  26:tmk_core/common/eeconfig.c **** }
+  27:tmk_core/common/eeconfig.c **** 
+  28:tmk_core/common/eeconfig.c **** /*
+  29:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  30:tmk_core/common/eeconfig.c ****  */
+  31:tmk_core/common/eeconfig.c **** void eeconfig_init_quantum(void) {
+  32:tmk_core/common/eeconfig.c **** #ifdef STM32_EEPROM_ENABLE
+  33:tmk_core/common/eeconfig.c ****     EEPROM_Erase();
+  34:tmk_core/common/eeconfig.c **** #endif
+  35:tmk_core/common/eeconfig.c ****     eeprom_update_word(EECONFIG_MAGIC, EECONFIG_MAGIC_NUMBER);
+  36:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_DEBUG, 0);
+  37:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_DEFAULT_LAYER, 0);
+  38:tmk_core/common/eeconfig.c ****     default_layer_state = 0;
+  39:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, 0);
+  40:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_UPPER_BYTE, 0);
+  41:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_MOUSEKEY_ACCEL, 0);
+  42:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_BACKLIGHT, 0);
+  43:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_AUDIO, 0xFF);  // On by default
+  44:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_RGBLIGHT, 0);
+  45:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_STENOMODE, 0);
+  46:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_HAPTIC, 0);
+  47:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_VELOCIKEY, 0);
+  48:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_RGB_MATRIX, 0);
+  49:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_RGB_MATRIX_SPEED, 0);
+  50:tmk_core/common/eeconfig.c **** 
+  51:tmk_core/common/eeconfig.c ****     eeconfig_init_kb();
+  52:tmk_core/common/eeconfig.c **** }
+  53:tmk_core/common/eeconfig.c **** 
+  54:tmk_core/common/eeconfig.c **** /** \brief eeconfig initialization
+  55:tmk_core/common/eeconfig.c ****  *
+  56:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  57:tmk_core/common/eeconfig.c ****  */
+  58:tmk_core/common/eeconfig.c **** void eeconfig_init(void) { eeconfig_init_quantum(); }
+  59:tmk_core/common/eeconfig.c **** 
+  60:tmk_core/common/eeconfig.c **** /** \brief eeconfig enable
+  61:tmk_core/common/eeconfig.c ****  *
+  62:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  63:tmk_core/common/eeconfig.c ****  */
+  64:tmk_core/common/eeconfig.c **** void eeconfig_enable(void) { eeprom_update_word(EECONFIG_MAGIC, EECONFIG_MAGIC_NUMBER); }
+  26              		.loc 1 64 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              		.loc 1 64 0
+  32 0000 4FF6EC61 		movw	r1, #65260
+  33 0004 0020     		movs	r0, #0
+  34 0006 FFF7FEBF 		b	eeprom_update_word
+  35              	.LVL0:
+  36              		.cfi_endproc
+  37              	.LFE283:
+  39              		.section	.text.eeconfig_disable,"ax",%progbits
+  40              		.align	1
+  41              		.global	eeconfig_disable
+  42              		.syntax unified
+  43              		.thumb
+  44              		.thumb_func
+  45              		.fpu softvfp
+  47              	eeconfig_disable:
+  48              	.LFB284:
+  65:tmk_core/common/eeconfig.c **** 
+  66:tmk_core/common/eeconfig.c **** /** \brief eeconfig disable
+  67:tmk_core/common/eeconfig.c ****  *
+  68:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  69:tmk_core/common/eeconfig.c ****  */
+  70:tmk_core/common/eeconfig.c **** void eeconfig_disable(void) {
+  49              		.loc 1 70 0
+  50              		.cfi_startproc
+  51              		@ args = 0, pretend = 0, frame = 0
+  52              		@ frame_needed = 0, uses_anonymous_args = 0
+  53 0000 08B5     		push	{r3, lr}
+  54              		.cfi_def_cfa_offset 8
+  55              		.cfi_offset 3, -8
+  56              		.cfi_offset 14, -4
+  71:tmk_core/common/eeconfig.c **** #ifdef STM32_EEPROM_ENABLE
+  72:tmk_core/common/eeconfig.c ****     EEPROM_Erase();
+  57              		.loc 1 72 0
+  58 0002 FFF7FEFF 		bl	EEPROM_Erase
+  59              	.LVL1:
+  73:tmk_core/common/eeconfig.c **** #endif
+  74:tmk_core/common/eeconfig.c ****     eeprom_update_word(EECONFIG_MAGIC, EECONFIG_MAGIC_NUMBER_OFF);
+  60              		.loc 1 74 0
+  61 0006 4FF6FF71 		movw	r1, #65535
+  62 000a 0020     		movs	r0, #0
+  75:tmk_core/common/eeconfig.c **** }
+  63              		.loc 1 75 0
+  64 000c BDE80840 		pop	{r3, lr}
+  65              		.cfi_restore 14
+  66              		.cfi_restore 3
+  67              		.cfi_def_cfa_offset 0
+  74:tmk_core/common/eeconfig.c **** }
+  68              		.loc 1 74 0
+  69 0010 FFF7FEBF 		b	eeprom_update_word
+  70              	.LVL2:
+  71              		.cfi_endproc
+  72              	.LFE284:
+  74              		.section	.text.eeconfig_is_enabled,"ax",%progbits
+  75              		.align	1
+  76              		.global	eeconfig_is_enabled
+  77              		.syntax unified
+  78              		.thumb
+  79              		.thumb_func
+  80              		.fpu softvfp
+  82              	eeconfig_is_enabled:
+  83              	.LFB285:
+  76:tmk_core/common/eeconfig.c **** 
+  77:tmk_core/common/eeconfig.c **** /** \brief eeconfig is enabled
+  78:tmk_core/common/eeconfig.c ****  *
+  79:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  80:tmk_core/common/eeconfig.c ****  */
+  81:tmk_core/common/eeconfig.c **** bool eeconfig_is_enabled(void) { return (eeprom_read_word(EECONFIG_MAGIC) == EECONFIG_MAGIC_NUMBER)
+  84              		.loc 1 81 0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 0
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  88 0000 08B5     		push	{r3, lr}
+  89              		.cfi_def_cfa_offset 8
+  90              		.cfi_offset 3, -8
+  91              		.cfi_offset 14, -4
+  92              		.loc 1 81 0
+  93 0002 0020     		movs	r0, #0
+  94 0004 FFF7FEFF 		bl	eeprom_read_word
+  95              	.LVL3:
+  96 0008 4FF6EC63 		movw	r3, #65260
+  97 000c C31A     		subs	r3, r0, r3
+  98 000e 5842     		rsbs	r0, r3, #0
+  99 0010 5841     		adcs	r0, r0, r3
+ 100 0012 08BD     		pop	{r3, pc}
+ 101              		.cfi_endproc
+ 102              	.LFE285:
+ 104              		.section	.text.eeconfig_is_disabled,"ax",%progbits
+ 105              		.align	1
+ 106              		.global	eeconfig_is_disabled
+ 107              		.syntax unified
+ 108              		.thumb
+ 109              		.thumb_func
+ 110              		.fpu softvfp
+ 112              	eeconfig_is_disabled:
+ 113              	.LFB286:
+  82:tmk_core/common/eeconfig.c **** 
+  83:tmk_core/common/eeconfig.c **** /** \brief eeconfig is disabled
+  84:tmk_core/common/eeconfig.c ****  *
+  85:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  86:tmk_core/common/eeconfig.c ****  */
+  87:tmk_core/common/eeconfig.c **** bool eeconfig_is_disabled(void) { return (eeprom_read_word(EECONFIG_MAGIC) == EECONFIG_MAGIC_NUMBER
+ 114              		.loc 1 87 0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+ 118 0000 08B5     		push	{r3, lr}
+ 119              		.cfi_def_cfa_offset 8
+ 120              		.cfi_offset 3, -8
+ 121              		.cfi_offset 14, -4
+ 122              		.loc 1 87 0
+ 123 0002 0020     		movs	r0, #0
+ 124 0004 FFF7FEFF 		bl	eeprom_read_word
+ 125              	.LVL4:
+ 126 0008 4FF6FF73 		movw	r3, #65535
+ 127 000c C31A     		subs	r3, r0, r3
+ 128 000e 5842     		rsbs	r0, r3, #0
+ 129 0010 5841     		adcs	r0, r0, r3
+ 130 0012 08BD     		pop	{r3, pc}
+ 131              		.cfi_endproc
+ 132              	.LFE286:
+ 134              		.section	.text.eeconfig_read_debug,"ax",%progbits
+ 135              		.align	1
+ 136              		.global	eeconfig_read_debug
+ 137              		.syntax unified
+ 138              		.thumb
+ 139              		.thumb_func
+ 140              		.fpu softvfp
+ 142              	eeconfig_read_debug:
+ 143              	.LFB287:
+  88:tmk_core/common/eeconfig.c **** 
+  89:tmk_core/common/eeconfig.c **** /** \brief eeconfig read debug
+  90:tmk_core/common/eeconfig.c ****  *
+  91:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  92:tmk_core/common/eeconfig.c ****  */
+  93:tmk_core/common/eeconfig.c **** uint8_t eeconfig_read_debug(void) { return eeprom_read_byte(EECONFIG_DEBUG); }
+ 144              		.loc 1 93 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148              		@ link register save eliminated.
+ 149              		.loc 1 93 0
+ 150 0000 0220     		movs	r0, #2
+ 151 0002 FFF7FEBF 		b	eeprom_read_byte
+ 152              	.LVL5:
+ 153              		.cfi_endproc
+ 154              	.LFE287:
+ 156              		.section	.text.eeconfig_update_debug,"ax",%progbits
+ 157              		.align	1
+ 158              		.global	eeconfig_update_debug
+ 159              		.syntax unified
+ 160              		.thumb
+ 161              		.thumb_func
+ 162              		.fpu softvfp
+ 164              	eeconfig_update_debug:
+ 165              	.LFB288:
+  94:tmk_core/common/eeconfig.c **** /** \brief eeconfig update debug
+  95:tmk_core/common/eeconfig.c ****  *
+  96:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+  97:tmk_core/common/eeconfig.c ****  */
+  98:tmk_core/common/eeconfig.c **** void eeconfig_update_debug(uint8_t val) { eeprom_update_byte(EECONFIG_DEBUG, val); }
+ 166              		.loc 1 98 0
+ 167              		.cfi_startproc
+ 168              		@ args = 0, pretend = 0, frame = 0
+ 169              		@ frame_needed = 0, uses_anonymous_args = 0
+ 170              		@ link register save eliminated.
+ 171              	.LVL6:
+ 172              		.loc 1 98 0
+ 173 0000 0146     		mov	r1, r0
+ 174 0002 0220     		movs	r0, #2
+ 175              	.LVL7:
+ 176 0004 FFF7FEBF 		b	eeprom_update_byte
+ 177              	.LVL8:
+ 178              		.cfi_endproc
+ 179              	.LFE288:
+ 181              		.section	.text.eeconfig_read_default_layer,"ax",%progbits
+ 182              		.align	1
+ 183              		.global	eeconfig_read_default_layer
+ 184              		.syntax unified
+ 185              		.thumb
+ 186              		.thumb_func
+ 187              		.fpu softvfp
+ 189              	eeconfig_read_default_layer:
+ 190              	.LFB289:
+  99:tmk_core/common/eeconfig.c **** 
+ 100:tmk_core/common/eeconfig.c **** /** \brief eeconfig read default layer
+ 101:tmk_core/common/eeconfig.c ****  *
+ 102:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 103:tmk_core/common/eeconfig.c ****  */
+ 104:tmk_core/common/eeconfig.c **** uint8_t eeconfig_read_default_layer(void) { return eeprom_read_byte(EECONFIG_DEFAULT_LAYER); }
+ 191              		.loc 1 104 0
+ 192              		.cfi_startproc
+ 193              		@ args = 0, pretend = 0, frame = 0
+ 194              		@ frame_needed = 0, uses_anonymous_args = 0
+ 195              		@ link register save eliminated.
+ 196              		.loc 1 104 0
+ 197 0000 0320     		movs	r0, #3
+ 198 0002 FFF7FEBF 		b	eeprom_read_byte
+ 199              	.LVL9:
+ 200              		.cfi_endproc
+ 201              	.LFE289:
+ 203              		.section	.text.eeconfig_update_default_layer,"ax",%progbits
+ 204              		.align	1
+ 205              		.global	eeconfig_update_default_layer
+ 206              		.syntax unified
+ 207              		.thumb
+ 208              		.thumb_func
+ 209              		.fpu softvfp
+ 211              	eeconfig_update_default_layer:
+ 212              	.LFB290:
+ 105:tmk_core/common/eeconfig.c **** /** \brief eeconfig update default layer
+ 106:tmk_core/common/eeconfig.c ****  *
+ 107:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 108:tmk_core/common/eeconfig.c ****  */
+ 109:tmk_core/common/eeconfig.c **** void eeconfig_update_default_layer(uint8_t val) { eeprom_update_byte(EECONFIG_DEFAULT_LAYER, val); 
+ 213              		.loc 1 109 0
+ 214              		.cfi_startproc
+ 215              		@ args = 0, pretend = 0, frame = 0
+ 216              		@ frame_needed = 0, uses_anonymous_args = 0
+ 217              		@ link register save eliminated.
+ 218              	.LVL10:
+ 219              		.loc 1 109 0
+ 220 0000 0146     		mov	r1, r0
+ 221 0002 0320     		movs	r0, #3
+ 222              	.LVL11:
+ 223 0004 FFF7FEBF 		b	eeprom_update_byte
+ 224              	.LVL12:
+ 225              		.cfi_endproc
+ 226              	.LFE290:
+ 228              		.section	.text.eeconfig_read_keymap,"ax",%progbits
+ 229              		.align	1
+ 230              		.global	eeconfig_read_keymap
+ 231              		.syntax unified
+ 232              		.thumb
+ 233              		.thumb_func
+ 234              		.fpu softvfp
+ 236              	eeconfig_read_keymap:
+ 237              	.LFB291:
+ 110:tmk_core/common/eeconfig.c **** 
+ 111:tmk_core/common/eeconfig.c **** /** \brief eeconfig read keymap
+ 112:tmk_core/common/eeconfig.c ****  *
+ 113:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 114:tmk_core/common/eeconfig.c ****  */
+ 115:tmk_core/common/eeconfig.c **** uint16_t eeconfig_read_keymap(void) { return (eeprom_read_byte(EECONFIG_KEYMAP_LOWER_BYTE) | (eepro
+ 238              		.loc 1 115 0
+ 239              		.cfi_startproc
+ 240              		@ args = 0, pretend = 0, frame = 0
+ 241              		@ frame_needed = 0, uses_anonymous_args = 0
+ 242 0000 10B5     		push	{r4, lr}
+ 243              		.cfi_def_cfa_offset 8
+ 244              		.cfi_offset 4, -8
+ 245              		.cfi_offset 14, -4
+ 246              		.loc 1 115 0
+ 247 0002 0420     		movs	r0, #4
+ 248 0004 FFF7FEFF 		bl	eeprom_read_byte
+ 249              	.LVL13:
+ 250 0008 0446     		mov	r4, r0
+ 251 000a 2120     		movs	r0, #33
+ 252 000c FFF7FEFF 		bl	eeprom_read_byte
+ 253              	.LVL14:
+ 254 0010 44EA0020 		orr	r0, r4, r0, lsl #8
+ 255 0014 80B2     		uxth	r0, r0
+ 256 0016 10BD     		pop	{r4, pc}
+ 257              		.cfi_endproc
+ 258              	.LFE291:
+ 260              		.section	.text.eeconfig_update_keymap,"ax",%progbits
+ 261              		.align	1
+ 262              		.global	eeconfig_update_keymap
+ 263              		.syntax unified
+ 264              		.thumb
+ 265              		.thumb_func
+ 266              		.fpu softvfp
+ 268              	eeconfig_update_keymap:
+ 269              	.LFB292:
+ 116:tmk_core/common/eeconfig.c **** /** \brief eeconfig update keymap
+ 117:tmk_core/common/eeconfig.c ****  *
+ 118:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 119:tmk_core/common/eeconfig.c ****  */
+ 120:tmk_core/common/eeconfig.c **** void eeconfig_update_keymap(uint16_t val) {
+ 270              		.loc 1 120 0
+ 271              		.cfi_startproc
+ 272              		@ args = 0, pretend = 0, frame = 0
+ 273              		@ frame_needed = 0, uses_anonymous_args = 0
+ 274              	.LVL15:
+ 275 0000 10B5     		push	{r4, lr}
+ 276              		.cfi_def_cfa_offset 8
+ 277              		.cfi_offset 4, -8
+ 278              		.cfi_offset 14, -4
+ 121:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, val & 0xFF);
+ 279              		.loc 1 121 0
+ 280 0002 C1B2     		uxtb	r1, r0
+ 120:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, val & 0xFF);
+ 281              		.loc 1 120 0
+ 282 0004 0446     		mov	r4, r0
+ 283              		.loc 1 121 0
+ 284 0006 0420     		movs	r0, #4
+ 285              	.LVL16:
+ 286 0008 FFF7FEFF 		bl	eeprom_update_byte
+ 287              	.LVL17:
+ 122:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_UPPER_BYTE, (val >> 8) & 0xFF);
+ 288              		.loc 1 122 0
+ 289 000c 210A     		lsrs	r1, r4, #8
+ 290 000e 2120     		movs	r0, #33
+ 123:tmk_core/common/eeconfig.c **** }
+ 291              		.loc 1 123 0
+ 292 0010 BDE81040 		pop	{r4, lr}
+ 293              		.cfi_restore 14
+ 294              		.cfi_restore 4
+ 295              		.cfi_def_cfa_offset 0
+ 122:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_UPPER_BYTE, (val >> 8) & 0xFF);
+ 296              		.loc 1 122 0
+ 297 0014 FFF7FEBF 		b	eeprom_update_byte
+ 298              	.LVL18:
+ 299              		.cfi_endproc
+ 300              	.LFE292:
+ 302              		.section	.text.eeconfig_read_backlight,"ax",%progbits
+ 303              		.align	1
+ 304              		.global	eeconfig_read_backlight
+ 305              		.syntax unified
+ 306              		.thumb
+ 307              		.thumb_func
+ 308              		.fpu softvfp
+ 310              	eeconfig_read_backlight:
+ 311              	.LFB293:
+ 124:tmk_core/common/eeconfig.c **** 
+ 125:tmk_core/common/eeconfig.c **** /** \brief eeconfig read backlight
+ 126:tmk_core/common/eeconfig.c ****  *
+ 127:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 128:tmk_core/common/eeconfig.c ****  */
+ 129:tmk_core/common/eeconfig.c **** uint8_t eeconfig_read_backlight(void) { return eeprom_read_byte(EECONFIG_BACKLIGHT); }
+ 312              		.loc 1 129 0
+ 313              		.cfi_startproc
+ 314              		@ args = 0, pretend = 0, frame = 0
+ 315              		@ frame_needed = 0, uses_anonymous_args = 0
+ 316              		@ link register save eliminated.
+ 317              		.loc 1 129 0
+ 318 0000 0620     		movs	r0, #6
+ 319 0002 FFF7FEBF 		b	eeprom_read_byte
+ 320              	.LVL19:
+ 321              		.cfi_endproc
+ 322              	.LFE293:
+ 324              		.section	.text.eeconfig_update_backlight,"ax",%progbits
+ 325              		.align	1
+ 326              		.global	eeconfig_update_backlight
+ 327              		.syntax unified
+ 328              		.thumb
+ 329              		.thumb_func
+ 330              		.fpu softvfp
+ 332              	eeconfig_update_backlight:
+ 333              	.LFB294:
+ 130:tmk_core/common/eeconfig.c **** /** \brief eeconfig update backlight
+ 131:tmk_core/common/eeconfig.c ****  *
+ 132:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 133:tmk_core/common/eeconfig.c ****  */
+ 134:tmk_core/common/eeconfig.c **** void eeconfig_update_backlight(uint8_t val) { eeprom_update_byte(EECONFIG_BACKLIGHT, val); }
+ 334              		.loc 1 134 0
+ 335              		.cfi_startproc
+ 336              		@ args = 0, pretend = 0, frame = 0
+ 337              		@ frame_needed = 0, uses_anonymous_args = 0
+ 338              		@ link register save eliminated.
+ 339              	.LVL20:
+ 340              		.loc 1 134 0
+ 341 0000 0146     		mov	r1, r0
+ 342 0002 0620     		movs	r0, #6
+ 343              	.LVL21:
+ 344 0004 FFF7FEBF 		b	eeprom_update_byte
+ 345              	.LVL22:
+ 346              		.cfi_endproc
+ 347              	.LFE294:
+ 349              		.section	.text.eeconfig_read_audio,"ax",%progbits
+ 350              		.align	1
+ 351              		.global	eeconfig_read_audio
+ 352              		.syntax unified
+ 353              		.thumb
+ 354              		.thumb_func
+ 355              		.fpu softvfp
+ 357              	eeconfig_read_audio:
+ 358              	.LFB295:
+ 135:tmk_core/common/eeconfig.c **** 
+ 136:tmk_core/common/eeconfig.c **** /** \brief eeconfig read audio
+ 137:tmk_core/common/eeconfig.c ****  *
+ 138:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 139:tmk_core/common/eeconfig.c ****  */
+ 140:tmk_core/common/eeconfig.c **** uint8_t eeconfig_read_audio(void) { return eeprom_read_byte(EECONFIG_AUDIO); }
+ 359              		.loc 1 140 0
+ 360              		.cfi_startproc
+ 361              		@ args = 0, pretend = 0, frame = 0
+ 362              		@ frame_needed = 0, uses_anonymous_args = 0
+ 363              		@ link register save eliminated.
+ 364              		.loc 1 140 0
+ 365 0000 0720     		movs	r0, #7
+ 366 0002 FFF7FEBF 		b	eeprom_read_byte
+ 367              	.LVL23:
+ 368              		.cfi_endproc
+ 369              	.LFE295:
+ 371              		.section	.text.eeconfig_update_audio,"ax",%progbits
+ 372              		.align	1
+ 373              		.global	eeconfig_update_audio
+ 374              		.syntax unified
+ 375              		.thumb
+ 376              		.thumb_func
+ 377              		.fpu softvfp
+ 379              	eeconfig_update_audio:
+ 380              	.LFB296:
+ 141:tmk_core/common/eeconfig.c **** /** \brief eeconfig update audio
+ 142:tmk_core/common/eeconfig.c ****  *
+ 143:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 144:tmk_core/common/eeconfig.c ****  */
+ 145:tmk_core/common/eeconfig.c **** void eeconfig_update_audio(uint8_t val) { eeprom_update_byte(EECONFIG_AUDIO, val); }
+ 381              		.loc 1 145 0
+ 382              		.cfi_startproc
+ 383              		@ args = 0, pretend = 0, frame = 0
+ 384              		@ frame_needed = 0, uses_anonymous_args = 0
+ 385              		@ link register save eliminated.
+ 386              	.LVL24:
+ 387              		.loc 1 145 0
+ 388 0000 0146     		mov	r1, r0
+ 389 0002 0720     		movs	r0, #7
+ 390              	.LVL25:
+ 391 0004 FFF7FEBF 		b	eeprom_update_byte
+ 392              	.LVL26:
+ 393              		.cfi_endproc
+ 394              	.LFE296:
+ 396              		.section	.text.eeconfig_read_kb,"ax",%progbits
+ 397              		.align	1
+ 398              		.global	eeconfig_read_kb
+ 399              		.syntax unified
+ 400              		.thumb
+ 401              		.thumb_func
+ 402              		.fpu softvfp
+ 404              	eeconfig_read_kb:
+ 405              	.LFB297:
+ 146:tmk_core/common/eeconfig.c **** 
+ 147:tmk_core/common/eeconfig.c **** /** \brief eeconfig read kb
+ 148:tmk_core/common/eeconfig.c ****  *
+ 149:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 150:tmk_core/common/eeconfig.c ****  */
+ 151:tmk_core/common/eeconfig.c **** uint32_t eeconfig_read_kb(void) { return eeprom_read_dword(EECONFIG_KEYBOARD); }
+ 406              		.loc 1 151 0
+ 407              		.cfi_startproc
+ 408              		@ args = 0, pretend = 0, frame = 0
+ 409              		@ frame_needed = 0, uses_anonymous_args = 0
+ 410              		@ link register save eliminated.
+ 411              		.loc 1 151 0
+ 412 0000 0F20     		movs	r0, #15
+ 413 0002 FFF7FEBF 		b	eeprom_read_dword
+ 414              	.LVL27:
+ 415              		.cfi_endproc
+ 416              	.LFE297:
+ 418              		.section	.text.eeconfig_update_kb,"ax",%progbits
+ 419              		.align	1
+ 420              		.global	eeconfig_update_kb
+ 421              		.syntax unified
+ 422              		.thumb
+ 423              		.thumb_func
+ 424              		.fpu softvfp
+ 426              	eeconfig_update_kb:
+ 427              	.LFB298:
+ 152:tmk_core/common/eeconfig.c **** /** \brief eeconfig update kb
+ 153:tmk_core/common/eeconfig.c ****  *
+ 154:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 155:tmk_core/common/eeconfig.c ****  */
+ 156:tmk_core/common/eeconfig.c **** 
+ 157:tmk_core/common/eeconfig.c **** void eeconfig_update_kb(uint32_t val) { eeprom_update_dword(EECONFIG_KEYBOARD, val); }
+ 428              		.loc 1 157 0
+ 429              		.cfi_startproc
+ 430              		@ args = 0, pretend = 0, frame = 0
+ 431              		@ frame_needed = 0, uses_anonymous_args = 0
+ 432              		@ link register save eliminated.
+ 433              	.LVL28:
+ 434              		.loc 1 157 0
+ 435 0000 0146     		mov	r1, r0
+ 436 0002 0F20     		movs	r0, #15
+ 437              	.LVL29:
+ 438 0004 FFF7FEBF 		b	eeprom_update_dword
+ 439              	.LVL30:
+ 440              		.cfi_endproc
+ 441              	.LFE298:
+ 443              		.section	.text.eeconfig_read_user,"ax",%progbits
+ 444              		.align	1
+ 445              		.global	eeconfig_read_user
+ 446              		.syntax unified
+ 447              		.thumb
+ 448              		.thumb_func
+ 449              		.fpu softvfp
+ 451              	eeconfig_read_user:
+ 452              	.LFB299:
+ 158:tmk_core/common/eeconfig.c **** /** \brief eeconfig read user
+ 159:tmk_core/common/eeconfig.c ****  *
+ 160:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 161:tmk_core/common/eeconfig.c ****  */
+ 162:tmk_core/common/eeconfig.c **** uint32_t eeconfig_read_user(void) { return eeprom_read_dword(EECONFIG_USER); }
+ 453              		.loc 1 162 0
+ 454              		.cfi_startproc
+ 455              		@ args = 0, pretend = 0, frame = 0
+ 456              		@ frame_needed = 0, uses_anonymous_args = 0
+ 457              		@ link register save eliminated.
+ 458              		.loc 1 162 0
+ 459 0000 1320     		movs	r0, #19
+ 460 0002 FFF7FEBF 		b	eeprom_read_dword
+ 461              	.LVL31:
+ 462              		.cfi_endproc
+ 463              	.LFE299:
+ 465              		.section	.text.eeconfig_update_user,"ax",%progbits
+ 466              		.align	1
+ 467              		.global	eeconfig_update_user
+ 468              		.syntax unified
+ 469              		.thumb
+ 470              		.thumb_func
+ 471              		.fpu softvfp
+ 473              	eeconfig_update_user:
+ 474              	.LFB300:
+ 163:tmk_core/common/eeconfig.c **** /** \brief eeconfig update user
+ 164:tmk_core/common/eeconfig.c ****  *
+ 165:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 166:tmk_core/common/eeconfig.c ****  */
+ 167:tmk_core/common/eeconfig.c **** void eeconfig_update_user(uint32_t val) { eeprom_update_dword(EECONFIG_USER, val); }
+ 475              		.loc 1 167 0
+ 476              		.cfi_startproc
+ 477              		@ args = 0, pretend = 0, frame = 0
+ 478              		@ frame_needed = 0, uses_anonymous_args = 0
+ 479              		@ link register save eliminated.
+ 480              	.LVL32:
+ 481              		.loc 1 167 0
+ 482 0000 0146     		mov	r1, r0
+ 483 0002 1320     		movs	r0, #19
+ 484              	.LVL33:
+ 485 0004 FFF7FEBF 		b	eeprom_update_dword
+ 486              	.LVL34:
+ 487              		.cfi_endproc
+ 488              	.LFE300:
+ 490              		.section	.text.eeconfig_init_user,"ax",%progbits
+ 491              		.align	1
+ 492              		.weak	eeconfig_init_user
+ 493              		.syntax unified
+ 494              		.thumb
+ 495              		.thumb_func
+ 496              		.fpu softvfp
+ 498              	eeconfig_init_user:
+ 499              	.LFB279:
+  16:tmk_core/common/eeconfig.c ****     // Reset user EEPROM value to blank, rather than to a set value
+ 500              		.loc 1 16 0
+ 501              		.cfi_startproc
+ 502              		@ args = 0, pretend = 0, frame = 0
+ 503              		@ frame_needed = 0, uses_anonymous_args = 0
+ 504              		@ link register save eliminated.
+  18:tmk_core/common/eeconfig.c **** }
+ 505              		.loc 1 18 0
+ 506 0000 0020     		movs	r0, #0
+ 507 0002 FFF7FEBF 		b	eeconfig_update_user
+ 508              	.LVL35:
+ 509              		.cfi_endproc
+ 510              	.LFE279:
+ 512              		.section	.text.eeconfig_init_kb,"ax",%progbits
+ 513              		.align	1
+ 514              		.weak	eeconfig_init_kb
+ 515              		.syntax unified
+ 516              		.thumb
+ 517              		.thumb_func
+ 518              		.fpu softvfp
+ 520              	eeconfig_init_kb:
+ 521              	.LFB280:
+  21:tmk_core/common/eeconfig.c ****     // Reset Keyboard EEPROM value to blank, rather than to a set value
+ 522              		.loc 1 21 0
+ 523              		.cfi_startproc
+ 524              		@ args = 0, pretend = 0, frame = 0
+ 525              		@ frame_needed = 0, uses_anonymous_args = 0
+ 526 0000 08B5     		push	{r3, lr}
+ 527              		.cfi_def_cfa_offset 8
+ 528              		.cfi_offset 3, -8
+ 529              		.cfi_offset 14, -4
+  23:tmk_core/common/eeconfig.c **** 
+ 530              		.loc 1 23 0
+ 531 0002 0020     		movs	r0, #0
+ 532 0004 FFF7FEFF 		bl	eeconfig_update_kb
+ 533              	.LVL36:
+  25:tmk_core/common/eeconfig.c **** }
+ 534              		.loc 1 25 0
+ 535 0008 FFF7FEFF 		bl	eeconfig_init_user
+ 536              	.LVL37:
+  26:tmk_core/common/eeconfig.c **** 
+ 537              		.loc 1 26 0
+ 538 000c 08BD     		pop	{r3, pc}
+ 539              		.cfi_endproc
+ 540              	.LFE280:
+ 542              		.section	.text.eeconfig_init_quantum,"ax",%progbits
+ 543              		.align	1
+ 544              		.global	eeconfig_init_quantum
+ 545              		.syntax unified
+ 546              		.thumb
+ 547              		.thumb_func
+ 548              		.fpu softvfp
+ 550              	eeconfig_init_quantum:
+ 551              	.LFB281:
+  31:tmk_core/common/eeconfig.c **** #ifdef STM32_EEPROM_ENABLE
+ 552              		.loc 1 31 0
+ 553              		.cfi_startproc
+ 554              		@ args = 0, pretend = 0, frame = 0
+ 555              		@ frame_needed = 0, uses_anonymous_args = 0
+ 556 0000 10B5     		push	{r4, lr}
+ 557              		.cfi_def_cfa_offset 8
+ 558              		.cfi_offset 4, -8
+ 559              		.cfi_offset 14, -4
+  33:tmk_core/common/eeconfig.c **** #endif
+ 560              		.loc 1 33 0
+ 561 0002 FFF7FEFF 		bl	EEPROM_Erase
+ 562              	.LVL38:
+  35:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_DEBUG, 0);
+ 563              		.loc 1 35 0
+ 564 0006 4FF6EC61 		movw	r1, #65260
+ 565 000a 0020     		movs	r0, #0
+ 566 000c FFF7FEFF 		bl	eeprom_update_word
+ 567              	.LVL39:
+  36:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_DEFAULT_LAYER, 0);
+ 568              		.loc 1 36 0
+ 569 0010 0021     		movs	r1, #0
+ 570 0012 0220     		movs	r0, #2
+ 571 0014 FFF7FEFF 		bl	eeprom_update_byte
+ 572              	.LVL40:
+  37:tmk_core/common/eeconfig.c ****     default_layer_state = 0;
+ 573              		.loc 1 37 0
+ 574 0018 0021     		movs	r1, #0
+ 575 001a 0320     		movs	r0, #3
+  38:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, 0);
+ 576              		.loc 1 38 0
+ 577 001c 0024     		movs	r4, #0
+  37:tmk_core/common/eeconfig.c ****     default_layer_state = 0;
+ 578              		.loc 1 37 0
+ 579 001e FFF7FEFF 		bl	eeprom_update_byte
+ 580              	.LVL41:
+  38:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, 0);
+ 581              		.loc 1 38 0
+ 582 0022 184B     		ldr	r3, .L22
+  39:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_UPPER_BYTE, 0);
+ 583              		.loc 1 39 0
+ 584 0024 2146     		mov	r1, r4
+ 585 0026 0420     		movs	r0, #4
+  38:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_LOWER_BYTE, 0);
+ 586              		.loc 1 38 0
+ 587 0028 1C60     		str	r4, [r3]
+  39:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_KEYMAP_UPPER_BYTE, 0);
+ 588              		.loc 1 39 0
+ 589 002a FFF7FEFF 		bl	eeprom_update_byte
+ 590              	.LVL42:
+  40:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_MOUSEKEY_ACCEL, 0);
+ 591              		.loc 1 40 0
+ 592 002e 2146     		mov	r1, r4
+ 593 0030 2120     		movs	r0, #33
+ 594 0032 FFF7FEFF 		bl	eeprom_update_byte
+ 595              	.LVL43:
+  41:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_BACKLIGHT, 0);
+ 596              		.loc 1 41 0
+ 597 0036 2146     		mov	r1, r4
+ 598 0038 0520     		movs	r0, #5
+ 599 003a FFF7FEFF 		bl	eeprom_update_byte
+ 600              	.LVL44:
+  42:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_AUDIO, 0xFF);  // On by default
+ 601              		.loc 1 42 0
+ 602 003e 2146     		mov	r1, r4
+ 603 0040 0620     		movs	r0, #6
+ 604 0042 FFF7FEFF 		bl	eeprom_update_byte
+ 605              	.LVL45:
+  43:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_RGBLIGHT, 0);
+ 606              		.loc 1 43 0
+ 607 0046 FF21     		movs	r1, #255
+ 608 0048 0720     		movs	r0, #7
+ 609 004a FFF7FEFF 		bl	eeprom_update_byte
+ 610              	.LVL46:
+  44:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_STENOMODE, 0);
+ 611              		.loc 1 44 0
+ 612 004e 2146     		mov	r1, r4
+ 613 0050 0820     		movs	r0, #8
+ 614 0052 FFF7FEFF 		bl	eeprom_update_dword
+ 615              	.LVL47:
+  45:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_HAPTIC, 0);
+ 616              		.loc 1 45 0
+ 617 0056 2146     		mov	r1, r4
+ 618 0058 0D20     		movs	r0, #13
+ 619 005a FFF7FEFF 		bl	eeprom_update_byte
+ 620              	.LVL48:
+  46:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_VELOCIKEY, 0);
+ 621              		.loc 1 46 0
+ 622 005e 2146     		mov	r1, r4
+ 623 0060 1820     		movs	r0, #24
+ 624 0062 FFF7FEFF 		bl	eeprom_update_dword
+ 625              	.LVL49:
+  47:tmk_core/common/eeconfig.c ****     eeprom_update_dword(EECONFIG_RGB_MATRIX, 0);
+ 626              		.loc 1 47 0
+ 627 0066 2146     		mov	r1, r4
+ 628 0068 1720     		movs	r0, #23
+ 629 006a FFF7FEFF 		bl	eeprom_update_byte
+ 630              	.LVL50:
+  48:tmk_core/common/eeconfig.c ****     eeprom_update_byte(EECONFIG_RGB_MATRIX_SPEED, 0);
+ 631              		.loc 1 48 0
+ 632 006e 2146     		mov	r1, r4
+ 633 0070 1C20     		movs	r0, #28
+ 634 0072 FFF7FEFF 		bl	eeprom_update_dword
+ 635              	.LVL51:
+  49:tmk_core/common/eeconfig.c **** 
+ 636              		.loc 1 49 0
+ 637 0076 2146     		mov	r1, r4
+ 638 0078 2020     		movs	r0, #32
+ 639 007a FFF7FEFF 		bl	eeprom_update_byte
+ 640              	.LVL52:
+  51:tmk_core/common/eeconfig.c **** }
+ 641              		.loc 1 51 0
+ 642 007e FFF7FEFF 		bl	eeconfig_init_kb
+ 643              	.LVL53:
+  52:tmk_core/common/eeconfig.c **** 
+ 644              		.loc 1 52 0
+ 645 0082 10BD     		pop	{r4, pc}
+ 646              	.L23:
+ 647              		.align	2
+ 648              	.L22:
+ 649 0084 00000000 		.word	default_layer_state
+ 650              		.cfi_endproc
+ 651              	.LFE281:
+ 653              		.section	.text.eeconfig_init,"ax",%progbits
+ 654              		.align	1
+ 655              		.global	eeconfig_init
+ 656              		.syntax unified
+ 657              		.thumb
+ 658              		.thumb_func
+ 659              		.fpu softvfp
+ 661              	eeconfig_init:
+ 662              	.LFB282:
+  58:tmk_core/common/eeconfig.c **** 
+ 663              		.loc 1 58 0
+ 664              		.cfi_startproc
+ 665              		@ args = 0, pretend = 0, frame = 0
+ 666              		@ frame_needed = 0, uses_anonymous_args = 0
+ 667              		@ link register save eliminated.
+  58:tmk_core/common/eeconfig.c **** 
+ 668              		.loc 1 58 0
+ 669 0000 FFF7FEBF 		b	eeconfig_init_quantum
+ 670              	.LVL54:
+ 671              		.cfi_endproc
+ 672              	.LFE282:
+ 674              		.section	.text.eeconfig_read_haptic,"ax",%progbits
+ 675              		.align	1
+ 676              		.global	eeconfig_read_haptic
+ 677              		.syntax unified
+ 678              		.thumb
+ 679              		.thumb_func
+ 680              		.fpu softvfp
+ 682              	eeconfig_read_haptic:
+ 683              	.LFB301:
+ 168:tmk_core/common/eeconfig.c **** 
+ 169:tmk_core/common/eeconfig.c **** uint32_t eeconfig_read_haptic(void) { return eeprom_read_dword(EECONFIG_HAPTIC); }
+ 684              		.loc 1 169 0
+ 685              		.cfi_startproc
+ 686              		@ args = 0, pretend = 0, frame = 0
+ 687              		@ frame_needed = 0, uses_anonymous_args = 0
+ 688              		@ link register save eliminated.
+ 689              		.loc 1 169 0
+ 690 0000 1820     		movs	r0, #24
+ 691 0002 FFF7FEBF 		b	eeprom_read_dword
+ 692              	.LVL55:
+ 693              		.cfi_endproc
+ 694              	.LFE301:
+ 696              		.section	.text.eeconfig_update_haptic,"ax",%progbits
+ 697              		.align	1
+ 698              		.global	eeconfig_update_haptic
+ 699              		.syntax unified
+ 700              		.thumb
+ 701              		.thumb_func
+ 702              		.fpu softvfp
+ 704              	eeconfig_update_haptic:
+ 705              	.LFB302:
+ 170:tmk_core/common/eeconfig.c **** /** \brief eeconfig update user
+ 171:tmk_core/common/eeconfig.c ****  *
+ 172:tmk_core/common/eeconfig.c ****  * FIXME: needs doc
+ 173:tmk_core/common/eeconfig.c ****  */
+ 174:tmk_core/common/eeconfig.c **** void eeconfig_update_haptic(uint32_t val) { eeprom_update_dword(EECONFIG_HAPTIC, val); }
+ 706              		.loc 1 174 0
+ 707              		.cfi_startproc
+ 708              		@ args = 0, pretend = 0, frame = 0
+ 709              		@ frame_needed = 0, uses_anonymous_args = 0
+ 710              		@ link register save eliminated.
+ 711              	.LVL56:
+ 712              		.loc 1 174 0
+ 713 0000 0146     		mov	r1, r0
+ 714 0002 1820     		movs	r0, #24
+ 715              	.LVL57:
+ 716 0004 FFF7FEBF 		b	eeprom_update_dword
+ 717              	.LVL58:
+ 718              		.cfi_endproc
+ 719              	.LFE302:
+ 721              		.text
+ 722              	.Letext0:
+ 723              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 724              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 725              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 726              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 727              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 728              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 729              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 730              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 731              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 732              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 733              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 734              		.file 13 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 735              		.file 14 "./lib/chibios/os/rt/include/chtm.h"
+ 736              		.file 15 "./lib/chibios/os/rt/include/chsem.h"
+ 737              		.file 16 "./lib/chibios/os/rt/include/chmtx.h"
+ 738              		.file 17 "./lib/chibios/os/rt/include/chsys.h"
+ 739              		.file 18 "./lib/chibios/os/rt/include/chregistry.h"
+ 740              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 741              		.file 20 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 742              		.file 21 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 743              		.file 22 "./lib/chibios/os/hal/include/hal_dac.h"
+ 744              		.file 23 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 745              		.file 24 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 746              		.file 25 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 747              		.file 26 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 748              		.file 27 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 749              		.file 28 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 750              		.file 29 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 751              		.file 30 "./lib/chibios/os/hal/include/hal_usb.h"
+ 752              		.file 31 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 753              		.file 32 "tmk_core/common/eeprom.h"
+ 754              		.file 33 "tmk_core/common/chibios/eeprom_stm32.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 eeconfig.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:16     .text.eeconfig_enable:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:23     .text.eeconfig_enable:0000000000000000 eeconfig_enable
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:40     .text.eeconfig_disable:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:47     .text.eeconfig_disable:0000000000000000 eeconfig_disable
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:75     .text.eeconfig_is_enabled:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:82     .text.eeconfig_is_enabled:0000000000000000 eeconfig_is_enabled
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:105    .text.eeconfig_is_disabled:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:112    .text.eeconfig_is_disabled:0000000000000000 eeconfig_is_disabled
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:135    .text.eeconfig_read_debug:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:142    .text.eeconfig_read_debug:0000000000000000 eeconfig_read_debug
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:157    .text.eeconfig_update_debug:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:164    .text.eeconfig_update_debug:0000000000000000 eeconfig_update_debug
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:182    .text.eeconfig_read_default_layer:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:189    .text.eeconfig_read_default_layer:0000000000000000 eeconfig_read_default_layer
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:204    .text.eeconfig_update_default_layer:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:211    .text.eeconfig_update_default_layer:0000000000000000 eeconfig_update_default_layer
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:229    .text.eeconfig_read_keymap:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:236    .text.eeconfig_read_keymap:0000000000000000 eeconfig_read_keymap
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:261    .text.eeconfig_update_keymap:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:268    .text.eeconfig_update_keymap:0000000000000000 eeconfig_update_keymap
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:303    .text.eeconfig_read_backlight:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:310    .text.eeconfig_read_backlight:0000000000000000 eeconfig_read_backlight
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:325    .text.eeconfig_update_backlight:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:332    .text.eeconfig_update_backlight:0000000000000000 eeconfig_update_backlight
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:350    .text.eeconfig_read_audio:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:357    .text.eeconfig_read_audio:0000000000000000 eeconfig_read_audio
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:372    .text.eeconfig_update_audio:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:379    .text.eeconfig_update_audio:0000000000000000 eeconfig_update_audio
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:397    .text.eeconfig_read_kb:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:404    .text.eeconfig_read_kb:0000000000000000 eeconfig_read_kb
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:419    .text.eeconfig_update_kb:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:426    .text.eeconfig_update_kb:0000000000000000 eeconfig_update_kb
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:444    .text.eeconfig_read_user:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:451    .text.eeconfig_read_user:0000000000000000 eeconfig_read_user
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:466    .text.eeconfig_update_user:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:473    .text.eeconfig_update_user:0000000000000000 eeconfig_update_user
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:491    .text.eeconfig_init_user:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:498    .text.eeconfig_init_user:0000000000000000 eeconfig_init_user
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:513    .text.eeconfig_init_kb:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:520    .text.eeconfig_init_kb:0000000000000000 eeconfig_init_kb
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:543    .text.eeconfig_init_quantum:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:550    .text.eeconfig_init_quantum:0000000000000000 eeconfig_init_quantum
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:649    .text.eeconfig_init_quantum:0000000000000084 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:654    .text.eeconfig_init:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:661    .text.eeconfig_init:0000000000000000 eeconfig_init
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:675    .text.eeconfig_read_haptic:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:682    .text.eeconfig_read_haptic:0000000000000000 eeconfig_read_haptic
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:697    .text.eeconfig_update_haptic:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccn0a99h.s:704    .text.eeconfig_update_haptic:0000000000000000 eeconfig_update_haptic
+
+UNDEFINED SYMBOLS
+eeprom_update_word
+EEPROM_Erase
+eeprom_read_word
+eeprom_read_byte
+eeprom_update_byte
+eeprom_read_dword
+eeprom_update_dword
+default_layer_state

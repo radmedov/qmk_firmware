@@ -1,0 +1,1356 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"hal_pwm.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.pwmInit,"ax",%progbits
+  16              		.align	1
+  17              		.global	pwmInit
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	pwmInit:
+  24              	.LFB279:
+  25              		.file 1 "lib/chibios/os/hal/src/hal_pwm.c"
+   1:lib/chibios/os/hal/src/hal_pwm.c **** /*
+   2:lib/chibios/os/hal/src/hal_pwm.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
+   3:lib/chibios/os/hal/src/hal_pwm.c **** 
+   4:lib/chibios/os/hal/src/hal_pwm.c ****     Licensed under the Apache License, Version 2.0 (the "License");
+   5:lib/chibios/os/hal/src/hal_pwm.c ****     you may not use this file except in compliance with the License.
+   6:lib/chibios/os/hal/src/hal_pwm.c ****     You may obtain a copy of the License at
+   7:lib/chibios/os/hal/src/hal_pwm.c **** 
+   8:lib/chibios/os/hal/src/hal_pwm.c ****         http://www.apache.org/licenses/LICENSE-2.0
+   9:lib/chibios/os/hal/src/hal_pwm.c **** 
+  10:lib/chibios/os/hal/src/hal_pwm.c ****     Unless required by applicable law or agreed to in writing, software
+  11:lib/chibios/os/hal/src/hal_pwm.c ****     distributed under the License is distributed on an "AS IS" BASIS,
+  12:lib/chibios/os/hal/src/hal_pwm.c ****     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  13:lib/chibios/os/hal/src/hal_pwm.c ****     See the License for the specific language governing permissions and
+  14:lib/chibios/os/hal/src/hal_pwm.c ****     limitations under the License.
+  15:lib/chibios/os/hal/src/hal_pwm.c **** */
+  16:lib/chibios/os/hal/src/hal_pwm.c **** 
+  17:lib/chibios/os/hal/src/hal_pwm.c **** /**
+  18:lib/chibios/os/hal/src/hal_pwm.c ****  * @file    hal_pwm.c
+  19:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   PWM Driver code.
+  20:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  21:lib/chibios/os/hal/src/hal_pwm.c ****  * @addtogroup PWM
+  22:lib/chibios/os/hal/src/hal_pwm.c ****  * @{
+  23:lib/chibios/os/hal/src/hal_pwm.c ****  */
+  24:lib/chibios/os/hal/src/hal_pwm.c **** 
+  25:lib/chibios/os/hal/src/hal_pwm.c **** #include "hal.h"
+  26:lib/chibios/os/hal/src/hal_pwm.c **** 
+  27:lib/chibios/os/hal/src/hal_pwm.c **** #if (HAL_USE_PWM == TRUE) || defined(__DOXYGEN__)
+  28:lib/chibios/os/hal/src/hal_pwm.c **** 
+  29:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  30:lib/chibios/os/hal/src/hal_pwm.c **** /* Driver local definitions.                                                 */
+  31:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  32:lib/chibios/os/hal/src/hal_pwm.c **** 
+  33:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  34:lib/chibios/os/hal/src/hal_pwm.c **** /* Driver exported variables.                                                */
+  35:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  36:lib/chibios/os/hal/src/hal_pwm.c **** 
+  37:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  38:lib/chibios/os/hal/src/hal_pwm.c **** /* Driver local variables and types.                                         */
+  39:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  40:lib/chibios/os/hal/src/hal_pwm.c **** 
+  41:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  42:lib/chibios/os/hal/src/hal_pwm.c **** /* Driver local functions.                                                   */
+  43:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  44:lib/chibios/os/hal/src/hal_pwm.c **** 
+  45:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  46:lib/chibios/os/hal/src/hal_pwm.c **** /* Driver exported functions.                                                */
+  47:lib/chibios/os/hal/src/hal_pwm.c **** /*===========================================================================*/
+  48:lib/chibios/os/hal/src/hal_pwm.c **** 
+  49:lib/chibios/os/hal/src/hal_pwm.c **** /**
+  50:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   PWM Driver initialization.
+  51:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    This function is implicitly invoked by @p halInit(), there is
+  52:lib/chibios/os/hal/src/hal_pwm.c ****  *          no need to explicitly initialize the driver.
+  53:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  54:lib/chibios/os/hal/src/hal_pwm.c ****  * @init
+  55:lib/chibios/os/hal/src/hal_pwm.c ****  */
+  56:lib/chibios/os/hal/src/hal_pwm.c **** void pwmInit(void) {
+  26              		.loc 1 56 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  57:lib/chibios/os/hal/src/hal_pwm.c **** 
+  58:lib/chibios/os/hal/src/hal_pwm.c ****   pwm_lld_init();
+  31              		.loc 1 58 0
+  32 0000 FFF7FEBF 		b	pwm_lld_init
+  33              	.LVL0:
+  34              		.cfi_endproc
+  35              	.LFE279:
+  37              		.section	.text.pwmObjectInit,"ax",%progbits
+  38              		.align	1
+  39              		.global	pwmObjectInit
+  40              		.syntax unified
+  41              		.thumb
+  42              		.thumb_func
+  43              		.fpu softvfp
+  45              	pwmObjectInit:
+  46              	.LFB280:
+  59:lib/chibios/os/hal/src/hal_pwm.c **** }
+  60:lib/chibios/os/hal/src/hal_pwm.c **** 
+  61:lib/chibios/os/hal/src/hal_pwm.c **** /**
+  62:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Initializes the standard part of a @p PWMDriver structure.
+  63:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  64:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[out] pwmp     pointer to a @p PWMDriver object
+  65:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  66:lib/chibios/os/hal/src/hal_pwm.c ****  * @init
+  67:lib/chibios/os/hal/src/hal_pwm.c ****  */
+  68:lib/chibios/os/hal/src/hal_pwm.c **** void pwmObjectInit(PWMDriver *pwmp) {
+  47              		.loc 1 68 0
+  48              		.cfi_startproc
+  49              		@ args = 0, pretend = 0, frame = 0
+  50              		@ frame_needed = 0, uses_anonymous_args = 0
+  51              		@ link register save eliminated.
+  52              	.LVL1:
+  69:lib/chibios/os/hal/src/hal_pwm.c **** 
+  70:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->state    = PWM_STOP;
+  53              		.loc 1 70 0
+  54 0000 0123     		movs	r3, #1
+  55 0002 0370     		strb	r3, [r0]
+  71:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->config   = NULL;
+  56              		.loc 1 71 0
+  57 0004 0023     		movs	r3, #0
+  58 0006 4360     		str	r3, [r0, #4]
+  72:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->enabled  = 0;
+  59              		.loc 1 72 0
+  60 0008 C360     		str	r3, [r0, #12]
+  73:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->channels = 0;
+  61              		.loc 1 73 0
+  62 000a 0374     		strb	r3, [r0, #16]
+  74:lib/chibios/os/hal/src/hal_pwm.c **** #if defined(PWM_DRIVER_EXT_INIT_HOOK)
+  75:lib/chibios/os/hal/src/hal_pwm.c ****   PWM_DRIVER_EXT_INIT_HOOK(pwmp);
+  76:lib/chibios/os/hal/src/hal_pwm.c **** #endif
+  77:lib/chibios/os/hal/src/hal_pwm.c **** }
+  63              		.loc 1 77 0
+  64 000c 7047     		bx	lr
+  65              		.cfi_endproc
+  66              	.LFE280:
+  68              		.section	.text.pwmStart,"ax",%progbits
+  69              		.align	1
+  70              		.global	pwmStart
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  74              		.fpu softvfp
+  76              	pwmStart:
+  77              	.LFB281:
+  78:lib/chibios/os/hal/src/hal_pwm.c **** 
+  79:lib/chibios/os/hal/src/hal_pwm.c **** /**
+  80:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Configures and activates the PWM peripheral.
+  81:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    Starting a driver that is already in the @p PWM_READY state
+  82:lib/chibios/os/hal/src/hal_pwm.c ****  *          disables all the active channels.
+  83:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  84:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+  85:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] config    pointer to a @p PWMConfig object
+  86:lib/chibios/os/hal/src/hal_pwm.c ****  *
+  87:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+  88:lib/chibios/os/hal/src/hal_pwm.c ****  */
+  89:lib/chibios/os/hal/src/hal_pwm.c **** void pwmStart(PWMDriver *pwmp, const PWMConfig *config) {
+  78              		.loc 1 89 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              	.LVL2:
+  83 0000 10B5     		push	{r4, lr}
+  84              		.cfi_def_cfa_offset 8
+  85              		.cfi_offset 4, -8
+  86              		.cfi_offset 14, -4
+  87              	.LBB141:
+  88              	.LBB142:
+  89              	.LBB143:
+  90              	.LBB144:
+  91              	.LBB145:
+  92              		.file 2 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h"
+   1:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**************************************************************************//**
+   2:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @version  V4.30
+   5:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  ******************************************************************************/
+   7:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+   9:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    All rights reserved.
+  10:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      specific prior written permission.
+  20:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    *
+  21:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  34:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  35:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  38:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #endif
+  45:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  46:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  47:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   @{
+  51:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  52:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  53:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  54:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  58:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  60:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  62:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  63:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  64:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  65:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  69:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  71:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+  72:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  73:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  74:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  75:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  76:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Control Register
+  77:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the Control Register.
+  78:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Control Register value
+  79:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  80:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_CONTROL(void)
+  81:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  82:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+  83:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  84:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, control" : "=r" (result) );
+  85:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+  86:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  87:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  88:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  89:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  90:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Control Register
+  91:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Writes the given value to the Control Register.
+  92:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    control  Control Register value to set
+  93:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  94:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_CONTROL(uint32_t control)
+  95:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  96:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+  97:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  98:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  99:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 100:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 101:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get IPSR Register
+ 102:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the IPSR Register.
+ 103:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               IPSR Register value
+ 104:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 105:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_IPSR(void)
+ 106:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 107:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 108:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 109:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, ipsr" : "=r" (result) );
+ 110:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 111:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 112:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 113:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 114:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 115:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get APSR Register
+ 116:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the APSR Register.
+ 117:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               APSR Register value
+ 118:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 119:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_APSR(void)
+ 120:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 121:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 122:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 123:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, apsr" : "=r" (result) );
+ 124:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 125:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 126:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 127:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 128:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 129:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get xPSR Register
+ 130:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the xPSR Register.
+ 131:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 132:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \return               xPSR Register value
+ 133:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 134:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_xPSR(void)
+ 135:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 136:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 137:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 138:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, xpsr" : "=r" (result) );
+ 139:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 140:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 141:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 142:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 143:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 144:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Process Stack Pointer
+ 145:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Process Stack Pointer (PSP).
+ 146:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               PSP Register value
+ 147:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 148:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PSP(void)
+ 149:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 150:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 151:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 152:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, psp\n"  : "=r" (result) );
+ 153:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 154:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 155:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 156:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 157:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 158:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Process Stack Pointer
+ 159:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Process Stack Pointer (PSP).
+ 160:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    topOfProcStack  Process Stack Pointer value to set
+ 161:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 162:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PSP(uint32_t topOfProcStack)
+ 163:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 164:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
+ 165:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 166:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 167:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 168:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 169:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Main Stack Pointer
+ 170:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Main Stack Pointer (MSP).
+ 171:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               MSP Register value
+ 172:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 173:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
+ 174:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 175:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 176:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 177:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, msp\n" : "=r" (result) );
+ 178:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 179:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 180:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 181:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 182:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 183:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Main Stack Pointer
+ 184:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Main Stack Pointer (MSP).
+ 185:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 186:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \param [in]    topOfMainStack  Main Stack Pointer value to set
+ 187:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 188:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+ 189:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 190:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+ 191:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 192:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 193:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 194:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 195:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Priority Mask
+ 196:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current state of the priority mask bit from the Priority Mask Register.
+ 197:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Priority Mask value
+ 198:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 199:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PRIMASK(void)
+ 200:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 201:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 202:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 203:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, primask" : "=r" (result) );
+ 204:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 205:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 206:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 207:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 208:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 209:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Priority Mask
+ 210:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Priority Mask Register.
+ 211:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    priMask  Priority Mask
+ 212:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 213:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PRIMASK(uint32_t priMask)
+ 214:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 215:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+ 216:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 217:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 218:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 219:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if       (__CORTEX_M >= 0x03U)
+ 220:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 221:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 222:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable FIQ
+ 223:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+ 224:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 225:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 226:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_fault_irq(void)
+ 227:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 228:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie f" : : : "memory");
+ 229:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 230:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 231:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 232:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 233:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable FIQ
+ 234:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+ 235:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 236:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 237:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_fault_irq(void)
+ 238:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 239:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid f" : : : "memory");
+ 240:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 241:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 242:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 243:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 244:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Base Priority
+ 245:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Base Priority register.
+ 246:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Base Priority register value
+ 247:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 248:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_BASEPRI(void)
+ 249:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 250:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 251:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 252:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, basepri" : "=r" (result) );
+ 253:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 254:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 255:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 256:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 257:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 258:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Base Priority
+ 259:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register.
+ 260:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 261:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 262:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI(uint32_t value)
+ 263:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 264:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR basepri, %0" : : "r" (value) : "memory");
+  93              		.loc 2 264 0
+  94 0002 2023     		movs	r3, #32
+  95              	.LBE145:
+  96              	.LBE144:
+  97              	.LBE143:
+  98              	.LBE142:
+  99              	.LBE141:
+ 100              		.loc 1 89 0
+ 101 0004 0446     		mov	r4, r0
+ 102              	.LBB150:
+ 103              	.LBB149:
+ 104              	.LBB148:
+ 105              	.LBB147:
+ 106              	.LBB146:
+ 107              		.loc 2 264 0
+ 108              		.syntax unified
+ 109              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 110 0006 83F31188 		MSR basepri, r3
+ 111              	@ 0 "" 2
+ 112              	.LVL3:
+ 113              		.thumb
+ 114              		.syntax unified
+ 115              	.LBE146:
+ 116              	.LBE147:
+ 117              	.LBE148:
+ 118              	.LBE149:
+ 119              	.LBE150:
+  90:lib/chibios/os/hal/src/hal_pwm.c **** 
+  91:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck((pwmp != NULL) && (config != NULL));
+  92:lib/chibios/os/hal/src/hal_pwm.c **** 
+  93:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+  94:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert((pwmp->state == PWM_STOP) || (pwmp->state == PWM_READY),
+  95:lib/chibios/os/hal/src/hal_pwm.c ****                 "invalid state");
+  96:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->config = config;
+  97:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->period = config->period;
+ 120              		.loc 1 97 0
+ 121 000a 4B68     		ldr	r3, [r1, #4]
+ 122 000c 8360     		str	r3, [r0, #8]
+  96:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->period = config->period;
+ 123              		.loc 1 96 0
+ 124 000e 4160     		str	r1, [r0, #4]
+  98:lib/chibios/os/hal/src/hal_pwm.c ****   pwm_lld_start(pwmp);
+ 125              		.loc 1 98 0
+ 126 0010 FFF7FEFF 		bl	pwm_lld_start
+ 127              	.LVL4:
+  99:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->enabled = 0;
+ 128              		.loc 1 99 0
+ 129 0014 0023     		movs	r3, #0
+ 100:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->state = PWM_READY;
+ 130              		.loc 1 100 0
+ 131 0016 0222     		movs	r2, #2
+  99:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->enabled = 0;
+ 132              		.loc 1 99 0
+ 133 0018 E360     		str	r3, [r4, #12]
+ 134              		.loc 1 100 0
+ 135 001a 2270     		strb	r2, [r4]
+ 136              	.LVL5:
+ 137              	.LBB151:
+ 138              	.LBB152:
+ 139              	.LBB153:
+ 140              	.LBB154:
+ 141              	.LBB155:
+ 142              	.LBB156:
+ 143              		.loc 2 264 0
+ 144              		.syntax unified
+ 145              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 146 001c 83F31188 		MSR basepri, r3
+ 147              	@ 0 "" 2
+ 148              	.LVL6:
+ 149              		.thumb
+ 150              		.syntax unified
+ 151              	.LBE156:
+ 152              	.LBE155:
+ 153              	.LBE154:
+ 154              	.LBE153:
+ 155              	.LBE152:
+ 156              	.LBE151:
+ 101:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 102:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 157              		.loc 1 102 0
+ 158 0020 10BD     		pop	{r4, pc}
+ 159              		.cfi_endproc
+ 160              	.LFE281:
+ 162              		.section	.text.pwmStop,"ax",%progbits
+ 163              		.align	1
+ 164              		.global	pwmStop
+ 165              		.syntax unified
+ 166              		.thumb
+ 167              		.thumb_func
+ 168              		.fpu softvfp
+ 170              	pwmStop:
+ 171              	.LFB282:
+ 103:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 104:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 105:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Deactivates the PWM peripheral.
+ 106:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 107:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 108:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 109:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 110:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 111:lib/chibios/os/hal/src/hal_pwm.c **** void pwmStop(PWMDriver *pwmp) {
+ 172              		.loc 1 111 0
+ 173              		.cfi_startproc
+ 174              		@ args = 0, pretend = 0, frame = 0
+ 175              		@ frame_needed = 0, uses_anonymous_args = 0
+ 176              	.LVL7:
+ 177 0000 10B5     		push	{r4, lr}
+ 178              		.cfi_def_cfa_offset 8
+ 179              		.cfi_offset 4, -8
+ 180              		.cfi_offset 14, -4
+ 181              	.LBB157:
+ 182              	.LBB158:
+ 183              	.LBB159:
+ 184              	.LBB160:
+ 185              	.LBB161:
+ 186              		.loc 2 264 0
+ 187 0002 2023     		movs	r3, #32
+ 188              	.LBE161:
+ 189              	.LBE160:
+ 190              	.LBE159:
+ 191              	.LBE158:
+ 192              	.LBE157:
+ 193              		.loc 1 111 0
+ 194 0004 0446     		mov	r4, r0
+ 195              	.LBB166:
+ 196              	.LBB165:
+ 197              	.LBB164:
+ 198              	.LBB163:
+ 199              	.LBB162:
+ 200              		.loc 2 264 0
+ 201              		.syntax unified
+ 202              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 203 0006 83F31188 		MSR basepri, r3
+ 204              	@ 0 "" 2
+ 205              	.LVL8:
+ 206              		.thumb
+ 207              		.syntax unified
+ 208              	.LBE162:
+ 209              	.LBE163:
+ 210              	.LBE164:
+ 211              	.LBE165:
+ 212              	.LBE166:
+ 112:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 113:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck(pwmp != NULL);
+ 114:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 115:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 116:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 117:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert((pwmp->state == PWM_STOP) || (pwmp->state == PWM_READY),
+ 118:lib/chibios/os/hal/src/hal_pwm.c ****                 "invalid state");
+ 119:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 120:lib/chibios/os/hal/src/hal_pwm.c ****   pwm_lld_stop(pwmp);
+ 213              		.loc 1 120 0
+ 214 000a FFF7FEFF 		bl	pwm_lld_stop
+ 215              	.LVL9:
+ 121:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->enabled = 0;
+ 216              		.loc 1 121 0
+ 217 000e 0023     		movs	r3, #0
+ 122:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->config  = NULL;
+ 123:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->state   = PWM_STOP;
+ 218              		.loc 1 123 0
+ 219 0010 0122     		movs	r2, #1
+ 121:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->enabled = 0;
+ 220              		.loc 1 121 0
+ 221 0012 E360     		str	r3, [r4, #12]
+ 122:lib/chibios/os/hal/src/hal_pwm.c ****   pwmp->config  = NULL;
+ 222              		.loc 1 122 0
+ 223 0014 6360     		str	r3, [r4, #4]
+ 224              		.loc 1 123 0
+ 225 0016 2270     		strb	r2, [r4]
+ 226              	.LVL10:
+ 227              	.LBB167:
+ 228              	.LBB168:
+ 229              	.LBB169:
+ 230              	.LBB170:
+ 231              	.LBB171:
+ 232              	.LBB172:
+ 233              		.loc 2 264 0
+ 234              		.syntax unified
+ 235              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 236 0018 83F31188 		MSR basepri, r3
+ 237              	@ 0 "" 2
+ 238              	.LVL11:
+ 239              		.thumb
+ 240              		.syntax unified
+ 241              	.LBE172:
+ 242              	.LBE171:
+ 243              	.LBE170:
+ 244              	.LBE169:
+ 245              	.LBE168:
+ 246              	.LBE167:
+ 124:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 125:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 126:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 247              		.loc 1 126 0
+ 248 001c 10BD     		pop	{r4, pc}
+ 249              		.cfi_endproc
+ 250              	.LFE282:
+ 252              		.section	.text.pwmChangePeriod,"ax",%progbits
+ 253              		.align	1
+ 254              		.global	pwmChangePeriod
+ 255              		.syntax unified
+ 256              		.thumb
+ 257              		.thumb_func
+ 258              		.fpu softvfp
+ 260              	pwmChangePeriod:
+ 261              	.LFB283:
+ 127:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 128:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 129:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Changes the period the PWM peripheral.
+ 130:lib/chibios/os/hal/src/hal_pwm.c ****  * @details This function changes the period of a PWM unit that has already
+ 131:lib/chibios/os/hal/src/hal_pwm.c ****  *          been activated using @p pwmStart().
+ 132:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 133:lib/chibios/os/hal/src/hal_pwm.c ****  * @post    The PWM unit period is changed to the new value.
+ 134:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    If a period is specified that is shorter than the pulse width
+ 135:lib/chibios/os/hal/src/hal_pwm.c ****  *          programmed in one of the channels then the behavior is not
+ 136:lib/chibios/os/hal/src/hal_pwm.c ****  *          guaranteed.
+ 137:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 138:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 139:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] period    new cycle time in ticks
+ 140:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 141:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 142:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 143:lib/chibios/os/hal/src/hal_pwm.c **** void pwmChangePeriod(PWMDriver *pwmp, pwmcnt_t period) {
+ 262              		.loc 1 143 0
+ 263              		.cfi_startproc
+ 264              		@ args = 0, pretend = 0, frame = 0
+ 265              		@ frame_needed = 0, uses_anonymous_args = 0
+ 266              		@ link register save eliminated.
+ 267              	.LVL12:
+ 268              	.LBB173:
+ 269              	.LBB174:
+ 270              	.LBB175:
+ 271              	.LBB176:
+ 272              	.LBB177:
+ 273              		.loc 2 264 0
+ 274 0000 2023     		movs	r3, #32
+ 275              		.syntax unified
+ 276              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 277 0002 83F31188 		MSR basepri, r3
+ 278              	@ 0 "" 2
+ 279              	.LVL13:
+ 280              		.thumb
+ 281              		.syntax unified
+ 282              	.LBE177:
+ 283              	.LBE176:
+ 284              	.LBE175:
+ 285              	.LBE174:
+ 286              	.LBE173:
+ 144:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 145:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck(pwmp != NULL);
+ 146:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 147:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 148:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "invalid state");
+ 149:lib/chibios/os/hal/src/hal_pwm.c ****   pwmChangePeriodI(pwmp, period);
+ 287              		.loc 1 149 0
+ 288 0006 8369     		ldr	r3, [r0, #24]
+ 289 0008 8160     		str	r1, [r0, #8]
+ 290 000a 0139     		subs	r1, r1, #1
+ 291              	.LVL14:
+ 292 000c D962     		str	r1, [r3, #44]
+ 293              	.LVL15:
+ 294              	.LBB178:
+ 295              	.LBB179:
+ 296              	.LBB180:
+ 297              	.LBB181:
+ 298              	.LBB182:
+ 299              	.LBB183:
+ 300              		.loc 2 264 0
+ 301 000e 0023     		movs	r3, #0
+ 302              		.syntax unified
+ 303              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 304 0010 83F31188 		MSR basepri, r3
+ 305              	@ 0 "" 2
+ 306              	.LVL16:
+ 307              		.thumb
+ 308              		.syntax unified
+ 309              	.LBE183:
+ 310              	.LBE182:
+ 311              	.LBE181:
+ 312              	.LBE180:
+ 313              	.LBE179:
+ 314              	.LBE178:
+ 150:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 151:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 315              		.loc 1 151 0
+ 316 0014 7047     		bx	lr
+ 317              		.cfi_endproc
+ 318              	.LFE283:
+ 320              		.section	.text.pwmEnableChannel,"ax",%progbits
+ 321              		.align	1
+ 322              		.global	pwmEnableChannel
+ 323              		.syntax unified
+ 324              		.thumb
+ 325              		.thumb_func
+ 326              		.fpu softvfp
+ 328              	pwmEnableChannel:
+ 329              	.LFB284:
+ 152:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 153:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 154:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Enables a PWM channel.
+ 155:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 156:lib/chibios/os/hal/src/hal_pwm.c ****  * @post    The channel is active using the specified configuration.
+ 157:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    Depending on the hardware implementation this function has
+ 158:lib/chibios/os/hal/src/hal_pwm.c ****  *          effect starting on the next cycle (recommended implementation)
+ 159:lib/chibios/os/hal/src/hal_pwm.c ****  *          or immediately (fallback implementation).
+ 160:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 161:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 162:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 163:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] width     PWM pulse width as clock pulses number
+ 164:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 165:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 166:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 167:lib/chibios/os/hal/src/hal_pwm.c **** void pwmEnableChannel(PWMDriver *pwmp,
+ 168:lib/chibios/os/hal/src/hal_pwm.c ****                       pwmchannel_t channel,
+ 169:lib/chibios/os/hal/src/hal_pwm.c ****                       pwmcnt_t width) {
+ 330              		.loc 1 169 0
+ 331              		.cfi_startproc
+ 332              		@ args = 0, pretend = 0, frame = 0
+ 333              		@ frame_needed = 0, uses_anonymous_args = 0
+ 334              	.LVL17:
+ 335 0000 38B5     		push	{r3, r4, r5, lr}
+ 336              		.cfi_def_cfa_offset 16
+ 337              		.cfi_offset 3, -16
+ 338              		.cfi_offset 4, -12
+ 339              		.cfi_offset 5, -8
+ 340              		.cfi_offset 14, -4
+ 341              	.LBB184:
+ 342              	.LBB185:
+ 343              	.LBB186:
+ 344              	.LBB187:
+ 345              	.LBB188:
+ 346              		.loc 2 264 0
+ 347 0002 2023     		movs	r3, #32
+ 348              		.syntax unified
+ 349              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 350 0004 83F31188 		MSR basepri, r3
+ 351              	@ 0 "" 2
+ 352              	.LVL18:
+ 353              		.thumb
+ 354              		.syntax unified
+ 355              	.LBE188:
+ 356              	.LBE187:
+ 357              	.LBE186:
+ 358              	.LBE185:
+ 359              	.LBE184:
+ 170:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 171:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck((pwmp != NULL) && (channel < pwmp->channels));
+ 172:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 173:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 174:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 175:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 176:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 177:lib/chibios/os/hal/src/hal_pwm.c ****   pwmEnableChannelI(pwmp, channel, width);
+ 360              		.loc 1 177 0
+ 361 0008 0123     		movs	r3, #1
+ 362 000a 03FA01F4 		lsl	r4, r3, r1
+ 363 000e C368     		ldr	r3, [r0, #12]
+ 364 0010 2343     		orrs	r3, r3, r4
+ 365 0012 C360     		str	r3, [r0, #12]
+ 366 0014 FFF7FEFF 		bl	pwm_lld_enable_channel
+ 367              	.LVL19:
+ 368              	.LBB189:
+ 369              	.LBB190:
+ 370              	.LBB191:
+ 371              	.LBB192:
+ 372              	.LBB193:
+ 373              	.LBB194:
+ 374              		.loc 2 264 0
+ 375 0018 0023     		movs	r3, #0
+ 376              		.syntax unified
+ 377              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 378 001a 83F31188 		MSR basepri, r3
+ 379              	@ 0 "" 2
+ 380              	.LVL20:
+ 381              		.thumb
+ 382              		.syntax unified
+ 383              	.LBE194:
+ 384              	.LBE193:
+ 385              	.LBE192:
+ 386              	.LBE191:
+ 387              	.LBE190:
+ 388              	.LBE189:
+ 178:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 179:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 180:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 389              		.loc 1 180 0
+ 390 001e 38BD     		pop	{r3, r4, r5, pc}
+ 391              		.cfi_endproc
+ 392              	.LFE284:
+ 394              		.section	.text.pwmDisableChannel,"ax",%progbits
+ 395              		.align	1
+ 396              		.global	pwmDisableChannel
+ 397              		.syntax unified
+ 398              		.thumb
+ 399              		.thumb_func
+ 400              		.fpu softvfp
+ 402              	pwmDisableChannel:
+ 403              	.LFB285:
+ 181:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 182:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 183:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Disables a PWM channel and its notification.
+ 184:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 185:lib/chibios/os/hal/src/hal_pwm.c ****  * @post    The channel is disabled and its output line returned to the
+ 186:lib/chibios/os/hal/src/hal_pwm.c ****  *          idle state.
+ 187:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    Depending on the hardware implementation this function has
+ 188:lib/chibios/os/hal/src/hal_pwm.c ****  *          effect starting on the next cycle (recommended implementation)
+ 189:lib/chibios/os/hal/src/hal_pwm.c ****  *          or immediately (fallback implementation).
+ 190:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 191:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 192:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 193:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 194:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 195:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 196:lib/chibios/os/hal/src/hal_pwm.c **** void pwmDisableChannel(PWMDriver *pwmp, pwmchannel_t channel) {
+ 404              		.loc 1 196 0
+ 405              		.cfi_startproc
+ 406              		@ args = 0, pretend = 0, frame = 0
+ 407              		@ frame_needed = 0, uses_anonymous_args = 0
+ 408              	.LVL21:
+ 409 0000 10B5     		push	{r4, lr}
+ 410              		.cfi_def_cfa_offset 8
+ 411              		.cfi_offset 4, -8
+ 412              		.cfi_offset 14, -4
+ 413              	.LBB195:
+ 414              	.LBB196:
+ 415              	.LBB197:
+ 416              	.LBB198:
+ 417              	.LBB199:
+ 418              		.loc 2 264 0
+ 419 0002 2023     		movs	r3, #32
+ 420              		.syntax unified
+ 421              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 422 0004 83F31188 		MSR basepri, r3
+ 423              	@ 0 "" 2
+ 424              	.LVL22:
+ 425              		.thumb
+ 426              		.syntax unified
+ 427              	.LBE199:
+ 428              	.LBE198:
+ 429              	.LBE197:
+ 430              	.LBE196:
+ 431              	.LBE195:
+ 197:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 198:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck((pwmp != NULL) && (channel < pwmp->channels));
+ 199:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 200:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 201:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 202:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 203:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 204:lib/chibios/os/hal/src/hal_pwm.c ****   pwmDisableChannelI(pwmp, channel);
+ 432              		.loc 1 204 0
+ 433 0008 0123     		movs	r3, #1
+ 434 000a 03FA01F2 		lsl	r2, r3, r1
+ 435 000e C368     		ldr	r3, [r0, #12]
+ 436 0010 23EA0203 		bic	r3, r3, r2
+ 437 0014 C360     		str	r3, [r0, #12]
+ 438 0016 FFF7FEFF 		bl	pwm_lld_disable_channel
+ 439              	.LVL23:
+ 440              	.LBB200:
+ 441              	.LBB201:
+ 442              	.LBB202:
+ 443              	.LBB203:
+ 444              	.LBB204:
+ 445              	.LBB205:
+ 446              		.loc 2 264 0
+ 447 001a 0023     		movs	r3, #0
+ 448              		.syntax unified
+ 449              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 450 001c 83F31188 		MSR basepri, r3
+ 451              	@ 0 "" 2
+ 452              	.LVL24:
+ 453              		.thumb
+ 454              		.syntax unified
+ 455              	.LBE205:
+ 456              	.LBE204:
+ 457              	.LBE203:
+ 458              	.LBE202:
+ 459              	.LBE201:
+ 460              	.LBE200:
+ 205:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 206:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 207:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 461              		.loc 1 207 0
+ 462 0020 10BD     		pop	{r4, pc}
+ 463              		.cfi_endproc
+ 464              	.LFE285:
+ 466              		.section	.text.pwmEnablePeriodicNotification,"ax",%progbits
+ 467              		.align	1
+ 468              		.global	pwmEnablePeriodicNotification
+ 469              		.syntax unified
+ 470              		.thumb
+ 471              		.thumb_func
+ 472              		.fpu softvfp
+ 474              	pwmEnablePeriodicNotification:
+ 475              	.LFB286:
+ 208:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 209:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 210:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Enables the periodic activation edge notification.
+ 211:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 212:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    If the notification is already enabled then the call has no effect.
+ 213:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 214:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 215:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 216:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 217:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 218:lib/chibios/os/hal/src/hal_pwm.c **** void pwmEnablePeriodicNotification(PWMDriver *pwmp) {
+ 476              		.loc 1 218 0
+ 477              		.cfi_startproc
+ 478              		@ args = 0, pretend = 0, frame = 0
+ 479              		@ frame_needed = 0, uses_anonymous_args = 0
+ 480              	.LVL25:
+ 481 0000 08B5     		push	{r3, lr}
+ 482              		.cfi_def_cfa_offset 8
+ 483              		.cfi_offset 3, -8
+ 484              		.cfi_offset 14, -4
+ 485              	.LBB206:
+ 486              	.LBB207:
+ 487              	.LBB208:
+ 488              	.LBB209:
+ 489              	.LBB210:
+ 490              		.loc 2 264 0
+ 491 0002 2023     		movs	r3, #32
+ 492              		.syntax unified
+ 493              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 494 0004 83F31188 		MSR basepri, r3
+ 495              	@ 0 "" 2
+ 496              	.LVL26:
+ 497              		.thumb
+ 498              		.syntax unified
+ 499              	.LBE210:
+ 500              	.LBE209:
+ 501              	.LBE208:
+ 502              	.LBE207:
+ 503              	.LBE206:
+ 219:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 220:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck(pwmp != NULL);
+ 221:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 222:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 223:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 224:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 225:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->config->callback != NULL, "undefined periodic callback");
+ 226:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 227:lib/chibios/os/hal/src/hal_pwm.c ****   pwmEnablePeriodicNotificationI(pwmp);
+ 504              		.loc 1 227 0
+ 505 0008 FFF7FEFF 		bl	pwm_lld_enable_periodic_notification
+ 506              	.LVL27:
+ 507              	.LBB211:
+ 508              	.LBB212:
+ 509              	.LBB213:
+ 510              	.LBB214:
+ 511              	.LBB215:
+ 512              	.LBB216:
+ 513              		.loc 2 264 0
+ 514 000c 0023     		movs	r3, #0
+ 515              		.syntax unified
+ 516              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 517 000e 83F31188 		MSR basepri, r3
+ 518              	@ 0 "" 2
+ 519              	.LVL28:
+ 520              		.thumb
+ 521              		.syntax unified
+ 522              	.LBE216:
+ 523              	.LBE215:
+ 524              	.LBE214:
+ 525              	.LBE213:
+ 526              	.LBE212:
+ 527              	.LBE211:
+ 228:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 229:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 230:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 528              		.loc 1 230 0
+ 529 0012 08BD     		pop	{r3, pc}
+ 530              		.cfi_endproc
+ 531              	.LFE286:
+ 533              		.section	.text.pwmDisablePeriodicNotification,"ax",%progbits
+ 534              		.align	1
+ 535              		.global	pwmDisablePeriodicNotification
+ 536              		.syntax unified
+ 537              		.thumb
+ 538              		.thumb_func
+ 539              		.fpu softvfp
+ 541              	pwmDisablePeriodicNotification:
+ 542              	.LFB287:
+ 231:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 232:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 233:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Disables the periodic activation edge notification.
+ 234:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 235:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    If the notification is already disabled then the call has no effect.
+ 236:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 237:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 238:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 239:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 240:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 241:lib/chibios/os/hal/src/hal_pwm.c **** void pwmDisablePeriodicNotification(PWMDriver *pwmp) {
+ 543              		.loc 1 241 0
+ 544              		.cfi_startproc
+ 545              		@ args = 0, pretend = 0, frame = 0
+ 546              		@ frame_needed = 0, uses_anonymous_args = 0
+ 547              	.LVL29:
+ 548 0000 08B5     		push	{r3, lr}
+ 549              		.cfi_def_cfa_offset 8
+ 550              		.cfi_offset 3, -8
+ 551              		.cfi_offset 14, -4
+ 552              	.LBB217:
+ 553              	.LBB218:
+ 554              	.LBB219:
+ 555              	.LBB220:
+ 556              	.LBB221:
+ 557              		.loc 2 264 0
+ 558 0002 2023     		movs	r3, #32
+ 559              		.syntax unified
+ 560              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 561 0004 83F31188 		MSR basepri, r3
+ 562              	@ 0 "" 2
+ 563              	.LVL30:
+ 564              		.thumb
+ 565              		.syntax unified
+ 566              	.LBE221:
+ 567              	.LBE220:
+ 568              	.LBE219:
+ 569              	.LBE218:
+ 570              	.LBE217:
+ 242:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 243:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck(pwmp != NULL);
+ 244:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 245:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 246:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 247:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 248:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->config->callback != NULL, "undefined periodic callback");
+ 249:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 250:lib/chibios/os/hal/src/hal_pwm.c ****   pwmDisablePeriodicNotificationI(pwmp);
+ 571              		.loc 1 250 0
+ 572 0008 FFF7FEFF 		bl	pwm_lld_disable_periodic_notification
+ 573              	.LVL31:
+ 574              	.LBB222:
+ 575              	.LBB223:
+ 576              	.LBB224:
+ 577              	.LBB225:
+ 578              	.LBB226:
+ 579              	.LBB227:
+ 580              		.loc 2 264 0
+ 581 000c 0023     		movs	r3, #0
+ 582              		.syntax unified
+ 583              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 584 000e 83F31188 		MSR basepri, r3
+ 585              	@ 0 "" 2
+ 586              	.LVL32:
+ 587              		.thumb
+ 588              		.syntax unified
+ 589              	.LBE227:
+ 590              	.LBE226:
+ 591              	.LBE225:
+ 592              	.LBE224:
+ 593              	.LBE223:
+ 594              	.LBE222:
+ 251:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 252:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 253:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 595              		.loc 1 253 0
+ 596 0012 08BD     		pop	{r3, pc}
+ 597              		.cfi_endproc
+ 598              	.LFE287:
+ 600              		.section	.text.pwmEnableChannelNotification,"ax",%progbits
+ 601              		.align	1
+ 602              		.global	pwmEnableChannelNotification
+ 603              		.syntax unified
+ 604              		.thumb
+ 605              		.thumb_func
+ 606              		.fpu softvfp
+ 608              	pwmEnableChannelNotification:
+ 609              	.LFB288:
+ 254:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 255:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 256:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Enables a channel de-activation edge notification.
+ 257:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 258:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The channel must have been activated using @p pwmEnableChannel().
+ 259:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    If the notification is already enabled then the call has no effect.
+ 260:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 261:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 262:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 263:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 264:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 265:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 266:lib/chibios/os/hal/src/hal_pwm.c **** void pwmEnableChannelNotification(PWMDriver *pwmp, pwmchannel_t channel) {
+ 610              		.loc 1 266 0
+ 611              		.cfi_startproc
+ 612              		@ args = 0, pretend = 0, frame = 0
+ 613              		@ frame_needed = 0, uses_anonymous_args = 0
+ 614              	.LVL33:
+ 615 0000 08B5     		push	{r3, lr}
+ 616              		.cfi_def_cfa_offset 8
+ 617              		.cfi_offset 3, -8
+ 618              		.cfi_offset 14, -4
+ 619              	.LBB228:
+ 620              	.LBB229:
+ 621              	.LBB230:
+ 622              	.LBB231:
+ 623              	.LBB232:
+ 624              		.loc 2 264 0
+ 625 0002 2023     		movs	r3, #32
+ 626              		.syntax unified
+ 627              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 628 0004 83F31188 		MSR basepri, r3
+ 629              	@ 0 "" 2
+ 630              	.LVL34:
+ 631              		.thumb
+ 632              		.syntax unified
+ 633              	.LBE232:
+ 634              	.LBE231:
+ 635              	.LBE230:
+ 636              	.LBE229:
+ 637              	.LBE228:
+ 267:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 268:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck((pwmp != NULL) && (channel < pwmp->channels));
+ 269:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 270:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 271:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 272:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 273:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert((pwmp->enabled & ((pwmchnmsk_t)1U << (pwmchnmsk_t)channel)) != 0U,
+ 274:lib/chibios/os/hal/src/hal_pwm.c ****                 "channel not enabled");
+ 275:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->config->channels[channel].callback != NULL,
+ 276:lib/chibios/os/hal/src/hal_pwm.c ****                 "undefined channel callback");
+ 277:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 278:lib/chibios/os/hal/src/hal_pwm.c ****   pwmEnableChannelNotificationI(pwmp, channel);
+ 638              		.loc 1 278 0
+ 639 0008 FFF7FEFF 		bl	pwm_lld_enable_channel_notification
+ 640              	.LVL35:
+ 641              	.LBB233:
+ 642              	.LBB234:
+ 643              	.LBB235:
+ 644              	.LBB236:
+ 645              	.LBB237:
+ 646              	.LBB238:
+ 647              		.loc 2 264 0
+ 648 000c 0023     		movs	r3, #0
+ 649              		.syntax unified
+ 650              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 651 000e 83F31188 		MSR basepri, r3
+ 652              	@ 0 "" 2
+ 653              	.LVL36:
+ 654              		.thumb
+ 655              		.syntax unified
+ 656              	.LBE238:
+ 657              	.LBE237:
+ 658              	.LBE236:
+ 659              	.LBE235:
+ 660              	.LBE234:
+ 661              	.LBE233:
+ 279:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 280:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 281:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 662              		.loc 1 281 0
+ 663 0012 08BD     		pop	{r3, pc}
+ 664              		.cfi_endproc
+ 665              	.LFE288:
+ 667              		.section	.text.pwmDisableChannelNotification,"ax",%progbits
+ 668              		.align	1
+ 669              		.global	pwmDisableChannelNotification
+ 670              		.syntax unified
+ 671              		.thumb
+ 672              		.thumb_func
+ 673              		.fpu softvfp
+ 675              	pwmDisableChannelNotification:
+ 676              	.LFB289:
+ 282:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 283:lib/chibios/os/hal/src/hal_pwm.c **** /**
+ 284:lib/chibios/os/hal/src/hal_pwm.c ****  * @brief   Disables a channel de-activation edge notification.
+ 285:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The PWM unit must have been activated using @p pwmStart().
+ 286:lib/chibios/os/hal/src/hal_pwm.c ****  * @pre     The channel must have been activated using @p pwmEnableChannel().
+ 287:lib/chibios/os/hal/src/hal_pwm.c ****  * @note    If the notification is already disabled then the call has no effect.
+ 288:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 289:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] pwmp      pointer to a @p PWMDriver object
+ 290:lib/chibios/os/hal/src/hal_pwm.c ****  * @param[in] channel   PWM channel identifier (0...channels-1)
+ 291:lib/chibios/os/hal/src/hal_pwm.c ****  *
+ 292:lib/chibios/os/hal/src/hal_pwm.c ****  * @api
+ 293:lib/chibios/os/hal/src/hal_pwm.c ****  */
+ 294:lib/chibios/os/hal/src/hal_pwm.c **** void pwmDisableChannelNotification(PWMDriver *pwmp, pwmchannel_t channel) {
+ 677              		.loc 1 294 0
+ 678              		.cfi_startproc
+ 679              		@ args = 0, pretend = 0, frame = 0
+ 680              		@ frame_needed = 0, uses_anonymous_args = 0
+ 681              	.LVL37:
+ 682 0000 08B5     		push	{r3, lr}
+ 683              		.cfi_def_cfa_offset 8
+ 684              		.cfi_offset 3, -8
+ 685              		.cfi_offset 14, -4
+ 686              	.LBB239:
+ 687              	.LBB240:
+ 688              	.LBB241:
+ 689              	.LBB242:
+ 690              	.LBB243:
+ 691              		.loc 2 264 0
+ 692 0002 2023     		movs	r3, #32
+ 693              		.syntax unified
+ 694              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 695 0004 83F31188 		MSR basepri, r3
+ 696              	@ 0 "" 2
+ 697              	.LVL38:
+ 698              		.thumb
+ 699              		.syntax unified
+ 700              	.LBE243:
+ 701              	.LBE242:
+ 702              	.LBE241:
+ 703              	.LBE240:
+ 704              	.LBE239:
+ 295:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 296:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgCheck((pwmp != NULL) && (channel < pwmp->channels));
+ 297:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 298:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysLock();
+ 299:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 300:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->state == PWM_READY, "not ready");
+ 301:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert((pwmp->enabled & ((pwmchnmsk_t)1U << (pwmchnmsk_t)channel)) != 0U,
+ 302:lib/chibios/os/hal/src/hal_pwm.c ****                 "channel not enabled");
+ 303:lib/chibios/os/hal/src/hal_pwm.c ****   osalDbgAssert(pwmp->config->channels[channel].callback != NULL,
+ 304:lib/chibios/os/hal/src/hal_pwm.c ****                 "undefined channel callback");
+ 305:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 306:lib/chibios/os/hal/src/hal_pwm.c ****   pwmDisableChannelNotificationI(pwmp, channel);
+ 705              		.loc 1 306 0
+ 706 0008 FFF7FEFF 		bl	pwm_lld_disable_channel_notification
+ 707              	.LVL39:
+ 708              	.LBB244:
+ 709              	.LBB245:
+ 710              	.LBB246:
+ 711              	.LBB247:
+ 712              	.LBB248:
+ 713              	.LBB249:
+ 714              		.loc 2 264 0
+ 715 000c 0023     		movs	r3, #0
+ 716              		.syntax unified
+ 717              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 718 000e 83F31188 		MSR basepri, r3
+ 719              	@ 0 "" 2
+ 720              	.LVL40:
+ 721              		.thumb
+ 722              		.syntax unified
+ 723              	.LBE249:
+ 724              	.LBE248:
+ 725              	.LBE247:
+ 726              	.LBE246:
+ 727              	.LBE245:
+ 728              	.LBE244:
+ 307:lib/chibios/os/hal/src/hal_pwm.c **** 
+ 308:lib/chibios/os/hal/src/hal_pwm.c ****   osalSysUnlock();
+ 309:lib/chibios/os/hal/src/hal_pwm.c **** }
+ 729              		.loc 1 309 0
+ 730 0012 08BD     		pop	{r3, pc}
+ 731              		.cfi_endproc
+ 732              	.LFE289:
+ 734              		.text
+ 735              	.Letext0:
+ 736              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 737              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 738              		.file 5 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 739              		.file 6 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 740              		.file 7 "./lib/chibios/os/rt/include/chsystypes.h"
+ 741              		.file 8 "./lib/chibios/os/rt/include/chschd.h"
+ 742              		.file 9 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 743              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 744              		.file 11 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/stm32f303xc.h"
+ 745              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 746              		.file 13 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 747              		.file 14 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.h"
+ 748              		.file 15 "./lib/chibios/os/rt/include/chtm.h"
+ 749              		.file 16 "./lib/chibios/os/rt/include/chsem.h"
+ 750              		.file 17 "./lib/chibios/os/rt/include/chmtx.h"
+ 751              		.file 18 "./lib/chibios/os/rt/include/chsys.h"
+ 752              		.file 19 "./lib/chibios/os/rt/include/chregistry.h"
+ 753              		.file 20 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 754              		.file 21 "./lib/chibios/os/hal/ports/STM32/LLD/DMAv1/stm32_dma.h"
+ 755              		.file 22 "./lib/chibios/os/hal/ports/STM32/LLD/GPIOv2/hal_pal_lld.h"
+ 756              		.file 23 "./lib/chibios/os/hal/include/hal_dac.h"
+ 757              		.file 24 "./lib/chibios/os/hal/ports/STM32/LLD/DACv1/hal_dac_lld.h"
+ 758              		.file 25 "./lib/chibios/os/hal/include/hal_gpt.h"
+ 759              		.file 26 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_gpt_lld.h"
+ 760              		.file 27 "./lib/chibios/os/hal/include/hal_i2c.h"
+ 761              		.file 28 "./lib/chibios/os/hal/ports/STM32/LLD/I2Cv2/hal_i2c_lld.h"
+ 762              		.file 29 "./lib/chibios/os/hal/include/hal_pwm.h"
+ 763              		.file 30 "./lib/chibios/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.h"
+ 764              		.file 31 "./lib/chibios/os/hal/include/hal_usb.h"
+ 765              		.file 32 "./lib/chibios/os/hal/ports/STM32/LLD/USBv1/hal_usb_lld.h"
+ 766              		.file 33 "./lib/chibios/os/hal/osal/rt/osal.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hal_pwm.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:16     .text.pwmInit:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:23     .text.pwmInit:0000000000000000 pwmInit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:38     .text.pwmObjectInit:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:45     .text.pwmObjectInit:0000000000000000 pwmObjectInit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:69     .text.pwmStart:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:76     .text.pwmStart:0000000000000000 pwmStart
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:163    .text.pwmStop:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:170    .text.pwmStop:0000000000000000 pwmStop
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:253    .text.pwmChangePeriod:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:260    .text.pwmChangePeriod:0000000000000000 pwmChangePeriod
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:321    .text.pwmEnableChannel:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:328    .text.pwmEnableChannel:0000000000000000 pwmEnableChannel
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:395    .text.pwmDisableChannel:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:402    .text.pwmDisableChannel:0000000000000000 pwmDisableChannel
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:467    .text.pwmEnablePeriodicNotification:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:474    .text.pwmEnablePeriodicNotification:0000000000000000 pwmEnablePeriodicNotification
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:534    .text.pwmDisablePeriodicNotification:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:541    .text.pwmDisablePeriodicNotification:0000000000000000 pwmDisablePeriodicNotification
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:601    .text.pwmEnableChannelNotification:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:608    .text.pwmEnableChannelNotification:0000000000000000 pwmEnableChannelNotification
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:668    .text.pwmDisableChannelNotification:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccoPqfUX.s:675    .text.pwmDisableChannelNotification:0000000000000000 pwmDisableChannelNotification
+
+UNDEFINED SYMBOLS
+pwm_lld_init
+pwm_lld_start
+pwm_lld_stop
+pwm_lld_enable_channel
+pwm_lld_disable_channel
+pwm_lld_enable_periodic_notification
+pwm_lld_disable_periodic_notification
+pwm_lld_enable_channel_notification
+pwm_lld_disable_channel_notification

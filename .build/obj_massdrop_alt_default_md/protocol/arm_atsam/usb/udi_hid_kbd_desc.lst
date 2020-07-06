@@ -1,0 +1,156 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"udi_hid_kbd_desc.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	udc_config
+  18              		.global	udc_config_fshs
+  19              		.global	udi_apis
+  20              		.global	udc_desc
+  21              		.global	udc_device_desc
+  22              		.data
+  23              		.align	2
+  26              	udc_config:
+  27 0000 00000000 		.word	udc_device_desc
+  28 0004 00000000 		.word	udc_config_fshs
+  29 0008 00000000 		.space	4
+  32              	udc_config_fshs:
+  33 000c 00000000 		.word	udc_desc
+  34 0010 00000000 		.word	udi_apis
+  37              	udi_apis:
+  38 0014 00000000 		.word	udi_api_hid_kbd
+  39 0018 00000000 		.word	udi_api_hid_exk
+  40 001c 00000000 		.word	udi_api_hid_nkro
+  43              	udc_desc:
+  44 0020 09       		.byte	9
+  45 0021 02       		.byte	2
+  46 0022 5400     		.short	84
+  47 0024 03       		.byte	3
+  48 0025 01       		.byte	1
+  49 0026 00       		.byte	0
+  50 0027 20       		.byte	32
+  51 0028 FA       		.byte	-6
+  52 0029 09       		.byte	9
+  53 002a 04       		.byte	4
+  54 002b 00       		.byte	0
+  55 002c 00       		.byte	0
+  56 002d 01       		.byte	1
+  57 002e 03       		.byte	3
+  58 002f 01       		.byte	1
+  59 0030 01       		.byte	1
+  60 0031 00       		.byte	0
+  61 0032 09       		.byte	9
+  62 0033 21       		.byte	33
+  63 0034 1101     		.2byte	273
+  64 0036 00       		.byte	0
+  65 0037 01       		.byte	1
+  66 0038 22       		.byte	34
+  67 0039 3B00     		.2byte	59
+  68 003b 07       		.byte	7
+  69 003c 05       		.byte	5
+  70 003d 81       		.byte	-127
+  71 003e 03       		.byte	3
+  72 003f 0800     		.2byte	8
+  73 0041 0A       		.byte	10
+  74 0042 09       		.byte	9
+  75 0043 04       		.byte	4
+  76 0044 01       		.byte	1
+  77 0045 00       		.byte	0
+  78 0046 01       		.byte	1
+  79 0047 03       		.byte	3
+  80 0048 01       		.byte	1
+  81 0049 00       		.byte	0
+  82 004a 00       		.byte	0
+  83 004b 09       		.byte	9
+  84 004c 21       		.byte	33
+  85 004d 1101     		.2byte	273
+  86 004f 00       		.byte	0
+  87 0050 01       		.byte	1
+  88 0051 22       		.byte	34
+  89 0052 3600     		.2byte	54
+  90 0054 07       		.byte	7
+  91 0055 05       		.byte	5
+  92 0056 82       		.byte	-126
+  93 0057 03       		.byte	3
+  94 0058 0800     		.short	8
+  95 005a 0A       		.byte	10
+  96 005b 09       		.byte	9
+  97 005c 04       		.byte	4
+  98 005d 02       		.byte	2
+  99 005e 00       		.byte	0
+ 100 005f 01       		.byte	1
+ 101 0060 03       		.byte	3
+ 102 0061 00       		.byte	0
+ 103 0062 01       		.byte	1
+ 104 0063 00       		.byte	0
+ 105 0064 09       		.byte	9
+ 106 0065 21       		.byte	33
+ 107 0066 1101     		.2byte	273
+ 108 0068 00       		.byte	0
+ 109 0069 01       		.byte	1
+ 110 006a 22       		.byte	34
+ 111 006b 3900     		.2byte	57
+ 112 006d 07       		.byte	7
+ 113 006e 05       		.byte	5
+ 114 006f 83       		.byte	-125
+ 115 0070 03       		.byte	3
+ 116 0071 2000     		.2byte	32
+ 117 0073 01       		.byte	1
+ 120              	udc_device_desc:
+ 121 0074 12       		.byte	18
+ 122 0075 01       		.byte	1
+ 123 0076 0002     		.short	512
+ 124 0078 00       		.byte	0
+ 125 0079 00       		.byte	0
+ 126 007a 00       		.byte	0
+ 127 007b 08       		.byte	8
+ 128 007c D804     		.short	1240
+ 129 007e D3EE     		.short	-4397
+ 130 0080 0101     		.short	257
+ 131 0082 01       		.byte	1
+ 132 0083 02       		.byte	2
+ 133 0084 03       		.byte	3
+ 134 0085 01       		.byte	1
+ 135              		.text
+ 136              	.Letext0:
+ 137              		.file 1 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 138              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 139              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 140              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 141              		.file 5 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 142              		.file 6 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 143              		.file 7 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 144              		.file 8 "tmk_core/protocol/arm_atsam/usb/compiler.h"
+ 145              		.file 9 "tmk_core/protocol/arm_atsam/usb/usb_protocol.h"
+ 146              		.file 10 "tmk_core/protocol/arm_atsam/usb/usb_protocol_hid.h"
+ 147              		.file 11 "tmk_core/protocol/arm_atsam/usb/udi_device_conf.h"
+ 148              		.file 12 "tmk_core/protocol/arm_atsam/usb/udi.h"
+ 149              		.file 13 "tmk_core/protocol/arm_atsam/usb/udc_desc.h"
+ 150              		.file 14 "tmk_core/protocol/arm_atsam/usb/udi_hid_kbd.h"
+ 151              		.file 15 "tmk_core/protocol/arm_atsam/usb/usb_main.h"
+ 152              		.file 16 "tmk_core/protocol/arm_atsam/usb/udi_cdc.h"
+ 153              		.file 17 "tmk_core/protocol/arm_atsam/usb/udi_hid_kbd_desc.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 udi_hid_kbd_desc.c
+/var/tmp//cc2MIzvR.s:26     .data:0000000000000000 udc_config
+/var/tmp//cc2MIzvR.s:32     .data:000000000000000c udc_config_fshs
+/var/tmp//cc2MIzvR.s:37     .data:0000000000000014 udi_apis
+/var/tmp//cc2MIzvR.s:43     .data:0000000000000020 udc_desc
+/var/tmp//cc2MIzvR.s:120    .data:0000000000000074 udc_device_desc
+/var/tmp//cc2MIzvR.s:23     .data:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+udi_api_hid_kbd
+udi_api_hid_exk
+udi_api_hid_nkro

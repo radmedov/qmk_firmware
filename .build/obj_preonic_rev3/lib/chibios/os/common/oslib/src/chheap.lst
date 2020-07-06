@@ -1,0 +1,1028 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"chheap.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text._heap_init,"ax",%progbits
+  16              		.align	1
+  17              		.global	_heap_init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	_heap_init:
+  24              	.LFB248:
+  25              		.file 1 "lib/chibios/os/common/oslib/src/chheap.c"
+   1:lib/chibios/os/common/oslib/src/chheap.c **** /*
+   2:lib/chibios/os/common/oslib/src/chheap.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:lib/chibios/os/common/oslib/src/chheap.c **** 
+   4:lib/chibios/os/common/oslib/src/chheap.c ****     This file is part of ChibiOS.
+   5:lib/chibios/os/common/oslib/src/chheap.c **** 
+   6:lib/chibios/os/common/oslib/src/chheap.c ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:lib/chibios/os/common/oslib/src/chheap.c ****     it under the terms of the GNU General Public License as published by
+   8:lib/chibios/os/common/oslib/src/chheap.c ****     the Free Software Foundation; either version 3 of the License, or
+   9:lib/chibios/os/common/oslib/src/chheap.c ****     (at your option) any later version.
+  10:lib/chibios/os/common/oslib/src/chheap.c **** 
+  11:lib/chibios/os/common/oslib/src/chheap.c ****     ChibiOS is distributed in the hope that it will be useful,
+  12:lib/chibios/os/common/oslib/src/chheap.c ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:lib/chibios/os/common/oslib/src/chheap.c ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:lib/chibios/os/common/oslib/src/chheap.c ****     GNU General Public License for more details.
+  15:lib/chibios/os/common/oslib/src/chheap.c **** 
+  16:lib/chibios/os/common/oslib/src/chheap.c ****     You should have received a copy of the GNU General Public License
+  17:lib/chibios/os/common/oslib/src/chheap.c ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:lib/chibios/os/common/oslib/src/chheap.c **** */
+  19:lib/chibios/os/common/oslib/src/chheap.c **** 
+  20:lib/chibios/os/common/oslib/src/chheap.c **** /**
+  21:lib/chibios/os/common/oslib/src/chheap.c ****  * @file    chheap.c
+  22:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Heaps code.
+  23:lib/chibios/os/common/oslib/src/chheap.c ****  *
+  24:lib/chibios/os/common/oslib/src/chheap.c ****  * @addtogroup heaps
+  25:lib/chibios/os/common/oslib/src/chheap.c ****  * @details Heap Allocator related APIs.
+  26:lib/chibios/os/common/oslib/src/chheap.c ****  *          <h2>Operation mode</h2>
+  27:lib/chibios/os/common/oslib/src/chheap.c ****  *          The heap allocator implements a first-fit strategy and its APIs
+  28:lib/chibios/os/common/oslib/src/chheap.c ****  *          are functionally equivalent to the usual @p malloc() and @p free()
+  29:lib/chibios/os/common/oslib/src/chheap.c ****  *          library functions. The main difference is that the OS heap APIs
+  30:lib/chibios/os/common/oslib/src/chheap.c ****  *          are guaranteed to be thread safe and there is the ability to
+  31:lib/chibios/os/common/oslib/src/chheap.c ****  *          return memory blocks aligned to arbitrary powers of two.<br>
+  32:lib/chibios/os/common/oslib/src/chheap.c ****  * @pre     In order to use the heap APIs the @p CH_CFG_USE_HEAP option must
+  33:lib/chibios/os/common/oslib/src/chheap.c ****  *          be enabled in @p chconf.h.
+  34:lib/chibios/os/common/oslib/src/chheap.c ****  * @note    Compatible with RT and NIL.
+  35:lib/chibios/os/common/oslib/src/chheap.c ****  * @{
+  36:lib/chibios/os/common/oslib/src/chheap.c ****  */
+  37:lib/chibios/os/common/oslib/src/chheap.c **** 
+  38:lib/chibios/os/common/oslib/src/chheap.c **** #include "ch.h"
+  39:lib/chibios/os/common/oslib/src/chheap.c **** 
+  40:lib/chibios/os/common/oslib/src/chheap.c **** #if (CH_CFG_USE_HEAP == TRUE) || defined(__DOXYGEN__)
+  41:lib/chibios/os/common/oslib/src/chheap.c **** 
+  42:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  43:lib/chibios/os/common/oslib/src/chheap.c **** /* Module local definitions.                                                 */
+  44:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  45:lib/chibios/os/common/oslib/src/chheap.c **** 
+  46:lib/chibios/os/common/oslib/src/chheap.c **** /*
+  47:lib/chibios/os/common/oslib/src/chheap.c ****  * Defaults on the best synchronization mechanism available.
+  48:lib/chibios/os/common/oslib/src/chheap.c ****  */
+  49:lib/chibios/os/common/oslib/src/chheap.c **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+  50:lib/chibios/os/common/oslib/src/chheap.c **** #define H_LOCK(h)       chMtxLock(&(h)->mtx)
+  51:lib/chibios/os/common/oslib/src/chheap.c **** #define H_UNLOCK(h)     chMtxUnlock(&(h)->mtx)
+  52:lib/chibios/os/common/oslib/src/chheap.c **** #else
+  53:lib/chibios/os/common/oslib/src/chheap.c **** #define H_LOCK(h)       (void) chSemWait(&(h)->sem)
+  54:lib/chibios/os/common/oslib/src/chheap.c **** #define H_UNLOCK(h)     chSemSignal(&(h)->sem)
+  55:lib/chibios/os/common/oslib/src/chheap.c **** #endif
+  56:lib/chibios/os/common/oslib/src/chheap.c **** 
+  57:lib/chibios/os/common/oslib/src/chheap.c **** #define H_BLOCK(hp)     ((hp) + 1U)
+  58:lib/chibios/os/common/oslib/src/chheap.c **** 
+  59:lib/chibios/os/common/oslib/src/chheap.c **** #define H_LIMIT(hp)     (H_BLOCK(hp) + H_PAGES(hp))
+  60:lib/chibios/os/common/oslib/src/chheap.c **** 
+  61:lib/chibios/os/common/oslib/src/chheap.c **** #define H_NEXT(hp)      ((hp)->free.next)
+  62:lib/chibios/os/common/oslib/src/chheap.c **** 
+  63:lib/chibios/os/common/oslib/src/chheap.c **** #define H_PAGES(hp)     ((hp)->free.pages)
+  64:lib/chibios/os/common/oslib/src/chheap.c **** 
+  65:lib/chibios/os/common/oslib/src/chheap.c **** #define H_HEAP(hp)      ((hp)->used.heap)
+  66:lib/chibios/os/common/oslib/src/chheap.c **** 
+  67:lib/chibios/os/common/oslib/src/chheap.c **** #define H_SIZE(hp)      ((hp)->used.size)
+  68:lib/chibios/os/common/oslib/src/chheap.c **** 
+  69:lib/chibios/os/common/oslib/src/chheap.c **** /*
+  70:lib/chibios/os/common/oslib/src/chheap.c ****  * Number of pages between two pointers in a MISRA-compatible way.
+  71:lib/chibios/os/common/oslib/src/chheap.c ****  */
+  72:lib/chibios/os/common/oslib/src/chheap.c **** #define NPAGES(p1, p2)                                                      \
+  73:lib/chibios/os/common/oslib/src/chheap.c ****   /*lint -save -e9033 [10.8] The cast is safe.*/                            \
+  74:lib/chibios/os/common/oslib/src/chheap.c ****   ((size_t)((p1) - (p2)))                                                   \
+  75:lib/chibios/os/common/oslib/src/chheap.c ****   /*lint -restore*/
+  76:lib/chibios/os/common/oslib/src/chheap.c **** 
+  77:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  78:lib/chibios/os/common/oslib/src/chheap.c **** /* Module exported variables.                                                */
+  79:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  80:lib/chibios/os/common/oslib/src/chheap.c **** 
+  81:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  82:lib/chibios/os/common/oslib/src/chheap.c **** /* Module local types.                                                       */
+  83:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  84:lib/chibios/os/common/oslib/src/chheap.c **** 
+  85:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  86:lib/chibios/os/common/oslib/src/chheap.c **** /* Module local variables.                                                   */
+  87:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  88:lib/chibios/os/common/oslib/src/chheap.c **** 
+  89:lib/chibios/os/common/oslib/src/chheap.c **** /**
+  90:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Default heap descriptor.
+  91:lib/chibios/os/common/oslib/src/chheap.c ****  */
+  92:lib/chibios/os/common/oslib/src/chheap.c **** static memory_heap_t default_heap;
+  93:lib/chibios/os/common/oslib/src/chheap.c **** 
+  94:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  95:lib/chibios/os/common/oslib/src/chheap.c **** /* Module local functions.                                                   */
+  96:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  97:lib/chibios/os/common/oslib/src/chheap.c **** 
+  98:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+  99:lib/chibios/os/common/oslib/src/chheap.c **** /* Module exported functions.                                                */
+ 100:lib/chibios/os/common/oslib/src/chheap.c **** /*===========================================================================*/
+ 101:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 102:lib/chibios/os/common/oslib/src/chheap.c **** /**
+ 103:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Initializes the default heap.
+ 104:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 105:lib/chibios/os/common/oslib/src/chheap.c ****  * @notapi
+ 106:lib/chibios/os/common/oslib/src/chheap.c ****  */
+ 107:lib/chibios/os/common/oslib/src/chheap.c **** void _heap_init(void) {
+  26              		.loc 1 107 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+ 108:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 109:lib/chibios/os/common/oslib/src/chheap.c ****   default_heap.provider = chCoreAllocAlignedWithOffset;
+  31              		.loc 1 109 0
+  32 0000 0448     		ldr	r0, .L2
+  33 0002 054B     		ldr	r3, .L2+4
+  34 0004 0360     		str	r3, [r0]
+ 110:lib/chibios/os/common/oslib/src/chheap.c ****   H_NEXT(&default_heap.header) = NULL;
+  35              		.loc 1 110 0
+  36 0006 0023     		movs	r3, #0
+ 111:lib/chibios/os/common/oslib/src/chheap.c ****   H_PAGES(&default_heap.header) = 0;
+  37              		.loc 1 111 0
+  38 0008 C0E90233 		strd	r3, r3, [r0, #8]
+ 112:lib/chibios/os/common/oslib/src/chheap.c **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+ 113:lib/chibios/os/common/oslib/src/chheap.c ****   chMtxObjectInit(&default_heap.mtx);
+  39              		.loc 1 113 0
+  40 000c 1030     		adds	r0, r0, #16
+  41 000e FFF7FEBF 		b	chMtxObjectInit
+  42              	.LVL0:
+  43              	.L3:
+  44 0012 00BF     		.align	2
+  45              	.L2:
+  46 0014 00000000 		.word	.LANCHOR0
+  47 0018 00000000 		.word	chCoreAllocAlignedWithOffset
+  48              		.cfi_endproc
+  49              	.LFE248:
+  51              		.section	.text.chHeapObjectInit,"ax",%progbits
+  52              		.align	1
+  53              		.global	chHeapObjectInit
+  54              		.syntax unified
+  55              		.thumb
+  56              		.thumb_func
+  57              		.fpu softvfp
+  59              	chHeapObjectInit:
+  60              	.LFB249:
+ 114:lib/chibios/os/common/oslib/src/chheap.c **** #else
+ 115:lib/chibios/os/common/oslib/src/chheap.c ****   chSemObjectInit(&default_heap.sem, (cnt_t)1);
+ 116:lib/chibios/os/common/oslib/src/chheap.c **** #endif
+ 117:lib/chibios/os/common/oslib/src/chheap.c **** }
+ 118:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 119:lib/chibios/os/common/oslib/src/chheap.c **** /**
+ 120:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Initializes a memory heap from a static memory area.
+ 121:lib/chibios/os/common/oslib/src/chheap.c ****  * @note    The heap buffer base and size are adjusted if the passed buffer
+ 122:lib/chibios/os/common/oslib/src/chheap.c ****  *          is not aligned to @p CH_HEAP_ALIGNMENT. This mean that the
+ 123:lib/chibios/os/common/oslib/src/chheap.c ****  *          effective heap size can be less than @p size.
+ 124:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 125:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[out] heapp    pointer to the memory heap descriptor to be initialized
+ 126:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] buf       heap buffer base
+ 127:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] size      heap size
+ 128:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 129:lib/chibios/os/common/oslib/src/chheap.c ****  * @init
+ 130:lib/chibios/os/common/oslib/src/chheap.c ****  */
+ 131:lib/chibios/os/common/oslib/src/chheap.c **** void chHeapObjectInit(memory_heap_t *heapp, void *buf, size_t size) {
+  61              		.loc 1 131 0
+  62              		.cfi_startproc
+  63              		@ args = 0, pretend = 0, frame = 0
+  64              		@ frame_needed = 0, uses_anonymous_args = 0
+  65              		@ link register save eliminated.
+  66              	.LVL1:
+ 132:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *hp = (heap_header_t *)MEM_ALIGN_NEXT(buf, CH_HEAP_ALIGNMENT);
+  67              		.loc 1 132 0
+  68 0000 CB1D     		adds	r3, r1, #7
+  69 0002 23F00703 		bic	r3, r3, #7
+  70              	.LVL2:
+ 133:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 134:lib/chibios/os/common/oslib/src/chheap.c ****   chDbgCheck((heapp != NULL) && (size > 0U));
+ 135:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 136:lib/chibios/os/common/oslib/src/chheap.c ****   /* Adjusting the size in case the initial block was not correctly
+ 137:lib/chibios/os/common/oslib/src/chheap.c ****      aligned.*/
+ 138:lib/chibios/os/common/oslib/src/chheap.c ****   size -= (size_t)((uint8_t *)hp - (uint8_t *)buf);
+ 139:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 140:lib/chibios/os/common/oslib/src/chheap.c ****   /* Initializing the heap header.*/
+ 141:lib/chibios/os/common/oslib/src/chheap.c ****   heapp->provider = NULL;
+ 142:lib/chibios/os/common/oslib/src/chheap.c ****   H_NEXT(&heapp->header) = hp;
+ 143:lib/chibios/os/common/oslib/src/chheap.c ****   H_PAGES(&heapp->header) = 0;
+ 144:lib/chibios/os/common/oslib/src/chheap.c ****   H_NEXT(hp) = NULL;
+ 145:lib/chibios/os/common/oslib/src/chheap.c ****   H_PAGES(hp) = (size - sizeof (heap_header_t)) / CH_HEAP_ALIGNMENT;
+  71              		.loc 1 145 0
+  72 0006 083A     		subs	r2, r2, #8
+  73              	.LVL3:
+ 138:lib/chibios/os/common/oslib/src/chheap.c **** 
+  74              		.loc 1 138 0
+  75 0008 591A     		subs	r1, r3, r1
+  76              	.LVL4:
+  77              		.loc 1 145 0
+  78 000a 521A     		subs	r2, r2, r1
+  79              	.LVL5:
+ 131:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *hp = (heap_header_t *)MEM_ALIGN_NEXT(buf, CH_HEAP_ALIGNMENT);
+  80              		.loc 1 131 0
+  81 000c 10B4     		push	{r4}
+  82              		.cfi_def_cfa_offset 4
+  83              		.cfi_offset 4, -4
+  84              		.loc 1 145 0
+  85 000e D208     		lsrs	r2, r2, #3
+ 141:lib/chibios/os/common/oslib/src/chheap.c ****   H_NEXT(&heapp->header) = hp;
+  86              		.loc 1 141 0
+  87 0010 0024     		movs	r4, #0
+  88 0012 0460     		str	r4, [r0]
+ 143:lib/chibios/os/common/oslib/src/chheap.c ****   H_NEXT(hp) = NULL;
+  89              		.loc 1 143 0
+  90 0014 C0E90234 		strd	r3, r4, [r0, #8]
+ 144:lib/chibios/os/common/oslib/src/chheap.c ****   H_PAGES(hp) = (size - sizeof (heap_header_t)) / CH_HEAP_ALIGNMENT;
+  91              		.loc 1 144 0
+  92 0018 1C60     		str	r4, [r3]
+  93              		.loc 1 145 0
+  94 001a 5A60     		str	r2, [r3, #4]
+ 146:lib/chibios/os/common/oslib/src/chheap.c **** #if (CH_CFG_USE_MUTEXES == TRUE) || defined(__DOXYGEN__)
+ 147:lib/chibios/os/common/oslib/src/chheap.c ****   chMtxObjectInit(&heapp->mtx);
+  95              		.loc 1 147 0
+  96 001c 1030     		adds	r0, r0, #16
+  97              	.LVL6:
+ 148:lib/chibios/os/common/oslib/src/chheap.c **** #else
+ 149:lib/chibios/os/common/oslib/src/chheap.c ****   chSemObjectInit(&heapp->sem, (cnt_t)1);
+ 150:lib/chibios/os/common/oslib/src/chheap.c **** #endif
+ 151:lib/chibios/os/common/oslib/src/chheap.c **** }
+  98              		.loc 1 151 0
+  99 001e 10BC     		pop	{r4}
+ 100              		.cfi_restore 4
+ 101              		.cfi_def_cfa_offset 0
+ 147:lib/chibios/os/common/oslib/src/chheap.c **** #else
+ 102              		.loc 1 147 0
+ 103 0020 FFF7FEBF 		b	chMtxObjectInit
+ 104              	.LVL7:
+ 105              		.cfi_endproc
+ 106              	.LFE249:
+ 108              		.section	.text.chHeapAllocAligned,"ax",%progbits
+ 109              		.align	1
+ 110              		.global	chHeapAllocAligned
+ 111              		.syntax unified
+ 112              		.thumb
+ 113              		.thumb_func
+ 114              		.fpu softvfp
+ 116              	chHeapAllocAligned:
+ 117              	.LFB250:
+ 152:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 153:lib/chibios/os/common/oslib/src/chheap.c **** /**
+ 154:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Allocates a block of memory from the heap by using the first-fit
+ 155:lib/chibios/os/common/oslib/src/chheap.c ****  *          algorithm.
+ 156:lib/chibios/os/common/oslib/src/chheap.c ****  * @details The allocated block is guaranteed to be properly aligned to the
+ 157:lib/chibios/os/common/oslib/src/chheap.c ****  *          specified alignment.
+ 158:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 159:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] heapp     pointer to a heap descriptor or @p NULL in order to
+ 160:lib/chibios/os/common/oslib/src/chheap.c ****  *                      access the default heap.
+ 161:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] size      the size of the block to be allocated. Note that the
+ 162:lib/chibios/os/common/oslib/src/chheap.c ****  *                      allocated block may be a bit bigger than the requested
+ 163:lib/chibios/os/common/oslib/src/chheap.c ****  *                      size for alignment and fragmentation reasons.
+ 164:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] align     desired memory alignment
+ 165:lib/chibios/os/common/oslib/src/chheap.c ****  * @return              A pointer to the aligned allocated block.
+ 166:lib/chibios/os/common/oslib/src/chheap.c ****  * @retval NULL         if the block cannot be allocated.
+ 167:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 168:lib/chibios/os/common/oslib/src/chheap.c ****  * @api
+ 169:lib/chibios/os/common/oslib/src/chheap.c ****  */
+ 170:lib/chibios/os/common/oslib/src/chheap.c **** void *chHeapAllocAligned(memory_heap_t *heapp, size_t size, unsigned align) {
+ 118              		.loc 1 170 0
+ 119              		.cfi_startproc
+ 120              		@ args = 0, pretend = 0, frame = 0
+ 121              		@ frame_needed = 0, uses_anonymous_args = 0
+ 122              	.LVL8:
+ 123 0000 2DE9F84F 		push	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 124              		.cfi_def_cfa_offset 40
+ 125              		.cfi_offset 3, -40
+ 126              		.cfi_offset 4, -36
+ 127              		.cfi_offset 5, -32
+ 128              		.cfi_offset 6, -28
+ 129              		.cfi_offset 7, -24
+ 130              		.cfi_offset 8, -20
+ 131              		.cfi_offset 9, -16
+ 132              		.cfi_offset 10, -12
+ 133              		.cfi_offset 11, -8
+ 134              		.cfi_offset 14, -4
+ 171:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp, *hp, *ahp;
+ 172:lib/chibios/os/common/oslib/src/chheap.c ****   size_t pages;
+ 173:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 174:lib/chibios/os/common/oslib/src/chheap.c ****   chDbgCheck((size > 0U) && MEM_IS_VALID_ALIGNMENT(align));
+ 175:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 176:lib/chibios/os/common/oslib/src/chheap.c ****   /* If an heap is not specified then the default system header is used.*/
+ 177:lib/chibios/os/common/oslib/src/chheap.c ****   if (heapp == NULL) {
+ 178:lib/chibios/os/common/oslib/src/chheap.c ****     heapp = &default_heap;
+ 135              		.loc 1 178 0
+ 136 0004 364F     		ldr	r7, .L20
+ 137 0006 0028     		cmp	r0, #0
+ 138 0008 18BF     		it	ne
+ 139 000a 0746     		movne	r7, r0
+ 140              	.LVL9:
+ 141 000c 082A     		cmp	r2, #8
+ 142 000e 38BF     		it	cc
+ 143 0010 0822     		movcc	r2, #8
+ 144              	.LVL10:
+ 179:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 180:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 181:lib/chibios/os/common/oslib/src/chheap.c ****   /* Minimum alignment is constrained by the heap header structure size.*/
+ 182:lib/chibios/os/common/oslib/src/chheap.c ****   if (align < CH_HEAP_ALIGNMENT) {
+ 183:lib/chibios/os/common/oslib/src/chheap.c ****     align = CH_HEAP_ALIGNMENT;
+ 184:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 185:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 186:lib/chibios/os/common/oslib/src/chheap.c ****   /* Size is converted in number of elementary allocation units.*/
+ 187:lib/chibios/os/common/oslib/src/chheap.c ****   pages = MEM_ALIGN_NEXT(size, CH_HEAP_ALIGNMENT) / CH_HEAP_ALIGNMENT;
+ 188:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 189:lib/chibios/os/common/oslib/src/chheap.c ****   /* Taking heap mutex/semaphore.*/
+ 190:lib/chibios/os/common/oslib/src/chheap.c ****   H_LOCK(heapp);
+ 145              		.loc 1 190 0
+ 146 0012 07F11009 		add	r9, r7, #16
+ 147 0016 9046     		mov	r8, r2
+ 148              	.LVL11:
+ 187:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 149              		.loc 1 187 0
+ 150 0018 CD1D     		adds	r5, r1, #7
+ 151              		.loc 1 190 0
+ 152 001a 4846     		mov	r0, r9
+ 170:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp, *hp, *ahp;
+ 153              		.loc 1 170 0
+ 154 001c 0E46     		mov	r6, r1
+ 187:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 155              		.loc 1 187 0
+ 156 001e ED08     		lsrs	r5, r5, #3
+ 157              	.LVL12:
+ 158              		.loc 1 190 0
+ 159 0020 FFF7FEFF 		bl	chMtxLock
+ 160              	.LVL13:
+ 191:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 192:lib/chibios/os/common/oslib/src/chheap.c ****   /* Start of the free blocks list.*/
+ 193:lib/chibios/os/common/oslib/src/chheap.c ****   qp = &heapp->header;
+ 194:lib/chibios/os/common/oslib/src/chheap.c ****   while (H_NEXT(qp) != NULL) {
+ 195:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 196:lib/chibios/os/common/oslib/src/chheap.c ****     /* Next free block.*/
+ 197:lib/chibios/os/common/oslib/src/chheap.c ****     hp = H_NEXT(qp);
+ 198:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 199:lib/chibios/os/common/oslib/src/chheap.c ****     /* Pointer aligned to the requested alignment.*/
+ 200:lib/chibios/os/common/oslib/src/chheap.c ****     ahp = (heap_header_t *)MEM_ALIGN_NEXT(H_BLOCK(hp), align) - 1U;
+ 161              		.loc 1 200 0
+ 162 0024 08F1FF3A 		add	r10, r8, #-1
+ 193:lib/chibios/os/common/oslib/src/chheap.c ****   while (H_NEXT(qp) != NULL) {
+ 163              		.loc 1 193 0
+ 164 0028 07F1080C 		add	ip, r7, #8
+ 165              	.LVL14:
+ 166              		.loc 1 200 0
+ 167 002c C8F1000B 		rsb	fp, r8, #0
+ 168              	.LVL15:
+ 169              	.L7:
+ 194:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 170              		.loc 1 194 0
+ 171 0030 DCF80030 		ldr	r3, [ip]
+ 172 0034 73B9     		cbnz	r3, .L13
+ 201:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 202:lib/chibios/os/common/oslib/src/chheap.c ****     if ((ahp < H_LIMIT(hp)) && (pages <= NPAGES(H_LIMIT(hp), ahp + 1U))) {
+ 203:lib/chibios/os/common/oslib/src/chheap.c ****       /* The block is large enough to contain a correctly aligned area
+ 204:lib/chibios/os/common/oslib/src/chheap.c ****          of sufficient size.*/
+ 205:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 206:lib/chibios/os/common/oslib/src/chheap.c ****       if (ahp > hp) {
+ 207:lib/chibios/os/common/oslib/src/chheap.c ****         /* The block is not properly aligned, must split it.*/
+ 208:lib/chibios/os/common/oslib/src/chheap.c ****         size_t bpages;
+ 209:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 210:lib/chibios/os/common/oslib/src/chheap.c ****         bpages = NPAGES(H_LIMIT(hp), H_BLOCK(ahp));
+ 211:lib/chibios/os/common/oslib/src/chheap.c ****         H_PAGES(hp) = NPAGES(ahp, H_BLOCK(hp));
+ 212:lib/chibios/os/common/oslib/src/chheap.c ****         if (bpages > pages) {
+ 213:lib/chibios/os/common/oslib/src/chheap.c ****           /* The block is bigger than required, must split the excess.*/
+ 214:lib/chibios/os/common/oslib/src/chheap.c ****           heap_header_t *fp;
+ 215:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 216:lib/chibios/os/common/oslib/src/chheap.c ****           /* Creating the excess block.*/
+ 217:lib/chibios/os/common/oslib/src/chheap.c ****           fp = H_BLOCK(ahp) + pages;
+ 218:lib/chibios/os/common/oslib/src/chheap.c ****           H_PAGES(fp) = (bpages - pages) - 1U;
+ 219:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 220:lib/chibios/os/common/oslib/src/chheap.c ****           /* Linking the excess block.*/
+ 221:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(fp) = H_NEXT(hp);
+ 222:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(hp) = fp;
+ 223:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 224:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 225:lib/chibios/os/common/oslib/src/chheap.c ****         hp = ahp;
+ 226:lib/chibios/os/common/oslib/src/chheap.c ****       }
+ 227:lib/chibios/os/common/oslib/src/chheap.c ****       else {
+ 228:lib/chibios/os/common/oslib/src/chheap.c ****         /* The block is already properly aligned.*/
+ 229:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 230:lib/chibios/os/common/oslib/src/chheap.c ****         if (H_PAGES(hp) == pages) {
+ 231:lib/chibios/os/common/oslib/src/chheap.c ****           /* Exact size, getting the whole block.*/
+ 232:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(qp) = H_NEXT(hp);
+ 233:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 234:lib/chibios/os/common/oslib/src/chheap.c ****         else {
+ 235:lib/chibios/os/common/oslib/src/chheap.c ****           /* The block is bigger than required, must split the excess.*/
+ 236:lib/chibios/os/common/oslib/src/chheap.c ****           heap_header_t *fp;
+ 237:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 238:lib/chibios/os/common/oslib/src/chheap.c ****           fp = H_BLOCK(hp) + pages;
+ 239:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(fp) = H_NEXT(hp);
+ 240:lib/chibios/os/common/oslib/src/chheap.c ****           H_PAGES(fp) = NPAGES(H_LIMIT(hp), H_BLOCK(fp));
+ 241:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(qp) = fp;
+ 242:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 243:lib/chibios/os/common/oslib/src/chheap.c ****       }
+ 244:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 245:lib/chibios/os/common/oslib/src/chheap.c ****       /* Setting in the block owner heap and size.*/
+ 246:lib/chibios/os/common/oslib/src/chheap.c ****       H_SIZE(hp) = size;
+ 247:lib/chibios/os/common/oslib/src/chheap.c ****       H_HEAP(hp) = heapp;
+ 248:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 249:lib/chibios/os/common/oslib/src/chheap.c ****       /* Releasing heap mutex/semaphore.*/
+ 250:lib/chibios/os/common/oslib/src/chheap.c ****       H_UNLOCK(heapp);
+ 251:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 252:lib/chibios/os/common/oslib/src/chheap.c ****       /*lint -save -e9087 [11.3] Safe cast.*/
+ 253:lib/chibios/os/common/oslib/src/chheap.c ****       return (void *)H_BLOCK(hp);
+ 254:lib/chibios/os/common/oslib/src/chheap.c ****       /*lint -restore*/
+ 255:lib/chibios/os/common/oslib/src/chheap.c ****     }
+ 256:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 257:lib/chibios/os/common/oslib/src/chheap.c ****     /* Next in the free blocks list.*/
+ 258:lib/chibios/os/common/oslib/src/chheap.c ****     qp = hp;
+ 259:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 260:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 261:lib/chibios/os/common/oslib/src/chheap.c ****   /* Releasing heap mutex/semaphore.*/
+ 262:lib/chibios/os/common/oslib/src/chheap.c ****   H_UNLOCK(heapp);
+ 173              		.loc 1 262 0
+ 174 0036 4846     		mov	r0, r9
+ 175 0038 FFF7FEFF 		bl	chMtxUnlock
+ 176              	.LVL16:
+ 263:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 264:lib/chibios/os/common/oslib/src/chheap.c ****   /* More memory is required, tries to get it from the associated provider
+ 265:lib/chibios/os/common/oslib/src/chheap.c ****      else fails.*/
+ 266:lib/chibios/os/common/oslib/src/chheap.c ****   if (heapp->provider != NULL) {
+ 177              		.loc 1 266 0
+ 178 003c 3C68     		ldr	r4, [r7]
+ 179 003e ACB3     		cbz	r4, .L5
+ 267:lib/chibios/os/common/oslib/src/chheap.c ****     ahp = heapp->provider((pages + 1U) * CH_HEAP_ALIGNMENT,
+ 180              		.loc 1 267 0
+ 181 0040 681C     		adds	r0, r5, #1
+ 182 0042 0822     		movs	r2, #8
+ 183 0044 4146     		mov	r1, r8
+ 184 0046 C000     		lsls	r0, r0, #3
+ 185 0048 A047     		blx	r4
+ 186              	.LVL17:
+ 268:lib/chibios/os/common/oslib/src/chheap.c ****                           align,
+ 269:lib/chibios/os/common/oslib/src/chheap.c ****                           sizeof (heap_header_t));
+ 270:lib/chibios/os/common/oslib/src/chheap.c ****     if (ahp != NULL) {
+ 187              		.loc 1 270 0
+ 188 004a 0446     		mov	r4, r0
+ 189 004c 70B3     		cbz	r0, .L5
+ 190              	.LVL18:
+ 271:lib/chibios/os/common/oslib/src/chheap.c ****       hp = ahp - 1U;
+ 272:lib/chibios/os/common/oslib/src/chheap.c ****       H_HEAP(hp) = heapp;
+ 273:lib/chibios/os/common/oslib/src/chheap.c ****       H_SIZE(hp) = size;
+ 191              		.loc 1 273 0
+ 192 004e 40E90276 		strd	r7, r6, [r0, #-8]
+ 274:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 275:lib/chibios/os/common/oslib/src/chheap.c ****       /*lint -save -e9087 [11.3] Safe cast.*/
+ 276:lib/chibios/os/common/oslib/src/chheap.c ****       return (void *)ahp;
+ 193              		.loc 1 276 0
+ 194 0052 2BE0     		b	.L5
+ 195              	.LVL19:
+ 196              	.L13:
+ 200:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 197              		.loc 1 200 0
+ 198 0054 03F10801 		add	r1, r3, #8
+ 202:lib/chibios/os/common/oslib/src/chheap.c ****       /* The block is large enough to contain a correctly aligned area
+ 199              		.loc 1 202 0
+ 200 0058 D3F804E0 		ldr	lr, [r3, #4]
+ 200:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 201              		.loc 1 200 0
+ 202 005c 01EB0A02 		add	r2, r1, r10
+ 203 0060 02EA0B02 		and	r2, r2, fp
+ 202:lib/chibios/os/common/oslib/src/chheap.c ****       /* The block is large enough to contain a correctly aligned area
+ 204              		.loc 1 202 0
+ 205 0064 0EF10104 		add	r4, lr, #1
+ 200:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 206              		.loc 1 200 0
+ 207 0068 A2F10800 		sub	r0, r2, #8
+ 208              	.LVL20:
+ 202:lib/chibios/os/common/oslib/src/chheap.c ****       /* The block is large enough to contain a correctly aligned area
+ 209              		.loc 1 202 0
+ 210 006c 03EBC404 		add	r4, r3, r4, lsl #3
+ 211 0070 8442     		cmp	r4, r0
+ 212 0072 32D9     		bls	.L8
+ 202:lib/chibios/os/common/oslib/src/chheap.c ****       /* The block is large enough to contain a correctly aligned area
+ 213              		.loc 1 202 0 is_stmt 0 discriminator 1
+ 214 0074 A21A     		subs	r2, r4, r2
+ 215 0076 D210     		asrs	r2, r2, #3
+ 216 0078 AA42     		cmp	r2, r5
+ 217 007a 2ED3     		bcc	.L8
+ 206:lib/chibios/os/common/oslib/src/chheap.c ****         /* The block is not properly aligned, must split it.*/
+ 218              		.loc 1 206 0 is_stmt 1
+ 219 007c 8342     		cmp	r3, r0
+ 220 007e 18D2     		bcs	.L9
+ 221              	.LVL21:
+ 222              	.LBB2:
+ 211:lib/chibios/os/common/oslib/src/chheap.c ****         if (bpages > pages) {
+ 223              		.loc 1 211 0
+ 224 0080 411A     		subs	r1, r0, r1
+ 225 0082 C910     		asrs	r1, r1, #3
+ 212:lib/chibios/os/common/oslib/src/chheap.c ****           /* The block is bigger than required, must split the excess.*/
+ 226              		.loc 1 212 0
+ 227 0084 AA42     		cmp	r2, r5
+ 211:lib/chibios/os/common/oslib/src/chheap.c ****         if (bpages > pages) {
+ 228              		.loc 1 211 0
+ 229 0086 5960     		str	r1, [r3, #4]
+ 212:lib/chibios/os/common/oslib/src/chheap.c ****           /* The block is bigger than required, must split the excess.*/
+ 230              		.loc 1 212 0
+ 231 0088 09D9     		bls	.L10
+ 232              	.LBB3:
+ 217:lib/chibios/os/common/oslib/src/chheap.c ****           H_PAGES(fp) = (bpages - pages) - 1U;
+ 233              		.loc 1 217 0
+ 234 008a 6C1C     		adds	r4, r5, #1
+ 235 008c 00EBC401 		add	r1, r0, r4, lsl #3
+ 236              	.LVL22:
+ 218:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 237              		.loc 1 218 0
+ 238 0090 ED43     		mvns	r5, r5
+ 239              	.LVL23:
+ 240 0092 2A44     		add	r2, r2, r5
+ 241              	.LVL24:
+ 242 0094 4A60     		str	r2, [r1, #4]
+ 221:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(hp) = fp;
+ 243              		.loc 1 221 0
+ 244 0096 1A68     		ldr	r2, [r3]
+ 245 0098 40F83420 		str	r2, [r0, r4, lsl #3]
+ 222:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 246              		.loc 1 222 0
+ 247 009c 1960     		str	r1, [r3]
+ 248              	.LVL25:
+ 249              	.L10:
+ 250              	.LBE3:
+ 251              	.LBE2:
+ 247:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 252              		.loc 1 247 0
+ 253 009e 0446     		mov	r4, r0
+ 246:lib/chibios/os/common/oslib/src/chheap.c ****       H_HEAP(hp) = heapp;
+ 254              		.loc 1 246 0
+ 255 00a0 4660     		str	r6, [r0, #4]
+ 247:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 256              		.loc 1 247 0
+ 257 00a2 44F8087B 		str	r7, [r4], #8
+ 250:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 258              		.loc 1 250 0
+ 259 00a6 4846     		mov	r0, r9
+ 260              	.LVL26:
+ 261 00a8 FFF7FEFF 		bl	chMtxUnlock
+ 262              	.LVL27:
+ 263              	.L5:
+ 277:lib/chibios/os/common/oslib/src/chheap.c ****       /*lint -restore*/
+ 278:lib/chibios/os/common/oslib/src/chheap.c ****     }
+ 279:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 280:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 281:lib/chibios/os/common/oslib/src/chheap.c ****   return NULL;
+ 282:lib/chibios/os/common/oslib/src/chheap.c **** }
+ 264              		.loc 1 282 0
+ 265 00ac 2046     		mov	r0, r4
+ 266 00ae BDE8F88F 		pop	{r3, r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 267              	.LVL28:
+ 268              	.L9:
+ 230:lib/chibios/os/common/oslib/src/chheap.c ****           /* Exact size, getting the whole block.*/
+ 269              		.loc 1 230 0
+ 270 00b2 AE45     		cmp	lr, r5
+ 271 00b4 1968     		ldr	r1, [r3]
+ 272 00b6 03D1     		bne	.L11
+ 232:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 273              		.loc 1 232 0
+ 274 00b8 CCF80010 		str	r1, [ip]
+ 275              	.LVL29:
+ 276              	.L19:
+ 277              	.LBB4:
+ 241:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 278              		.loc 1 241 0
+ 279 00bc 1846     		mov	r0, r3
+ 280              	.LVL30:
+ 281 00be EEE7     		b	.L10
+ 282              	.LVL31:
+ 283              	.L11:
+ 238:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(fp) = H_NEXT(hp);
+ 284              		.loc 1 238 0
+ 285 00c0 0135     		adds	r5, r5, #1
+ 286              	.LVL32:
+ 287 00c2 03EBC502 		add	r2, r3, r5, lsl #3
+ 288              	.LVL33:
+ 239:lib/chibios/os/common/oslib/src/chheap.c ****           H_PAGES(fp) = NPAGES(H_LIMIT(hp), H_BLOCK(fp));
+ 289              		.loc 1 239 0
+ 290 00c6 43F83510 		str	r1, [r3, r5, lsl #3]
+ 240:lib/chibios/os/common/oslib/src/chheap.c ****           H_NEXT(qp) = fp;
+ 291              		.loc 1 240 0
+ 292 00ca 02F10801 		add	r1, r2, #8
+ 293 00ce 641A     		subs	r4, r4, r1
+ 294 00d0 E410     		asrs	r4, r4, #3
+ 295 00d2 5460     		str	r4, [r2, #4]
+ 241:lib/chibios/os/common/oslib/src/chheap.c ****         }
+ 296              		.loc 1 241 0
+ 297 00d4 CCF80020 		str	r2, [ip]
+ 298 00d8 F0E7     		b	.L19
+ 299              	.LVL34:
+ 300              	.L8:
+ 301 00da 9C46     		mov	ip, r3
+ 302              	.LVL35:
+ 303 00dc A8E7     		b	.L7
+ 304              	.L21:
+ 305 00de 00BF     		.align	2
+ 306              	.L20:
+ 307 00e0 00000000 		.word	.LANCHOR0
+ 308              	.LBE4:
+ 309              		.cfi_endproc
+ 310              	.LFE250:
+ 312              		.section	.text.chHeapFree,"ax",%progbits
+ 313              		.align	1
+ 314              		.global	chHeapFree
+ 315              		.syntax unified
+ 316              		.thumb
+ 317              		.thumb_func
+ 318              		.fpu softvfp
+ 320              	chHeapFree:
+ 321              	.LFB251:
+ 283:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 284:lib/chibios/os/common/oslib/src/chheap.c **** /**
+ 285:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Frees a previously allocated memory block.
+ 286:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 287:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] p         pointer to the memory block to be freed
+ 288:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 289:lib/chibios/os/common/oslib/src/chheap.c ****  * @api
+ 290:lib/chibios/os/common/oslib/src/chheap.c ****  */
+ 291:lib/chibios/os/common/oslib/src/chheap.c **** void chHeapFree(void *p) {
+ 322              		.loc 1 291 0
+ 323              		.cfi_startproc
+ 324              		@ args = 0, pretend = 0, frame = 0
+ 325              		@ frame_needed = 0, uses_anonymous_args = 0
+ 326              	.LVL36:
+ 327 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 328              		.cfi_def_cfa_offset 24
+ 329              		.cfi_offset 3, -24
+ 330              		.cfi_offset 4, -20
+ 331              		.cfi_offset 5, -16
+ 332              		.cfi_offset 6, -12
+ 333              		.cfi_offset 7, -8
+ 334              		.cfi_offset 14, -4
+ 292:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp, *hp;
+ 293:lib/chibios/os/common/oslib/src/chheap.c ****   memory_heap_t *heapp;
+ 294:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 295:lib/chibios/os/common/oslib/src/chheap.c ****   chDbgCheck((p != NULL) && MEM_IS_ALIGNED(p, CH_HEAP_ALIGNMENT));
+ 296:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 297:lib/chibios/os/common/oslib/src/chheap.c ****   /*lint -save -e9087 [11.3] Safe cast.*/
+ 298:lib/chibios/os/common/oslib/src/chheap.c ****   hp = (heap_header_t *)p - 1U;
+ 299:lib/chibios/os/common/oslib/src/chheap.c ****   /*lint -restore*/
+ 300:lib/chibios/os/common/oslib/src/chheap.c ****   heapp = H_HEAP(hp);
+ 301:lib/chibios/os/common/oslib/src/chheap.c ****   qp = &heapp->header;
+ 302:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 303:lib/chibios/os/common/oslib/src/chheap.c ****   /* Size is converted in number of elementary allocation units.*/
+ 304:lib/chibios/os/common/oslib/src/chheap.c ****   H_PAGES(hp) = MEM_ALIGN_NEXT(H_SIZE(hp),
+ 335              		.loc 1 304 0
+ 336 0002 50F8043C 		ldr	r3, [r0, #-4]
+ 300:lib/chibios/os/common/oslib/src/chheap.c ****   qp = &heapp->header;
+ 337              		.loc 1 300 0
+ 338 0006 50F8086C 		ldr	r6, [r0, #-8]
+ 339              		.loc 1 304 0
+ 340 000a 0733     		adds	r3, r3, #7
+ 305:lib/chibios/os/common/oslib/src/chheap.c ****                                CH_HEAP_ALIGNMENT) / CH_HEAP_ALIGNMENT;
+ 341              		.loc 1 305 0
+ 342 000c DB08     		lsrs	r3, r3, #3
+ 301:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 343              		.loc 1 301 0
+ 344 000e 06F10807 		add	r7, r6, #8
+ 306:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 307:lib/chibios/os/common/oslib/src/chheap.c ****   /* Taking heap mutex/semaphore.*/
+ 308:lib/chibios/os/common/oslib/src/chheap.c ****   H_LOCK(heapp);
+ 345              		.loc 1 308 0
+ 346 0012 1036     		adds	r6, r6, #16
+ 304:lib/chibios/os/common/oslib/src/chheap.c ****                                CH_HEAP_ALIGNMENT) / CH_HEAP_ALIGNMENT;
+ 347              		.loc 1 304 0
+ 348 0014 40F8043C 		str	r3, [r0, #-4]
+ 291:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp, *hp;
+ 349              		.loc 1 291 0
+ 350 0018 0446     		mov	r4, r0
+ 298:lib/chibios/os/common/oslib/src/chheap.c ****   /*lint -restore*/
+ 351              		.loc 1 298 0
+ 352 001a A0F10805 		sub	r5, r0, #8
+ 353              	.LVL37:
+ 354              		.loc 1 308 0
+ 355 001e 3046     		mov	r0, r6
+ 356              	.LVL38:
+ 357 0020 FFF7FEFF 		bl	chMtxLock
+ 358              	.LVL39:
+ 301:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 359              		.loc 1 301 0
+ 360 0024 3B46     		mov	r3, r7
+ 361              	.LVL40:
+ 362              	.L28:
+ 309:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 310:lib/chibios/os/common/oslib/src/chheap.c ****   while (true) {
+ 311:lib/chibios/os/common/oslib/src/chheap.c ****     chDbgAssert((hp < qp) || (hp >= H_LIMIT(qp)), "within free block");
+ 312:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 313:lib/chibios/os/common/oslib/src/chheap.c ****     if (((qp == &heapp->header) || (hp > qp)) &&
+ 363              		.loc 1 313 0
+ 364 0026 BB42     		cmp	r3, r7
+ 365 0028 1A68     		ldr	r2, [r3]
+ 366 002a 01D0     		beq	.L23
+ 367              		.loc 1 313 0 is_stmt 0 discriminator 2
+ 368 002c 9D42     		cmp	r5, r3
+ 369 002e 29D9     		bls	.L24
+ 370              	.L23:
+ 371              		.loc 1 313 0 discriminator 3
+ 372 0030 0AB1     		cbz	r2, .L25
+ 314:lib/chibios/os/common/oslib/src/chheap.c ****         ((H_NEXT(qp) == NULL) || (hp < H_NEXT(qp)))) {
+ 373              		.loc 1 314 0 is_stmt 1
+ 374 0032 9542     		cmp	r5, r2
+ 375 0034 26D2     		bcs	.L24
+ 376              	.L25:
+ 315:lib/chibios/os/common/oslib/src/chheap.c ****       /* Insertion after qp.*/
+ 316:lib/chibios/os/common/oslib/src/chheap.c ****       H_NEXT(hp) = H_NEXT(qp);
+ 377              		.loc 1 316 0
+ 378 0036 44F8082C 		str	r2, [r4, #-8]
+ 317:lib/chibios/os/common/oslib/src/chheap.c ****       H_NEXT(qp) = hp;
+ 318:lib/chibios/os/common/oslib/src/chheap.c ****       /* Verifies if the newly inserted block should be merged.*/
+ 319:lib/chibios/os/common/oslib/src/chheap.c ****       if (H_LIMIT(hp) == H_NEXT(hp)) {
+ 379              		.loc 1 319 0
+ 380 003a 54F8042C 		ldr	r2, [r4, #-4]
+ 317:lib/chibios/os/common/oslib/src/chheap.c ****       H_NEXT(qp) = hp;
+ 381              		.loc 1 317 0
+ 382 003e 1D60     		str	r5, [r3]
+ 383              		.loc 1 319 0
+ 384 0040 0132     		adds	r2, r2, #1
+ 385 0042 54F8080C 		ldr	r0, [r4, #-8]
+ 386 0046 05EBC201 		add	r1, r5, r2, lsl #3
+ 387 004a 8142     		cmp	r1, r0
+ 388 004c 07D1     		bne	.L26
+ 320:lib/chibios/os/common/oslib/src/chheap.c ****         /* Merge with the next block.*/
+ 321:lib/chibios/os/common/oslib/src/chheap.c ****         H_PAGES(hp) += H_PAGES(H_NEXT(hp)) + 1U;
+ 389              		.loc 1 321 0
+ 390 004e 4968     		ldr	r1, [r1, #4]
+ 391 0050 1144     		add	r1, r1, r2
+ 322:lib/chibios/os/common/oslib/src/chheap.c ****         H_NEXT(hp) = H_NEXT(H_NEXT(hp));
+ 392              		.loc 1 322 0
+ 393 0052 55F83220 		ldr	r2, [r5, r2, lsl #3]
+ 321:lib/chibios/os/common/oslib/src/chheap.c ****         H_NEXT(hp) = H_NEXT(H_NEXT(hp));
+ 394              		.loc 1 321 0
+ 395 0056 44F8041C 		str	r1, [r4, #-4]
+ 396              		.loc 1 322 0
+ 397 005a 44F8082C 		str	r2, [r4, #-8]
+ 398              	.L26:
+ 323:lib/chibios/os/common/oslib/src/chheap.c ****       }
+ 324:lib/chibios/os/common/oslib/src/chheap.c ****       if ((H_LIMIT(qp) == hp)) {
+ 399              		.loc 1 324 0
+ 400 005e 5868     		ldr	r0, [r3, #4]
+ 401 0060 411C     		adds	r1, r0, #1
+ 402 0062 03EBC101 		add	r1, r3, r1, lsl #3
+ 403 0066 8D42     		cmp	r5, r1
+ 404 0068 07D1     		bne	.L27
+ 325:lib/chibios/os/common/oslib/src/chheap.c ****         /* Merge with the previous block.*/
+ 326:lib/chibios/os/common/oslib/src/chheap.c ****         H_PAGES(qp) += H_PAGES(hp) + 1U;
+ 405              		.loc 1 326 0
+ 406 006a 54F8042C 		ldr	r2, [r4, #-4]
+ 407 006e 0132     		adds	r2, r2, #1
+ 408 0070 0244     		add	r2, r2, r0
+ 409 0072 5A60     		str	r2, [r3, #4]
+ 327:lib/chibios/os/common/oslib/src/chheap.c ****         H_NEXT(qp) = H_NEXT(hp);
+ 410              		.loc 1 327 0
+ 411 0074 54F8082C 		ldr	r2, [r4, #-8]
+ 412 0078 1A60     		str	r2, [r3]
+ 413              	.L27:
+ 328:lib/chibios/os/common/oslib/src/chheap.c ****       }
+ 329:lib/chibios/os/common/oslib/src/chheap.c ****       break;
+ 330:lib/chibios/os/common/oslib/src/chheap.c ****     }
+ 331:lib/chibios/os/common/oslib/src/chheap.c ****     qp = H_NEXT(qp);
+ 332:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 333:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 334:lib/chibios/os/common/oslib/src/chheap.c ****   /* Releasing heap mutex/semaphore.*/
+ 335:lib/chibios/os/common/oslib/src/chheap.c ****   H_UNLOCK(heapp);
+ 414              		.loc 1 335 0
+ 415 007a 3046     		mov	r0, r6
+ 336:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 337:lib/chibios/os/common/oslib/src/chheap.c ****   return;
+ 338:lib/chibios/os/common/oslib/src/chheap.c **** }
+ 416              		.loc 1 338 0
+ 417 007c BDE8F840 		pop	{r3, r4, r5, r6, r7, lr}
+ 418              		.cfi_remember_state
+ 419              		.cfi_restore 14
+ 420              		.cfi_restore 7
+ 421              		.cfi_restore 6
+ 422              		.cfi_restore 5
+ 423              		.cfi_restore 4
+ 424              		.cfi_restore 3
+ 425              		.cfi_def_cfa_offset 0
+ 426              	.LVL41:
+ 335:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 427              		.loc 1 335 0
+ 428 0080 FFF7FEBF 		b	chMtxUnlock
+ 429              	.LVL42:
+ 430              	.L24:
+ 431              		.cfi_restore_state
+ 331:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 432              		.loc 1 331 0
+ 433 0084 1346     		mov	r3, r2
+ 434              	.LVL43:
+ 311:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 435              		.loc 1 311 0
+ 436 0086 CEE7     		b	.L28
+ 437              		.cfi_endproc
+ 438              	.LFE251:
+ 440              		.section	.text.chHeapStatus,"ax",%progbits
+ 441              		.align	1
+ 442              		.global	chHeapStatus
+ 443              		.syntax unified
+ 444              		.thumb
+ 445              		.thumb_func
+ 446              		.fpu softvfp
+ 448              	chHeapStatus:
+ 449              	.LFB252:
+ 339:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 340:lib/chibios/os/common/oslib/src/chheap.c **** /**
+ 341:lib/chibios/os/common/oslib/src/chheap.c ****  * @brief   Reports the heap status.
+ 342:lib/chibios/os/common/oslib/src/chheap.c ****  * @note    This function is meant to be used in the test suite, it should
+ 343:lib/chibios/os/common/oslib/src/chheap.c ****  *          not be really useful for the application code.
+ 344:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 345:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] heapp     pointer to a heap descriptor or @p NULL in order to
+ 346:lib/chibios/os/common/oslib/src/chheap.c ****  *                      access the default heap.
+ 347:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] totalp    pointer to a variable that will receive the total
+ 348:lib/chibios/os/common/oslib/src/chheap.c ****  *                      fragmented free space or @ NULL
+ 349:lib/chibios/os/common/oslib/src/chheap.c ****  * @param[in] largestp  pointer to a variable that will receive the largest
+ 350:lib/chibios/os/common/oslib/src/chheap.c ****  *                      free free block found space or @ NULL
+ 351:lib/chibios/os/common/oslib/src/chheap.c ****  * @return              The number of fragments in the heap.
+ 352:lib/chibios/os/common/oslib/src/chheap.c ****  *
+ 353:lib/chibios/os/common/oslib/src/chheap.c ****  * @api
+ 354:lib/chibios/os/common/oslib/src/chheap.c ****  */
+ 355:lib/chibios/os/common/oslib/src/chheap.c **** size_t chHeapStatus(memory_heap_t *heapp, size_t *totalp, size_t *largestp) {
+ 450              		.loc 1 355 0
+ 451              		.cfi_startproc
+ 452              		@ args = 0, pretend = 0, frame = 0
+ 453              		@ frame_needed = 0, uses_anonymous_args = 0
+ 454              	.LVL44:
+ 455 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 456              		.cfi_def_cfa_offset 24
+ 457              		.cfi_offset 4, -24
+ 458              		.cfi_offset 5, -20
+ 459              		.cfi_offset 6, -16
+ 460              		.cfi_offset 7, -12
+ 461              		.cfi_offset 8, -8
+ 462              		.cfi_offset 14, -4
+ 356:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp;
+ 357:lib/chibios/os/common/oslib/src/chheap.c ****   size_t n, tpages, lpages;
+ 358:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 359:lib/chibios/os/common/oslib/src/chheap.c ****   if (heapp == NULL) {
+ 360:lib/chibios/os/common/oslib/src/chheap.c ****     heapp = &default_heap;
+ 463              		.loc 1 360 0
+ 464 0004 144C     		ldr	r4, .L44
+ 465 0006 0028     		cmp	r0, #0
+ 466 0008 18BF     		it	ne
+ 467 000a 0446     		movne	r4, r0
+ 468              	.LVL45:
+ 361:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 362:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 363:lib/chibios/os/common/oslib/src/chheap.c ****   H_LOCK(heapp);
+ 469              		.loc 1 363 0
+ 470 000c 04F11006 		add	r6, r4, #16
+ 471 0010 3046     		mov	r0, r6
+ 355:lib/chibios/os/common/oslib/src/chheap.c ****   heap_header_t *qp;
+ 472              		.loc 1 355 0
+ 473 0012 8846     		mov	r8, r1
+ 474 0014 1746     		mov	r7, r2
+ 475              		.loc 1 363 0
+ 476 0016 FFF7FEFF 		bl	chMtxLock
+ 477              	.LVL46:
+ 364:lib/chibios/os/common/oslib/src/chheap.c ****   tpages = 0U;
+ 365:lib/chibios/os/common/oslib/src/chheap.c ****   lpages = 0U;
+ 478              		.loc 1 365 0
+ 479 001a 0023     		movs	r3, #0
+ 366:lib/chibios/os/common/oslib/src/chheap.c ****   n = 0U;
+ 367:lib/chibios/os/common/oslib/src/chheap.c ****   qp = &heapp->header;
+ 480              		.loc 1 367 0
+ 481 001c 04F10800 		add	r0, r4, #8
+ 482              	.LVL47:
+ 366:lib/chibios/os/common/oslib/src/chheap.c ****   n = 0U;
+ 483              		.loc 1 366 0
+ 484 0020 1D46     		mov	r5, r3
+ 364:lib/chibios/os/common/oslib/src/chheap.c ****   tpages = 0U;
+ 485              		.loc 1 364 0
+ 486 0022 1C46     		mov	r4, r3
+ 487              	.LVL48:
+ 488              	.L34:
+ 368:lib/chibios/os/common/oslib/src/chheap.c ****   while (H_NEXT(qp) != NULL) {
+ 489              		.loc 1 368 0
+ 490 0024 0068     		ldr	r0, [r0]
+ 491              	.LVL49:
+ 492 0026 70B9     		cbnz	r0, .L35
+ 369:lib/chibios/os/common/oslib/src/chheap.c ****     size_t pages = H_PAGES(H_NEXT(qp));
+ 370:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 371:lib/chibios/os/common/oslib/src/chheap.c ****     /* Updating counters.*/
+ 372:lib/chibios/os/common/oslib/src/chheap.c ****     n++;
+ 373:lib/chibios/os/common/oslib/src/chheap.c ****     tpages += pages;
+ 374:lib/chibios/os/common/oslib/src/chheap.c ****     if (pages > lpages) {
+ 375:lib/chibios/os/common/oslib/src/chheap.c ****       lpages = pages;
+ 376:lib/chibios/os/common/oslib/src/chheap.c ****     }
+ 377:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 378:lib/chibios/os/common/oslib/src/chheap.c ****     qp = H_NEXT(qp);
+ 379:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 380:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 381:lib/chibios/os/common/oslib/src/chheap.c ****   /* Writing out fragmented free memory.*/
+ 382:lib/chibios/os/common/oslib/src/chheap.c ****   if (totalp != NULL) {
+ 493              		.loc 1 382 0
+ 494 0028 B8F1000F 		cmp	r8, #0
+ 495 002c 02D0     		beq	.L36
+ 383:lib/chibios/os/common/oslib/src/chheap.c ****     *totalp = tpages * CH_HEAP_ALIGNMENT;
+ 496              		.loc 1 383 0
+ 497 002e E400     		lsls	r4, r4, #3
+ 498              	.LVL50:
+ 499 0030 C8F80040 		str	r4, [r8]
+ 500              	.L36:
+ 384:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 385:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 386:lib/chibios/os/common/oslib/src/chheap.c ****   /* Writing out unfragmented free memory.*/
+ 387:lib/chibios/os/common/oslib/src/chheap.c ****   if (largestp != NULL) {
+ 501              		.loc 1 387 0
+ 502 0034 0FB1     		cbz	r7, .L37
+ 388:lib/chibios/os/common/oslib/src/chheap.c ****     *largestp = lpages * CH_HEAP_ALIGNMENT;
+ 503              		.loc 1 388 0
+ 504 0036 DB00     		lsls	r3, r3, #3
+ 505              	.LVL51:
+ 506 0038 3B60     		str	r3, [r7]
+ 507              	.L37:
+ 389:lib/chibios/os/common/oslib/src/chheap.c ****   }
+ 390:lib/chibios/os/common/oslib/src/chheap.c ****   H_UNLOCK(heapp);
+ 508              		.loc 1 390 0
+ 509 003a 3046     		mov	r0, r6
+ 510 003c FFF7FEFF 		bl	chMtxUnlock
+ 511              	.LVL52:
+ 391:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 392:lib/chibios/os/common/oslib/src/chheap.c ****   return n;
+ 393:lib/chibios/os/common/oslib/src/chheap.c **** }
+ 512              		.loc 1 393 0
+ 513 0040 2846     		mov	r0, r5
+ 514 0042 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 515              	.LVL53:
+ 516              	.L35:
+ 517              	.LBB5:
+ 369:lib/chibios/os/common/oslib/src/chheap.c **** 
+ 518              		.loc 1 369 0
+ 519 0046 4268     		ldr	r2, [r0, #4]
+ 520              	.LVL54:
+ 521 0048 9342     		cmp	r3, r2
+ 372:lib/chibios/os/common/oslib/src/chheap.c ****     tpages += pages;
+ 522              		.loc 1 372 0
+ 523 004a 05F10105 		add	r5, r5, #1
+ 524              	.LVL55:
+ 373:lib/chibios/os/common/oslib/src/chheap.c ****     if (pages > lpages) {
+ 525              		.loc 1 373 0
+ 526 004e 1444     		add	r4, r4, r2
+ 527              	.LVL56:
+ 528 0050 38BF     		it	cc
+ 529 0052 1346     		movcc	r3, r2
+ 530              	.LVL57:
+ 531 0054 E6E7     		b	.L34
+ 532              	.L45:
+ 533 0056 00BF     		.align	2
+ 534              	.L44:
+ 535 0058 00000000 		.word	.LANCHOR0
+ 536              	.LBE5:
+ 537              		.cfi_endproc
+ 538              	.LFE252:
+ 540              		.section	.bss.default_heap,"aw",%nobits
+ 541              		.align	3
+ 542              		.set	.LANCHOR0,. + 0
+ 545              	default_heap:
+ 546 0000 00000000 		.space	32
+ 546      00000000 
+ 546      00000000 
+ 546      00000000 
+ 546      00000000 
+ 547              		.text
+ 548              	.Letext0:
+ 549              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 550              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 551              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 552              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 553              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 554              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 555              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 556              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 557              		.file 10 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 558              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 559              		.file 12 "./lib/chibios/os/rt/include/chtm.h"
+ 560              		.file 13 "./lib/chibios/os/rt/include/chsem.h"
+ 561              		.file 14 "./lib/chibios/os/rt/include/chmtx.h"
+ 562              		.file 15 "./lib/chibios/os/rt/include/chsys.h"
+ 563              		.file 16 "./lib/chibios/os/rt/include/chregistry.h"
+ 564              		.file 17 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 565              		.file 18 "./lib/chibios/os/common/oslib/include/chheap.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 chheap.c
+/var/tmp//cc8HvWTC.s:16     .text._heap_init:0000000000000000 $t
+/var/tmp//cc8HvWTC.s:23     .text._heap_init:0000000000000000 _heap_init
+/var/tmp//cc8HvWTC.s:46     .text._heap_init:0000000000000014 $d
+/var/tmp//cc8HvWTC.s:52     .text.chHeapObjectInit:0000000000000000 $t
+/var/tmp//cc8HvWTC.s:59     .text.chHeapObjectInit:0000000000000000 chHeapObjectInit
+/var/tmp//cc8HvWTC.s:109    .text.chHeapAllocAligned:0000000000000000 $t
+/var/tmp//cc8HvWTC.s:116    .text.chHeapAllocAligned:0000000000000000 chHeapAllocAligned
+/var/tmp//cc8HvWTC.s:307    .text.chHeapAllocAligned:00000000000000e0 $d
+/var/tmp//cc8HvWTC.s:313    .text.chHeapFree:0000000000000000 $t
+/var/tmp//cc8HvWTC.s:320    .text.chHeapFree:0000000000000000 chHeapFree
+/var/tmp//cc8HvWTC.s:441    .text.chHeapStatus:0000000000000000 $t
+/var/tmp//cc8HvWTC.s:448    .text.chHeapStatus:0000000000000000 chHeapStatus
+/var/tmp//cc8HvWTC.s:535    .text.chHeapStatus:0000000000000058 $d
+/var/tmp//cc8HvWTC.s:541    .bss.default_heap:0000000000000000 $d
+/var/tmp//cc8HvWTC.s:545    .bss.default_heap:0000000000000000 default_heap
+
+UNDEFINED SYMBOLS
+chMtxObjectInit
+chCoreAllocAlignedWithOffset
+chMtxLock
+chMtxUnlock

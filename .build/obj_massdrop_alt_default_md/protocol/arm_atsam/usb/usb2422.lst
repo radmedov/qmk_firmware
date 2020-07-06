@@ -1,0 +1,2037 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"usb2422.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.USB_write2422_block,"ax",%progbits
+  18              		.align	1
+  19              		.global	USB_write2422_block
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	USB_write2422_block:
+  26              	.LFB145:
+  27              		.file 1 "tmk_core/protocol/arm_atsam/usb/usb2422.c"
+   1:tmk_core/protocol/arm_atsam/usb/usb2422.c **** /*
+   2:tmk_core/protocol/arm_atsam/usb/usb2422.c **** Copyright 2018 Massdrop Inc.
+   3:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+   4:tmk_core/protocol/arm_atsam/usb/usb2422.c **** This program is free software: you can redistribute it and/or modify
+   5:tmk_core/protocol/arm_atsam/usb/usb2422.c **** it under the terms of the GNU General Public License as published by
+   6:tmk_core/protocol/arm_atsam/usb/usb2422.c **** the Free Software Foundation, either version 2 of the License, or
+   7:tmk_core/protocol/arm_atsam/usb/usb2422.c **** (at your option) any later version.
+   8:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+   9:tmk_core/protocol/arm_atsam/usb/usb2422.c **** This program is distributed in the hope that it will be useful,
+  10:tmk_core/protocol/arm_atsam/usb/usb2422.c **** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11:tmk_core/protocol/arm_atsam/usb/usb2422.c **** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12:tmk_core/protocol/arm_atsam/usb/usb2422.c **** GNU General Public License for more details.
+  13:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  14:tmk_core/protocol/arm_atsam/usb/usb2422.c **** You should have received a copy of the GNU General Public License
+  15:tmk_core/protocol/arm_atsam/usb/usb2422.c **** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16:tmk_core/protocol/arm_atsam/usb/usb2422.c **** */
+  17:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  18:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #include "arm_atsam_protocol.h"
+  19:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #include <string.h>
+  20:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  21:tmk_core/protocol/arm_atsam/usb/usb2422.c **** Usb2422       USB2422_shadow;
+  22:tmk_core/protocol/arm_atsam/usb/usb2422.c **** unsigned char i2c0_buf[34];
+  23:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  24:tmk_core/protocol/arm_atsam/usb/usb2422.c **** const uint16_t MFRNAME[] = {'M', 'a', 's', 's', 'd', 'r', 'o', 'p', ' ', 'I', 'n', 'c', '.'};  // M
+  25:tmk_core/protocol/arm_atsam/usb/usb2422.c **** const uint16_t PRDNAME[] = {'M', 'a', 's', 's', 'd', 'r', 'o', 'p', ' ', 'H', 'u', 'b'};       // M
+  26:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+  27:tmk_core/protocol/arm_atsam/usb/usb2422.c **** // Serial number reported stops before first found space character or at last found character
+  28:tmk_core/protocol/arm_atsam/usb/usb2422.c **** const uint16_t SERNAME[] = {'U', 'n', 'a', 'v', 'a', 'i', 'l', 'a', 'b', 'l', 'e'};  // Unavailable
+  29:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #else
+  30:tmk_core/protocol/arm_atsam/usb/usb2422.c **** // In production, this field is found, modified, and offset noted as the last 32-bit word in the bo
+  31:tmk_core/protocol/arm_atsam/usb/usb2422.c **** // The offset allows the application to use the factory programmed serial (which may differ from th
+  32:tmk_core/protocol/arm_atsam/usb/usb2422.c **** // Serial number reported stops before first found space character or when max size is reached
+  33:tmk_core/protocol/arm_atsam/usb/usb2422.c **** __attribute__((__aligned__(4))) const uint16_t SERNAME[BOOTLOADER_SERIAL_MAX_SIZE] = {'M', 'D', 'H'
+  34:tmk_core/protocol/arm_atsam/usb/usb2422.c **** // NOTE: Serial replacer will not write a string longer than given here as a precaution, so give en
+  35:tmk_core/protocol/arm_atsam/usb/usb2422.c **** //      space as needed and adjust BOOTLOADER_SERIAL_MAX_SIZE to match amount given
+  36:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif  // MD_BOOTLOADER
+  37:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  38:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint8_t usb_host_port;
+  39:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  40:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+  41:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  42:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint8_t usb_extra_state;
+  43:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint8_t usb_extra_manual;
+  44:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint8_t usb_gcr_auto;
+  45:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  46:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif  // MD_BOOTLOADER
+  47:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  48:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint16_t adc_extra;
+  49:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  50:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_write2422_block(void) {
+  28              		.loc 1 50 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  34              		.cfi_def_cfa_offset 24
+  35              		.cfi_offset 4, -24
+  36              		.cfi_offset 5, -20
+  37              		.cfi_offset 6, -16
+  38              		.cfi_offset 7, -12
+  39              		.cfi_offset 8, -8
+  40              		.cfi_offset 14, -4
+  51:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     unsigned char *dest = i2c0_buf;
+  52:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     unsigned char *src;
+  53:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     unsigned char *base = (unsigned char *)&USB2422_shadow;
+  54:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  55:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_WRITE2422_BLOCK_BEGIN);
+  41              		.loc 1 55 0
+  42 0004 184C     		ldr	r4, .L8
+  56:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  57:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     for (src = base; src < base + 256; src += 32) {
+  58:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         dest[0] = src - base;
+  43              		.loc 1 58 0
+  44 0006 194E     		ldr	r6, .L8+4
+  59:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         dest[1] = 32;
+  60:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         memcpy(&dest[2], src, 32);
+  61:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         i2c0_transmit(USB2422_ADDR, dest, 34, 50000);
+  62:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SERCOM0->I2CM.CTRLB.bit.CMD = 0x03;
+  45              		.loc 1 62 0
+  46 0008 194F     		ldr	r7, .L8+8
+  55:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  47              		.loc 1 55 0
+  48 000a 4C23     		movs	r3, #76
+  49 000c 2360     		str	r3, [r4]
+  50              	.LVL1:
+  51 000e 0025     		movs	r5, #0
+  59:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         dest[1] = 32;
+  52              		.loc 1 59 0
+  53 0010 4FF02008 		mov	r8, #32
+  54              	.LVL2:
+  55              	.L5:
+  60:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         i2c0_transmit(USB2422_ADDR, dest, 34, 50000);
+  56              		.loc 1 60 0
+  57 0014 174B     		ldr	r3, .L8+12
+  58 0016 184A     		ldr	r2, .L8+16
+  58:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         dest[1] = 32;
+  59              		.loc 1 58 0
+  60 0018 3570     		strb	r5, [r6]
+  60:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         i2c0_transmit(USB2422_ADDR, dest, 34, 50000);
+  61              		.loc 1 60 0
+  62 001a 2B44     		add	r3, r3, r5
+  63              	.LVL3:
+  59:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         memcpy(&dest[2], src, 32);
+  64              		.loc 1 59 0
+  65 001c 86F80180 		strb	r8, [r6, #1]
+  60:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         i2c0_transmit(USB2422_ADDR, dest, 34, 50000);
+  66              		.loc 1 60 0
+  67 0020 03F12001 		add	r1, r3, #32
+  68              	.LVL4:
+  69              	.L2:
+  70 0024 53F8040B 		ldr	r0, [r3], #4	@ unaligned
+  71 0028 42F8040B 		str	r0, [r2], #4	@ unaligned
+  72 002c 8B42     		cmp	r3, r1
+  73 002e F9D1     		bne	.L2
+  61:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SERCOM0->I2CM.CTRLB.bit.CMD = 0x03;
+  74              		.loc 1 61 0
+  75 0030 4CF25033 		movw	r3, #50000
+  76 0034 2222     		movs	r2, #34
+  77 0036 3146     		mov	r1, r6
+  78              	.LVL5:
+  79 0038 5820     		movs	r0, #88
+  80 003a FFF7FEFF 		bl	i2c0_transmit
+  81              	.LVL6:
+  82              		.loc 1 62 0
+  83 003e 7B68     		ldr	r3, [r7, #4]
+  84 0040 43F44033 		orr	r3, r3, #196608
+  85 0044 7B60     		str	r3, [r7, #4]
+  63:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         while (SERCOM0->I2CM.SYNCBUSY.bit.SYSOP) {
+  64:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             DBGC(DC_USB_WRITE2422_BLOCK_SYNC_SYSOP);
+  86              		.loc 1 64 0
+  87 0046 4D22     		movs	r2, #77
+  88              	.L3:
+  63:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         while (SERCOM0->I2CM.SYNCBUSY.bit.SYSOP) {
+  89              		.loc 1 63 0
+  90 0048 FB69     		ldr	r3, [r7, #28]
+  91 004a 5B07     		lsls	r3, r3, #29
+  92 004c 0AD4     		bmi	.L4
+  65:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+  66:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         wait_us(100);
+  93              		.loc 1 66 0 discriminator 2
+  94 004e 6420     		movs	r0, #100
+  95 0050 2035     		adds	r5, r5, #32
+  96              	.LVL7:
+  97 0052 FFF7FEFF 		bl	CLK_delay_us
+  98              	.LVL8:
+  57:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         dest[0] = src - base;
+  99              		.loc 1 57 0 discriminator 2
+ 100 0056 B5F5807F 		cmp	r5, #256
+ 101 005a DBD1     		bne	.L5
+  67:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+  68:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  69:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_WRITE2422_BLOCK_COMPLETE);
+ 102              		.loc 1 69 0
+ 103 005c 4E23     		movs	r3, #78
+ 104 005e 2360     		str	r3, [r4]
+  70:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 105              		.loc 1 70 0
+ 106 0060 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 107              	.LVL9:
+ 108              	.L4:
+  64:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+ 109              		.loc 1 64 0
+ 110 0064 2260     		str	r2, [r4]
+ 111 0066 EFE7     		b	.L3
+ 112              	.L9:
+ 113              		.align	2
+ 114              	.L8:
+ 115 0068 00000000 		.word	debug_code
+ 116 006c 00000000 		.word	i2c0_buf
+ 117 0070 00300040 		.word	1073754112
+ 118 0074 00000000 		.word	USB2422_shadow
+ 119 0078 02000000 		.word	i2c0_buf+2
+ 120              		.cfi_endproc
+ 121              	.LFE145:
+ 123              		.section	.text.USB2422_init,"ax",%progbits
+ 124              		.align	1
+ 125              		.global	USB2422_init
+ 126              		.syntax unified
+ 127              		.thumb
+ 128              		.thumb_func
+ 129              		.fpu fpv4-sp-d16
+ 131              	USB2422_init:
+ 132              	.LFB146:
+  71:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  72:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB2422_init(void) {
+ 133              		.loc 1 72 0
+ 134              		.cfi_startproc
+ 135              		@ args = 0, pretend = 0, frame = 0
+ 136              		@ frame_needed = 0, uses_anonymous_args = 0
+ 137              	.LVL10:
+ 138 0000 70B5     		push	{r4, r5, r6, lr}
+ 139              		.cfi_def_cfa_offset 16
+ 140              		.cfi_offset 4, -16
+ 141              		.cfi_offset 5, -12
+ 142              		.cfi_offset 6, -8
+ 143              		.cfi_offset 14, -4
+  73:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Gclk *   pgclk = GCLK;
+  74:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Mclk *   pmclk = MCLK;
+  75:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Port *   pport = PORT;
+  76:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Oscctrl *posc  = OSCCTRL;
+  77:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Usb *    pusb  = USB;
+  78:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  79:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB2422_INIT_BEGIN);
+ 144              		.loc 1 79 0
+ 145 0002 814C     		ldr	r4, .L33
+  80:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  81:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while ((v_5v = adc_get(ADC_5V)) < ADC_5V_START_LEVEL) {
+ 146              		.loc 1 81 0
+ 147 0004 814E     		ldr	r6, .L33+4
+  79:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 148              		.loc 1 79 0
+ 149 0006 6D23     		movs	r3, #109
+ 150 0008 2360     		str	r3, [r4]
+ 151              		.loc 1 81 0
+ 152 000a 40F63C15 		movw	r5, #2364
+ 153              	.L11:
+ 154 000e 0C20     		movs	r0, #12
+ 155 0010 FFF7FEFF 		bl	adc_get
+ 156              	.LVL11:
+ 157 0014 A842     		cmp	r0, r5
+ 158 0016 3080     		strh	r0, [r6]	@ movhi
+ 159 0018 40F2DF80 		bls	.L12
+  82:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_WAIT_5V_LOW);
+  83:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+  84:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  85:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // setup peripheral and synchronous bus clocks to USB
+  86:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pgclk->PCHCTRL[10].bit.GEN  = 0;
+ 160              		.loc 1 86 0
+ 161 001c 7C4B     		ldr	r3, .L33+8
+ 162 001e D3F8A820 		ldr	r2, [r3, #168]
+ 163 0022 6FF30302 		bfc	r2, #0, #4
+ 164 0026 C3F8A820 		str	r2, [r3, #168]
+  87:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pgclk->PCHCTRL[10].bit.CHEN = 1;
+ 165              		.loc 1 87 0
+ 166 002a D3F8A820 		ldr	r2, [r3, #168]
+ 167 002e 42F04002 		orr	r2, r2, #64
+ 168 0032 C3F8A820 		str	r2, [r3, #168]
+  88:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pmclk->AHBMASK.bit.USB_     = 1;
+ 169              		.loc 1 88 0
+ 170 0036 A3F5A053 		sub	r3, r3, #5120
+  89:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pmclk->APBBMASK.bit.USB_    = 1;
+  90:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  91:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // setup port pins for D-, D+, and SOF_1KHZ
+  92:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[0].PMUX[12].reg          = 0x77;  // PA24, PA25, function column H for USB D-, D+
+  93:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[0].PINCFG[24].bit.PMUXEN = 1;
+  94:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[0].PINCFG[25].bit.PMUXEN = 1;
+  95:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[1].PMUX[11].bit.PMUXE    = 7;  // PB22, function column H for USB SOF_1KHz output
+ 171              		.loc 1 95 0
+ 172 003a 0721     		movs	r1, #7
+  88:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pmclk->AHBMASK.bit.USB_     = 1;
+ 173              		.loc 1 88 0
+ 174 003c 1A69     		ldr	r2, [r3, #16]
+ 175 003e 42F48062 		orr	r2, r2, #1024
+ 176 0042 1A61     		str	r2, [r3, #16]
+  89:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pmclk->APBBMASK.bit.USB_    = 1;
+ 177              		.loc 1 89 0
+ 178 0044 9A69     		ldr	r2, [r3, #24]
+ 179 0046 42F00102 		orr	r2, r2, #1
+ 180 004a 9A61     		str	r2, [r3, #24]
+  92:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[0].PINCFG[24].bit.PMUXEN = 1;
+ 181              		.loc 1 92 0
+ 182 004c 714B     		ldr	r3, .L33+12
+ 183 004e 7722     		movs	r2, #119
+ 184 0050 83F83C20 		strb	r2, [r3, #60]
+  93:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[0].PINCFG[25].bit.PMUXEN = 1;
+ 185              		.loc 1 93 0
+ 186 0054 93F85820 		ldrb	r2, [r3, #88]	@ zero_extendqisi2
+ 187 0058 42F00102 		orr	r2, r2, #1
+ 188 005c 83F85820 		strb	r2, [r3, #88]
+  94:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[1].PMUX[11].bit.PMUXE    = 7;  // PB22, function column H for USB SOF_1KHz output
+ 189              		.loc 1 94 0
+ 190 0060 93F85920 		ldrb	r2, [r3, #89]	@ zero_extendqisi2
+ 191 0064 42F00102 		orr	r2, r2, #1
+ 192 0068 83F85920 		strb	r2, [r3, #89]
+ 193              		.loc 1 95 0
+ 194 006c 93F8BB20 		ldrb	r2, [r3, #187]	@ zero_extendqisi2
+ 195 0070 61F30302 		bfi	r2, r1, #0, #4
+ 196 0074 83F8BB20 		strb	r2, [r3, #187]
+  96:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[1].PINCFG[22].bit.PMUXEN = 1;
+ 197              		.loc 1 96 0
+ 198 0078 93F8D620 		ldrb	r2, [r3, #214]	@ zero_extendqisi2
+ 199 007c 42F00102 		orr	r2, r2, #1
+ 200 0080 83F8D620 		strb	r2, [r3, #214]
+  97:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+  98:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // configure and enable DFLL for USB clock recovery mode at 48MHz
+  99:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLA.bit.ENABLE = 0;
+ 201              		.loc 1 99 0
+ 202 0084 644B     		ldr	r3, .L33+16
+ 203 0086 1A7F     		ldrb	r2, [r3, #28]	@ zero_extendqisi2
+ 204 0088 6FF34102 		bfc	r2, #1, #1
+ 205 008c 1A77     		strb	r2, [r3, #28]
+ 100:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.ENABLE) {
+ 101:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DISABLING);
+ 206              		.loc 1 101 0
+ 207 008e 6F21     		movs	r1, #111
+ 208              	.L13:
+ 100:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.ENABLE) {
+ 209              		.loc 1 100 0
+ 210 0090 93F82C20 		ldrb	r2, [r3, #44]	@ zero_extendqisi2
+ 211 0094 9507     		lsls	r5, r2, #30
+ 212 0096 00F1A380 		bmi	.L14
+ 102:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 103:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 213              		.loc 1 103 0
+ 214 009a 5F4B     		ldr	r3, .L33+16
+ 104:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLCTRLB_1);
+ 215              		.loc 1 104 0
+ 216 009c 7021     		movs	r1, #112
+ 217              	.L15:
+ 103:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLCTRLB_1);
+ 218              		.loc 1 103 0
+ 219 009e 93F82C20 		ldrb	r2, [r3, #44]	@ zero_extendqisi2
+ 220 00a2 5007     		lsls	r0, r2, #29
+ 221 00a4 00F19E80 		bmi	.L16
+ 105:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 106:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLB.bit.USBCRM = 1;
+ 222              		.loc 1 106 0
+ 223 00a8 93F82020 		ldrb	r2, [r3, #32]	@ zero_extendqisi2
+ 224 00ac 42F00802 		orr	r2, r2, #8
+ 225 00b0 83F82020 		strb	r2, [r3, #32]
+ 107:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 226              		.loc 1 107 0
+ 227 00b4 584B     		ldr	r3, .L33+16
+ 108:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLCTRLB_2);
+ 228              		.loc 1 108 0
+ 229 00b6 7121     		movs	r1, #113
+ 230              	.L17:
+ 107:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 231              		.loc 1 107 0
+ 232 00b8 93F82C20 		ldrb	r2, [r3, #44]	@ zero_extendqisi2
+ 233 00bc 5207     		lsls	r2, r2, #29
+ 234 00be 00F19380 		bmi	.L18
+ 109:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 110:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLB.bit.MODE = 1;
+ 235              		.loc 1 110 0
+ 236 00c2 93F82020 		ldrb	r2, [r3, #32]	@ zero_extendqisi2
+ 111:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 237              		.loc 1 111 0
+ 238 00c6 5449     		ldr	r1, .L33+16
+ 110:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 239              		.loc 1 110 0
+ 240 00c8 42F00102 		orr	r2, r2, #1
+ 241 00cc 83F82020 		strb	r2, [r3, #32]
+ 112:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLCTRLB_3);
+ 242              		.loc 1 112 0
+ 243 00d0 7223     		movs	r3, #114
+ 244              	.L19:
+ 111:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 245              		.loc 1 111 0
+ 246 00d2 91F82C20 		ldrb	r2, [r1, #44]	@ zero_extendqisi2
+ 247 00d6 C2F38002 		ubfx	r2, r2, #2, #1
+ 248 00da 002A     		cmp	r2, #0
+ 249 00dc 40F08680 		bne	.L20
+ 113:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 114:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLB.bit.QLDIS = 0;
+ 250              		.loc 1 114 0
+ 251 00e0 91F82030 		ldrb	r3, [r1, #32]	@ zero_extendqisi2
+ 252 00e4 62F34513 		bfi	r3, r2, #5, #1
+ 253 00e8 81F82030 		strb	r3, [r1, #32]
+ 115:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 254              		.loc 1 115 0
+ 255 00ec 4A4B     		ldr	r3, .L33+16
+ 116:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLCTRLB_4);
+ 256              		.loc 1 116 0
+ 257 00ee 7321     		movs	r1, #115
+ 258              	.L21:
+ 115:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLCTRLB) {
+ 259              		.loc 1 115 0
+ 260 00f0 93F82C20 		ldrb	r2, [r3, #44]	@ zero_extendqisi2
+ 261 00f4 5607     		lsls	r6, r2, #29
+ 262 00f6 7BD4     		bmi	.L22
+ 117:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 118:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLB.bit.CCDIS = 1;
+ 263              		.loc 1 118 0
+ 264 00f8 93F82020 		ldrb	r2, [r3, #32]	@ zero_extendqisi2
+ 265 00fc 42F01002 		orr	r2, r2, #16
+ 266 0100 83F82020 		strb	r2, [r3, #32]
+ 119:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLMUL.bit.MUL     = 0xBB80;  // 4800 x 1KHz
+ 267              		.loc 1 119 0
+ 268 0104 9A6A     		ldr	r2, [r3, #40]
+ 269 0106 4BF68031 		movw	r1, #48000
+ 270 010a 61F30F02 		bfi	r2, r1, #0, #16
+ 271 010e 9A62     		str	r2, [r3, #40]
+ 120:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLMUL) {
+ 272              		.loc 1 120 0
+ 273 0110 414B     		ldr	r3, .L33+16
+ 121:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_DFLLMUL);
+ 274              		.loc 1 121 0
+ 275 0112 7421     		movs	r1, #116
+ 276              	.L23:
+ 120:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.DFLLMUL) {
+ 277              		.loc 1 120 0
+ 278 0114 93F82C20 		ldrb	r2, [r3, #44]	@ zero_extendqisi2
+ 279 0118 D506     		lsls	r5, r2, #27
+ 280 011a 6BD4     		bmi	.L24
+ 122:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 123:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     posc->DFLLCTRLA.bit.ENABLE = 1;
+ 281              		.loc 1 123 0
+ 282 011c 1A7F     		ldrb	r2, [r3, #28]	@ zero_extendqisi2
+ 283 011e 42F00202 		orr	r2, r2, #2
+ 284 0122 1A77     		strb	r2, [r3, #28]
+ 124:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.ENABLE) {
+ 285              		.loc 1 124 0
+ 286 0124 3C4A     		ldr	r2, .L33+16
+ 125:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_OSC_SYNC_ENABLING);
+ 287              		.loc 1 125 0
+ 288 0126 7521     		movs	r1, #117
+ 289              	.L25:
+ 124:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (posc->DFLLSYNC.bit.ENABLE) {
+ 290              		.loc 1 124 0
+ 291 0128 92F82C30 		ldrb	r3, [r2, #44]	@ zero_extendqisi2
+ 292 012c 9807     		lsls	r0, r3, #30
+ 293 012e 63D4     		bmi	.L26
+ 126:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 127:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 128:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.CTRLA.bit.SWRST = 1;
+ 294              		.loc 1 128 0
+ 295 0130 4FF08243 		mov	r3, #1090519040
+ 129:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.SYNCBUSY.bit.SWRST) {
+ 130:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_USB_SYNC_SWRST);
+ 296              		.loc 1 130 0
+ 297 0134 7621     		movs	r1, #118
+ 128:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.SYNCBUSY.bit.SWRST) {
+ 298              		.loc 1 128 0
+ 299 0136 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 300 0138 42F00102 		orr	r2, r2, #1
+ 301 013c 1A70     		strb	r2, [r3]
+ 302              	.L27:
+ 129:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.SYNCBUSY.bit.SWRST) {
+ 303              		.loc 1 129 0
+ 304 013e 9A78     		ldrb	r2, [r3, #2]	@ zero_extendqisi2
+ 305 0140 D207     		lsls	r2, r2, #31
+ 306 0142 5BD4     		bmi	.L28
+ 131:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 132:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.CTRLA.bit.SWRST) {
+ 307              		.loc 1 132 0
+ 308 0144 4FF08243 		mov	r3, #1090519040
+ 133:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_USB_WAIT_SWRST);
+ 309              		.loc 1 133 0
+ 310 0148 7721     		movs	r1, #119
+ 311              	.L29:
+ 132:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_USB_WAIT_SWRST);
+ 312              		.loc 1 132 0
+ 313 014a 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 314 014c 12F00102 		ands	r2, r2, #1
+ 315 0150 56D1     		bne	.L30
+ 134:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 135:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // calibration from factory presets
+ 136:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.PADCAL.bit.TRANSN = (USB_FUSES_TRANSN_ADDR >> USB_FUSES_TRANSN_Pos) & USB_FUSES_TR
+ 316              		.loc 1 136 0
+ 317 0152 198D     		ldrh	r1, [r3, #40]
+ 318 0154 0420     		movs	r0, #4
+ 319 0156 60F38A11 		bfi	r1, r0, #6, #5
+ 320 015a 1985     		strh	r1, [r3, #40]	@ movhi
+ 137:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.PADCAL.bit.TRANSP = (USB_FUSES_TRANSP_ADDR >> USB_FUSES_TRANSP_Pos) & USB_FUSES_TR
+ 321              		.loc 1 137 0
+ 322 015c 198D     		ldrh	r1, [r3, #40]
+ 323 015e 62F30401 		bfi	r1, r2, #0, #5
+ 324 0162 1985     		strh	r1, [r3, #40]	@ movhi
+ 138:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.PADCAL.bit.TRIM   = (USB_FUSES_TRIM_ADDR >> USB_FUSES_TRIM_Pos) & USB_FUSES_TRIM_M
+ 325              		.loc 1 138 0
+ 326 0164 198D     		ldrh	r1, [r3, #40]
+ 327 0166 62F30E31 		bfi	r1, r2, #12, #3
+ 328 016a 1985     		strh	r1, [r3, #40]	@ movhi
+ 139:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // device mode, enabled
+ 140:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.CTRLB.bit.SPDCONF = 0;  // full speed
+ 329              		.loc 1 140 0
+ 330 016c 1989     		ldrh	r1, [r3, #8]
+ 331 016e 62F38301 		bfi	r1, r2, #2, #2
+ 332 0172 1981     		strh	r1, [r3, #8]	@ movhi
+ 141:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.CTRLA.bit.MODE    = 0;
+ 333              		.loc 1 141 0
+ 334 0174 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 335 0176 62F3C711 		bfi	r1, r2, #7, #1
+ 336 017a 1970     		strb	r1, [r3]
+ 142:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.CTRLA.bit.ENABLE  = 1;
+ 337              		.loc 1 142 0
+ 338 017c 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 339 017e 42F00202 		orr	r2, r2, #2
+ 340 0182 1A70     		strb	r2, [r3]
+ 143:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.SYNCBUSY.bit.ENABLE) {
+ 341              		.loc 1 143 0
+ 342 0184 4FF08243 		mov	r3, #1090519040
+ 144:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB2422_INIT_USB_SYNC_ENABLING);
+ 343              		.loc 1 144 0
+ 344 0188 7822     		movs	r2, #120
+ 345              	.L31:
+ 143:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (pusb->DEVICE.SYNCBUSY.bit.ENABLE) {
+ 346              		.loc 1 143 0
+ 347 018a 9D78     		ldrb	r5, [r3, #2]	@ zero_extendqisi2
+ 348 018c C5F34005 		ubfx	r5, r5, #1, #1
+ 349 0190 002D     		cmp	r5, #0
+ 350 0192 37D1     		bne	.L32
+ 145:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 146:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 147:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.QOSCTRL.bit.DQOS = 2;
+ 351              		.loc 1 147 0
+ 352 0194 DA78     		ldrb	r2, [r3, #3]	@ zero_extendqisi2
+ 353 0196 0221     		movs	r1, #2
+ 354 0198 61F38302 		bfi	r2, r1, #2, #2
+ 355 019c DA70     		strb	r2, [r3, #3]
+ 148:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb->DEVICE.QOSCTRL.bit.CQOS = 2;
+ 356              		.loc 1 148 0
+ 357 019e DA78     		ldrb	r2, [r3, #3]	@ zero_extendqisi2
+ 358 01a0 61F30102 		bfi	r2, r1, #0, #2
+ 359 01a4 DA70     		strb	r2, [r3, #3]
+ 149:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 150:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pport->Group[USB2422_HUB_ACTIVE_GROUP].PINCFG[USB2422_HUB_ACTIVE_PIN].bit.INEN = 1;
+ 360              		.loc 1 150 0
+ 361 01a6 1B4A     		ldr	r2, .L33+12
+ 362 01a8 92F85230 		ldrb	r3, [r2, #82]	@ zero_extendqisi2
+ 363 01ac 0B43     		orrs	r3, r3, r1
+ 364 01ae 82F85230 		strb	r3, [r2, #82]
+ 151:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 152:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     i2c0_init();  // IC2 clk must be high at USB2422 reset release time to signal SMB configuration
+ 365              		.loc 1 152 0
+ 366 01b2 FFF7FEFF 		bl	i2c0_init
+ 367              	.LVL12:
+ 153:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 154:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.HUB_CONNECT = 1;  // connect signal
+ 368              		.loc 1 154 0
+ 369 01b6 194A     		ldr	r2, .L33+20
+ 370 01b8 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+ 155:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.HUB_RESET_N = 1;  // reset high
+ 371              		.loc 1 155 0
+ 372 01ba 43F0C003 		orr	r3, r3, #192
+ 373 01be 5370     		strb	r3, [r2, #1]
+ 156:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     SR_EXP_WriteData();
+ 374              		.loc 1 156 0
+ 375 01c0 FFF7FEFF 		bl	SR_EXP_WriteData
+ 376              	.LVL13:
+ 157:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 158:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     wait_us(100);
+ 377              		.loc 1 158 0
+ 378 01c4 6420     		movs	r0, #100
+ 379 01c6 FFF7FEFF 		bl	CLK_delay_us
+ 380              	.LVL14:
+ 159:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 160:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 161:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 162:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_extra_manual = 0;
+ 381              		.loc 1 162 0
+ 382 01ca 154B     		ldr	r3, .L33+24
+ 383 01cc 1D70     		strb	r5, [r3]
+ 163:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_gcr_auto     = 1;
+ 384              		.loc 1 163 0
+ 385 01ce 154B     		ldr	r3, .L33+28
+ 386 01d0 0122     		movs	r2, #1
+ 387 01d2 1A70     		strb	r2, [r3]
+ 164:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 165:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif  // MD_BOOTLOADER
+ 166:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 167:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB2422_INIT_COMPLETE);
+ 388              		.loc 1 167 0
+ 389 01d4 7923     		movs	r3, #121
+ 390 01d6 2360     		str	r3, [r4]
+ 168:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 391              		.loc 1 168 0
+ 392 01d8 70BD     		pop	{r4, r5, r6, pc}
+ 393              	.L12:
+  82:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 394              		.loc 1 82 0
+ 395 01da 6E23     		movs	r3, #110
+ 396 01dc 2360     		str	r3, [r4]
+ 397 01de 16E7     		b	.L11
+ 398              	.L14:
+ 101:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 399              		.loc 1 101 0
+ 400 01e0 2160     		str	r1, [r4]
+ 401 01e2 55E7     		b	.L13
+ 402              	.L16:
+ 104:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 403              		.loc 1 104 0
+ 404 01e4 2160     		str	r1, [r4]
+ 405 01e6 5AE7     		b	.L15
+ 406              	.L18:
+ 108:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 407              		.loc 1 108 0
+ 408 01e8 2160     		str	r1, [r4]
+ 409 01ea 65E7     		b	.L17
+ 410              	.L20:
+ 112:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 411              		.loc 1 112 0
+ 412 01ec 2360     		str	r3, [r4]
+ 413 01ee 70E7     		b	.L19
+ 414              	.L22:
+ 116:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 415              		.loc 1 116 0
+ 416 01f0 2160     		str	r1, [r4]
+ 417 01f2 7DE7     		b	.L21
+ 418              	.L24:
+ 121:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 419              		.loc 1 121 0
+ 420 01f4 2160     		str	r1, [r4]
+ 421 01f6 8DE7     		b	.L23
+ 422              	.L26:
+ 125:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 423              		.loc 1 125 0
+ 424 01f8 2160     		str	r1, [r4]
+ 425 01fa 95E7     		b	.L25
+ 426              	.L28:
+ 130:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 427              		.loc 1 130 0
+ 428 01fc 2160     		str	r1, [r4]
+ 429 01fe 9EE7     		b	.L27
+ 430              	.L30:
+ 133:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 431              		.loc 1 133 0
+ 432 0200 2160     		str	r1, [r4]
+ 433 0202 A2E7     		b	.L29
+ 434              	.L32:
+ 144:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 435              		.loc 1 144 0
+ 436 0204 2260     		str	r2, [r4]
+ 437 0206 C0E7     		b	.L31
+ 438              	.L34:
+ 439              		.align	2
+ 440              	.L33:
+ 441 0208 00000000 		.word	debug_code
+ 442 020c 00000000 		.word	v_5v
+ 443 0210 001C0040 		.word	1073748992
+ 444 0214 00800041 		.word	1090551808
+ 445 0218 00100040 		.word	1073745920
+ 446 021c 00000000 		.word	sr_exp_data
+ 447 0220 00000000 		.word	usb_extra_manual
+ 448 0224 00000000 		.word	usb_gcr_auto
+ 449              		.cfi_endproc
+ 450              	.LFE146:
+ 452              		.section	.text.USB_reset,"ax",%progbits
+ 453              		.align	1
+ 454              		.global	USB_reset
+ 455              		.syntax unified
+ 456              		.thumb
+ 457              		.thumb_func
+ 458              		.fpu fpv4-sp-d16
+ 460              	USB_reset:
+ 461              	.LFB147:
+ 169:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 170:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_reset(void) {
+ 462              		.loc 1 170 0
+ 463              		.cfi_startproc
+ 464              		@ args = 0, pretend = 0, frame = 0
+ 465              		@ frame_needed = 0, uses_anonymous_args = 0
+ 466 0000 38B5     		push	{r3, r4, r5, lr}
+ 467              		.cfi_def_cfa_offset 16
+ 468              		.cfi_offset 3, -16
+ 469              		.cfi_offset 4, -12
+ 470              		.cfi_offset 5, -8
+ 471              		.cfi_offset 14, -4
+ 171:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_RESET_BEGIN);
+ 172:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 173:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pulse reset for at least 1 usec
+ 174:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.HUB_RESET_N = 0;  // reset low
+ 472              		.loc 1 174 0
+ 473 0002 0B4C     		ldr	r4, .L36
+ 171:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_RESET_BEGIN);
+ 474              		.loc 1 171 0
+ 475 0004 0B4D     		ldr	r5, .L36+4
+ 476 0006 4423     		movs	r3, #68
+ 477 0008 2B60     		str	r3, [r5]
+ 478              		.loc 1 174 0
+ 479 000a 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 480 000c 6FF38613 		bfc	r3, #6, #1
+ 481 0010 6370     		strb	r3, [r4, #1]
+ 175:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     SR_EXP_WriteData();
+ 482              		.loc 1 175 0
+ 483 0012 FFF7FEFF 		bl	SR_EXP_WriteData
+ 484              	.LVL15:
+ 176:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     wait_us(2);
+ 485              		.loc 1 176 0
+ 486 0016 0220     		movs	r0, #2
+ 487 0018 FFF7FEFF 		bl	CLK_delay_us
+ 488              	.LVL16:
+ 177:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.HUB_RESET_N = 1;  // reset high to run
+ 489              		.loc 1 177 0
+ 490 001c 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 491 001e 43F04003 		orr	r3, r3, #64
+ 492 0022 6370     		strb	r3, [r4, #1]
+ 178:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     SR_EXP_WriteData();
+ 493              		.loc 1 178 0
+ 494 0024 FFF7FEFF 		bl	SR_EXP_WriteData
+ 495              	.LVL17:
+ 179:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 180:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_RESET_COMPLETE);
+ 496              		.loc 1 180 0
+ 497 0028 4523     		movs	r3, #69
+ 498 002a 2B60     		str	r3, [r5]
+ 181:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 499              		.loc 1 181 0
+ 500 002c 38BD     		pop	{r3, r4, r5, pc}
+ 501              	.L37:
+ 502 002e 00BF     		.align	2
+ 503              	.L36:
+ 504 0030 00000000 		.word	sr_exp_data
+ 505 0034 00000000 		.word	debug_code
+ 506              		.cfi_endproc
+ 507              	.LFE147:
+ 509              		.section	.text.USB_configure,"ax",%progbits
+ 510              		.align	1
+ 511              		.global	USB_configure
+ 512              		.syntax unified
+ 513              		.thumb
+ 514              		.thumb_func
+ 515              		.fpu fpv4-sp-d16
+ 517              	USB_configure:
+ 518              	.LFB148:
+ 182:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 183:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_configure(void) {
+ 519              		.loc 1 183 0
+ 520              		.cfi_startproc
+ 521              		@ args = 0, pretend = 0, frame = 0
+ 522              		@ frame_needed = 0, uses_anonymous_args = 0
+ 523              	.LVL18:
+ 524 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 525              		.cfi_def_cfa_offset 24
+ 526              		.cfi_offset 3, -24
+ 527              		.cfi_offset 4, -20
+ 528              		.cfi_offset 5, -16
+ 529              		.cfi_offset 6, -12
+ 530              		.cfi_offset 7, -8
+ 531              		.cfi_offset 14, -4
+ 184:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     Usb2422 *pusb2422 = &USB2422_shadow;
+ 185:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     memset(pusb2422, 0, sizeof(Usb2422));
+ 532              		.loc 1 185 0
+ 533 0002 4FF48072 		mov	r2, #256
+ 534 0006 0021     		movs	r1, #0
+ 535 0008 3248     		ldr	r0, .L49
+ 186:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 187:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint16_t *serial_use    = (uint16_t *)SERNAME;                 // Default to use SERNAME from t
+ 188:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint8_t   serial_length = sizeof(SERNAME) / sizeof(uint16_t);  // Default to use SERNAME from t
+ 189:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 190:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint32_t serial_ptrloc = (uint32_t)&_srom - 4;
+ 191:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #else                                                      // MD_BOOTLOADER
+ 192:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint32_t serial_ptrloc = (uint32_t)&_erom - 4;
+ 193:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif                                                     // MD_BOOTLOADER
+ 194:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint32_t serial_address = *(uint32_t *)serial_ptrloc;  // Address of bootloader's serial number
+ 195:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 196:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_CONFIGURE_BEGIN);
+ 536              		.loc 1 196 0
+ 537 000a 334D     		ldr	r5, .L49+4
+ 185:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 538              		.loc 1 185 0
+ 539 000c FFF7FEFF 		bl	memset
+ 540              	.LVL19:
+ 190:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #else                                                      // MD_BOOTLOADER
+ 541              		.loc 1 190 0
+ 542 0010 324B     		ldr	r3, .L49+8
+ 194:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 543              		.loc 1 194 0
+ 544 0012 53F8040C 		ldr	r0, [r3, #-4]
+ 190:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #else                                                      // MD_BOOTLOADER
+ 545              		.loc 1 190 0
+ 546 0016 1A1F     		subs	r2, r3, #4
+ 547              	.LVL20:
+ 548              		.loc 1 196 0
+ 549 0018 4923     		movs	r3, #73
+ 550 001a 2B60     		str	r3, [r5]
+ 197:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 198:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (serial_address != 0xFFFFFFFF && serial_address < serial_ptrloc)  // Check for factory progr
+ 551              		.loc 1 198 0
+ 552 001c 431C     		adds	r3, r0, #1
+ 553 001e 55D0     		beq	.L46
+ 554              		.loc 1 198 0 is_stmt 0 discriminator 1
+ 555 0020 8242     		cmp	r2, r0
+ 556 0022 53D9     		bls	.L46
+ 199:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     {
+ 200:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if ((serial_address & 0xFF) % 4 == 0)  // Check alignment
+ 557              		.loc 1 200 0 is_stmt 1
+ 558 0024 10F00303 		ands	r3, r0, #3
+ 559 0028 50D1     		bne	.L46
+ 201:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         {
+ 202:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             serial_use    = (uint16_t *)(serial_address);
+ 560              		.loc 1 202 0
+ 561 002a 0146     		mov	r1, r0
+ 562              	.LVL21:
+ 203:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             serial_length = 0;
+ 204:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             while ((*(serial_use + serial_length) > 32 && *(serial_use + serial_length) < 127) && s
+ 205:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 serial_length++;
+ 206:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBGC(DC_USB_CONFIGURE_GET_SERIAL);
+ 563              		.loc 1 206 0
+ 564 002c 4A26     		movs	r6, #74
+ 565              	.LVL22:
+ 566              	.L40:
+ 204:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 serial_length++;
+ 567              		.loc 1 204 0
+ 568 002e 30F81340 		ldrh	r4, [r0, r3, lsl #1]
+ 569 0032 213C     		subs	r4, r4, #33
+ 570 0034 5D2C     		cmp	r4, #93
+ 571 0036 DAB2     		uxtb	r2, r3
+ 572              	.LVL23:
+ 573 0038 03D8     		bhi	.L39
+ 574 003a 0133     		adds	r3, r3, #1
+ 204:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 serial_length++;
+ 575              		.loc 1 204 0 is_stmt 0 discriminator 1
+ 576 003c 152B     		cmp	r3, #21
+ 577 003e 43D1     		bne	.L41
+ 578 0040 1422     		movs	r2, #20
+ 579              	.LVL24:
+ 580              	.L39:
+ 207:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             }
+ 208:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+ 209:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 210:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 211:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // configure Usb2422 registers
+ 212:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->VID.reg               = 0x04D8;  // from Microchip 4/19/2018
+ 581              		.loc 1 212 0 is_stmt 1
+ 582 0042 244C     		ldr	r4, .L49
+ 583 0044 4FF49B60 		mov	r0, #1240
+ 584              	.LVL25:
+ 585 0048 2080     		strh	r0, [r4]	@ movhi
+ 213:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->PID.reg               = 0xEEC5;  // from Microchip 4/19/2018 = Massdrop, Inc. USB Hub
+ 586              		.loc 1 213 0
+ 587 004a 4EF6C560 		movw	r0, #61125
+ 588 004e 6080     		strh	r0, [r4, #2]	@ movhi
+ 214:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->DID.reg               = 0x0101;  // BCD 01.01
+ 589              		.loc 1 214 0
+ 590 0050 40F20110 		movw	r0, #257
+ 591 0054 A080     		strh	r0, [r4, #4]	@ movhi
+ 215:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->CFG1.bit.SELF_BUS_PWR = 1;       // self powered for now
+ 592              		.loc 1 215 0
+ 593 0056 A079     		ldrb	r0, [r4, #6]	@ zero_extendqisi2
+ 216:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->CFG1.bit.HS_DISABLE   = 1;       // full or high speed
+ 217:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->CFG2.bit.COMPOUND = 0; // compound device
+ 218:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->CFG3.bit.STRING_EN = 1;  // strings enabled
+ 219:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->NRD.bit.PORT2_NR = 0; // MCU is non-removable
+ 220:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->MAXPB.reg = 20;  // 0mA
+ 221:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->HCMCB.reg = 20;  // 0mA
+ 222:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->MFRSL.reg = sizeof(MFRNAME) / sizeof(uint16_t);
+ 223:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->PRDSL.reg = sizeof(PRDNAME) / sizeof(uint16_t);
+ 224:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->SERSL.reg = serial_length;
+ 594              		.loc 1 224 0
+ 595 0058 6275     		strb	r2, [r4, #21]
+ 216:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->CFG1.bit.HS_DISABLE   = 1;       // full or high speed
+ 596              		.loc 1 216 0
+ 597 005a 40F0A000 		orr	r0, r0, #160
+ 598 005e A071     		strb	r0, [r4, #6]
+ 218:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->NRD.bit.PORT2_NR = 0; // MCU is non-removable
+ 599              		.loc 1 218 0
+ 600 0060 207A     		ldrb	r0, [r4, #8]	@ zero_extendqisi2
+ 601 0062 40F00100 		orr	r0, r0, #1
+ 602 0066 2072     		strb	r0, [r4, #8]
+ 220:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->HCMCB.reg = 20;  // 0mA
+ 603              		.loc 1 220 0
+ 604 0068 1420     		movs	r0, #20
+ 605 006a 6073     		strb	r0, [r4, #13]
+ 221:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->MFRSL.reg = sizeof(MFRNAME) / sizeof(uint16_t);
+ 606              		.loc 1 221 0
+ 607 006c E073     		strb	r0, [r4, #15]
+ 222:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->PRDSL.reg = sizeof(PRDNAME) / sizeof(uint16_t);
+ 608              		.loc 1 222 0
+ 609 006e 0D20     		movs	r0, #13
+ 610 0070 E074     		strb	r0, [r4, #19]
+ 223:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->SERSL.reg = serial_length;
+ 611              		.loc 1 223 0
+ 612 0072 0C20     		movs	r0, #12
+ 613 0074 2075     		strb	r0, [r4, #20]
+ 225:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     memcpy(pusb2422->MFRSTR, MFRNAME, sizeof(MFRNAME));
+ 614              		.loc 1 225 0
+ 615 0076 1A48     		ldr	r0, .L49+12
+ 616 0078 04F11606 		add	r6, r4, #22
+ 617 007c 00F11807 		add	r7, r0, #24
+ 618              	.LVL26:
+ 619              	.L42:
+ 620 0080 50F8043B 		ldr	r3, [r0], #4	@ unaligned
+ 621 0084 46F8043B 		str	r3, [r6], #4	@ unaligned
+ 622 0088 B842     		cmp	r0, r7
+ 623 008a F9D1     		bne	.L42
+ 624 008c 0388     		ldrh	r3, [r0]	@ unaligned
+ 625 008e 3380     		strh	r3, [r6]	@ unaligned
+ 226:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     memcpy(pusb2422->PRDSTR, PRDNAME, sizeof(PRDNAME));
+ 626              		.loc 1 226 0
+ 627 0090 144B     		ldr	r3, .L49+16
+ 628 0092 1548     		ldr	r0, .L49+20
+ 629 0094 03F11806 		add	r6, r3, #24
+ 630              	.L43:
+ 631 0098 53F8047B 		ldr	r7, [r3], #4	@ unaligned
+ 632 009c 40F8047B 		str	r7, [r0], #4	@ unaligned
+ 633 00a0 B342     		cmp	r3, r6
+ 634 00a2 F9D1     		bne	.L43
+ 227:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     memcpy(pusb2422->SERSTR, serial_use, serial_length * sizeof(uint16_t));
+ 635              		.loc 1 227 0
+ 636 00a4 5200     		lsls	r2, r2, #1
+ 637              	.LVL27:
+ 638 00a6 1148     		ldr	r0, .L49+24
+ 639 00a8 FFF7FEFF 		bl	memcpy
+ 640              	.LVL28:
+ 228:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->BOOSTUP.bit.BOOST=3;    //upstream port
+ 229:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->BOOSTDOWN.bit.BOOST1=0; // extra port
+ 230:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // pusb2422->BOOSTDOWN.bit.BOOST2=2; //MCU is close
+ 231:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     pusb2422->STCD.bit.USB_ATTACH = 1;
+ 641              		.loc 1 231 0
+ 642 00ac 94F8FF30 		ldrb	r3, [r4, #255]	@ zero_extendqisi2
+ 643 00b0 43F00103 		orr	r3, r3, #1
+ 644 00b4 84F8FF30 		strb	r3, [r4, #255]
+ 232:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     USB_write2422_block();
+ 645              		.loc 1 232 0
+ 646 00b8 FFF7FEFF 		bl	USB_write2422_block
+ 647              	.LVL29:
+ 233:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 234:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     adc_extra = 0;
+ 648              		.loc 1 234 0
+ 649 00bc 0C4B     		ldr	r3, .L49+28
+ 650 00be 0022     		movs	r2, #0
+ 651 00c0 1A80     		strh	r2, [r3]	@ movhi
+ 235:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 236:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_CONFIGURE_COMPLETE);
+ 652              		.loc 1 236 0
+ 653 00c2 4B23     		movs	r3, #75
+ 654 00c4 2B60     		str	r3, [r5]
+ 237:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 655              		.loc 1 237 0
+ 656 00c6 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 657              	.LVL30:
+ 658              	.L41:
+ 206:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             }
+ 659              		.loc 1 206 0
+ 660 00c8 2E60     		str	r6, [r5]
+ 661 00ca B0E7     		b	.L40
+ 662              	.LVL31:
+ 663              	.L46:
+ 188:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 664              		.loc 1 188 0
+ 665 00cc 0B22     		movs	r2, #11
+ 666              	.LVL32:
+ 187:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint8_t   serial_length = sizeof(SERNAME) / sizeof(uint16_t);  // Default to use SERNAME from t
+ 667              		.loc 1 187 0
+ 668 00ce 0949     		ldr	r1, .L49+32
+ 669 00d0 B7E7     		b	.L39
+ 670              	.L50:
+ 671 00d2 00BF     		.align	2
+ 672              	.L49:
+ 673 00d4 00000000 		.word	USB2422_shadow
+ 674 00d8 00000000 		.word	debug_code
+ 675 00dc 00000000 		.word	_srom
+ 676 00e0 16000000 		.word	.LANCHOR0+22
+ 677 00e4 30000000 		.word	.LANCHOR0+48
+ 678 00e8 54000000 		.word	USB2422_shadow+84
+ 679 00ec 92000000 		.word	USB2422_shadow+146
+ 680 00f0 00000000 		.word	adc_extra
+ 681 00f4 00000000 		.word	.LANCHOR0
+ 682              		.cfi_endproc
+ 683              	.LFE148:
+ 685              		.section	.text.USB_active,"ax",%progbits
+ 686              		.align	1
+ 687              		.global	USB_active
+ 688              		.syntax unified
+ 689              		.thumb
+ 690              		.thumb_func
+ 691              		.fpu fpv4-sp-d16
+ 693              	USB_active:
+ 694              	.LFB149:
+ 238:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 239:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint16_t USB_active(void) { return (PORT->Group[USB2422_HUB_ACTIVE_GROUP].IN.reg & (1 << USB2422_HU
+ 695              		.loc 1 239 0
+ 696              		.cfi_startproc
+ 697              		@ args = 0, pretend = 0, frame = 0
+ 698              		@ frame_needed = 0, uses_anonymous_args = 0
+ 699              		@ link register save eliminated.
+ 700              		.loc 1 239 0
+ 701 0000 024B     		ldr	r3, .L52
+ 702 0002 186A     		ldr	r0, [r3, #32]
+ 703 0004 C0F38040 		ubfx	r0, r0, #18, #1
+ 704 0008 7047     		bx	lr
+ 705              	.L53:
+ 706 000a 00BF     		.align	2
+ 707              	.L52:
+ 708 000c 00800041 		.word	1090551808
+ 709              		.cfi_endproc
+ 710              	.LFE149:
+ 712              		.section	.text.USB_set_host_by_voltage,"ax",%progbits
+ 713              		.align	1
+ 714              		.global	USB_set_host_by_voltage
+ 715              		.syntax unified
+ 716              		.thumb
+ 717              		.thumb_func
+ 718              		.fpu fpv4-sp-d16
+ 720              	USB_set_host_by_voltage:
+ 721              	.LFB150:
+ 240:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 241:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_set_host_by_voltage(void) {
+ 722              		.loc 1 241 0
+ 723              		.cfi_startproc
+ 724              		@ args = 0, pretend = 0, frame = 0
+ 725              		@ frame_needed = 0, uses_anonymous_args = 0
+ 726 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 727              		.cfi_def_cfa_offset 32
+ 728              		.cfi_offset 3, -32
+ 729              		.cfi_offset 4, -28
+ 730              		.cfi_offset 5, -24
+ 731              		.cfi_offset 6, -20
+ 732              		.cfi_offset 7, -16
+ 733              		.cfi_offset 8, -12
+ 734              		.cfi_offset 9, -8
+ 735              		.cfi_offset 14, -4
+ 242:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // UP is upstream device (HOST)
+ 243:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // DN1 is downstream device (EXTRA)
+ 244:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // DN2 is keyboard (KEYB)
+ 245:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 246:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_SET_HOST_BY_VOLTAGE_BEGIN);
+ 736              		.loc 1 246 0
+ 737 0004 394D     		ldr	r5, .L60
+ 247:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 248:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_host_port = USB_HOST_PORT_UNKNOWN;
+ 249:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 250:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_extra_state = USB_EXTRA_STATE_UNKNOWN;
+ 251:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif                             // MD_BOOTLOADER
+ 252:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.SRC_1    = 1;  // USBC-1 available for test
+ 738              		.loc 1 252 0
+ 739 0006 3A4C     		ldr	r4, .L60+4
+ 248:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 740              		.loc 1 248 0
+ 741 0008 3A4E     		ldr	r6, .L60+8
+ 250:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif                             // MD_BOOTLOADER
+ 742              		.loc 1 250 0
+ 743 000a 3B4F     		ldr	r7, .L60+12
+ 253:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.SRC_2    = 1;  // USBC-2 available for test
+ 254:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_UP_N   = 1;  // HOST disable
+ 255:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_DN1_N  = 1;  // EXTRA disable
+ 256:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_VBUS_1 = 0;  // USBC-1 disable full power I/O
+ 257:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_VBUS_2 = 0;  // USBC-2 disable full power I/O
+ 258:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 259:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     SR_EXP_WriteData();
+ 260:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 261:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     wait_ms(250);
+ 262:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 263:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while ((v_5v = adc_get(ADC_5V)) < ADC_5V_START_LEVEL) {
+ 744              		.loc 1 263 0
+ 745 000c DFF8F890 		ldr	r9, .L60+28
+ 246:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 746              		.loc 1 246 0
+ 747 0010 4623     		movs	r3, #70
+ 748 0012 2B60     		str	r3, [r5]
+ 248:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 749              		.loc 1 248 0
+ 750 0014 0223     		movs	r3, #2
+ 751 0016 3370     		strb	r3, [r6]
+ 250:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif                             // MD_BOOTLOADER
+ 752              		.loc 1 250 0
+ 753 0018 3B70     		strb	r3, [r7]
+ 252:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.SRC_2    = 1;  // USBC-2 available for test
+ 754              		.loc 1 252 0
+ 755 001a 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 253:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_UP_N   = 1;  // HOST disable
+ 756              		.loc 1 253 0
+ 757 001c 43F0C003 		orr	r3, r3, #192
+ 758 0020 2370     		strb	r3, [r4]
+ 254:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_DN1_N  = 1;  // EXTRA disable
+ 759              		.loc 1 254 0
+ 760 0022 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 256:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_VBUS_2 = 0;  // USBC-2 disable full power I/O
+ 761              		.loc 1 256 0
+ 762 0024 43F01403 		orr	r3, r3, #20
+ 257:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 763              		.loc 1 257 0
+ 764 0028 03F0FD03 		and	r3, r3, #253
+ 765 002c 6FF30003 		bfc	r3, #0, #1
+ 766 0030 6370     		strb	r3, [r4, #1]
+ 259:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 767              		.loc 1 259 0
+ 768 0032 FFF7FEFF 		bl	SR_EXP_WriteData
+ 769              	.LVL33:
+ 261:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 770              		.loc 1 261 0
+ 771 0036 FA20     		movs	r0, #250
+ 772 0038 0021     		movs	r1, #0
+ 773 003a FFF7FEFF 		bl	CLK_delay_ms
+ 774              	.LVL34:
+ 775              		.loc 1 263 0
+ 776 003e 40F63C18 		movw	r8, #2364
+ 777              	.L55:
+ 778 0042 0C20     		movs	r0, #12
+ 779 0044 FFF7FEFF 		bl	adc_get
+ 780              	.LVL35:
+ 781 0048 4045     		cmp	r0, r8
+ 782 004a A9F80000 		strh	r0, [r9]	@ movhi
+ 783 004e 35D9     		bls	.L56
+ 264:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         DBGC(DC_USB_SET_HOST_5V_LOW_WAITING);
+ 265:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 266:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 267:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_1 = adc_get(ADC_CON1);
+ 784              		.loc 1 267 0
+ 785 0050 0E20     		movs	r0, #14
+ 786 0052 FFF7FEFF 		bl	adc_get
+ 787              	.LVL36:
+ 788 0056 DFF8B480 		ldr	r8, .L60+32
+ 789 005a A8F80000 		strh	r0, [r8]	@ movhi
+ 268:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_2 = adc_get(ADC_CON2);
+ 790              		.loc 1 268 0
+ 791 005e 0D20     		movs	r0, #13
+ 792 0060 FFF7FEFF 		bl	adc_get
+ 793              	.LVL37:
+ 794 0064 254B     		ldr	r3, .L60+16
+ 269:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 270:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_1_boot = v_con_1;
+ 795              		.loc 1 270 0
+ 796 0066 264A     		ldr	r2, .L60+20
+ 268:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_2 = adc_get(ADC_CON2);
+ 797              		.loc 1 268 0
+ 798 0068 1880     		strh	r0, [r3]	@ movhi
+ 799              		.loc 1 270 0
+ 800 006a B8F80030 		ldrh	r3, [r8]
+ 801 006e 1380     		strh	r3, [r2]	@ movhi
+ 271:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_2_boot = v_con_2;
+ 802              		.loc 1 271 0
+ 803 0070 244A     		ldr	r2, .L60+24
+ 272:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 273:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (v_con_1 > v_con_2) {
+ 804              		.loc 1 273 0
+ 805 0072 9842     		cmp	r0, r3
+ 271:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     v_con_2_boot = v_con_2;
+ 806              		.loc 1 271 0
+ 807 0074 1080     		strh	r0, [r2]	@ movhi
+ 274:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_UP  = 0;  // HOST to USBC-1
+ 808              		.loc 1 274 0
+ 809 0076 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 273:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_UP  = 0;  // HOST to USBC-1
+ 810              		.loc 1 273 0
+ 811 0078 23D2     		bcs	.L57
+ 275:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_DN1 = 1;  // EXTRA to USBC-2
+ 276:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_1 = 1;  // HOST on USBC-1
+ 812              		.loc 1 276 0
+ 813 007a 2278     		ldrb	r2, [r4]	@ zero_extendqisi2
+ 275:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_DN1 = 1;  // EXTRA to USBC-2
+ 814              		.loc 1 275 0
+ 815 007c 03F0DF03 		and	r3, r3, #223
+ 277:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_2 = 0;  // EXTRA available on USBC-2
+ 816              		.loc 1 277 0
+ 817 0080 62F07F02 		orn	r2, r2, #127
+ 278:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 279:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_1 = 1;  // USBC-1 enable full power I/O
+ 280:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_2 = 0;  // USBC-2 disable full power I/O
+ 818              		.loc 1 280 0
+ 819 0084 43F00A03 		orr	r3, r3, #10
+ 277:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_2 = 0;  // EXTRA available on USBC-2
+ 820              		.loc 1 277 0
+ 821 0088 6FF38612 		bfc	r2, #6, #1
+ 822              		.loc 1 280 0
+ 823 008c 6FF30003 		bfc	r3, #0, #1
+ 277:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_2 = 0;  // EXTRA available on USBC-2
+ 824              		.loc 1 277 0
+ 825 0090 2270     		strb	r2, [r4]
+ 826              		.loc 1 280 0
+ 827 0092 6370     		strb	r3, [r4, #1]
+ 281:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 282:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SR_EXP_WriteData();
+ 828              		.loc 1 282 0
+ 829 0094 FFF7FEFF 		bl	SR_EXP_WriteData
+ 830              	.LVL38:
+ 283:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 284:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_UP_N = 0;  // HOST enable
+ 831              		.loc 1 284 0
+ 832 0098 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 833 009a 6FF30413 		bfc	r3, #4, #1
+ 834 009e 6370     		strb	r3, [r4, #1]
+ 285:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 286:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SR_EXP_WriteData();
+ 835              		.loc 1 286 0
+ 836 00a0 FFF7FEFF 		bl	SR_EXP_WriteData
+ 837              	.LVL39:
+ 287:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 288:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         usb_host_port = USB_HOST_PORT_1;
+ 838              		.loc 1 288 0
+ 839 00a4 0023     		movs	r3, #0
+ 840              	.L59:
+ 289:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     } else {
+ 290:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_UP  = 1;  // EXTRA to USBC-1
+ 291:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.S_DN1 = 0;  // HOST to USBC-2
+ 292:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_1 = 0;  // EXTRA available on USBC-1
+ 293:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_2 = 1;  // HOST on USBC-2
+ 294:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 295:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_1 = 0;  // USBC-1 disable full power I/O
+ 296:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_2 = 1;  // USBC-2 enable full power I/O
+ 297:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 298:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SR_EXP_WriteData();
+ 299:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 300:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_UP_N = 0;  // HOST enable
+ 301:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 302:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         SR_EXP_WriteData();
+ 303:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 304:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         usb_host_port = USB_HOST_PORT_2;
+ 841              		.loc 1 304 0
+ 842 00a6 3370     		strb	r3, [r6]
+ 305:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 306:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 307:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 308:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_extra_state = USB_EXTRA_STATE_DISABLED;
+ 843              		.loc 1 308 0
+ 844 00a8 0023     		movs	r3, #0
+ 845 00aa 3B70     		strb	r3, [r7]
+ 309:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #endif  // MD_BOOTLOADER
+ 310:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 311:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     USB_reset();
+ 846              		.loc 1 311 0
+ 847 00ac FFF7FEFF 		bl	USB_reset
+ 848              	.LVL40:
+ 312:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     USB_configure();
+ 849              		.loc 1 312 0
+ 850 00b0 FFF7FEFF 		bl	USB_configure
+ 851              	.LVL41:
+ 313:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 314:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_USB_SET_HOST_BY_VOLTAGE_COMPLETE);
+ 852              		.loc 1 314 0
+ 853 00b4 4823     		movs	r3, #72
+ 854 00b6 2B60     		str	r3, [r5]
+ 315:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 855              		.loc 1 315 0
+ 856 00b8 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 857              	.L56:
+ 264:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 858              		.loc 1 264 0
+ 859 00bc 4723     		movs	r3, #71
+ 860 00be 2B60     		str	r3, [r5]
+ 861 00c0 BFE7     		b	.L55
+ 862              	.L57:
+ 292:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.SRC_2 = 1;  // HOST on USBC-2
+ 863              		.loc 1 292 0
+ 864 00c2 2278     		ldrb	r2, [r4]	@ zero_extendqisi2
+ 296:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 865              		.loc 1 296 0
+ 866 00c4 03F0D403 		and	r3, r3, #212
+ 293:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 867              		.loc 1 293 0
+ 868 00c8 02F07F02 		and	r2, r2, #127
+ 869 00cc 42F04002 		orr	r2, r2, #64
+ 296:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 870              		.loc 1 296 0
+ 871 00d0 43F02103 		orr	r3, r3, #33
+ 293:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 872              		.loc 1 293 0
+ 873 00d4 2270     		strb	r2, [r4]
+ 296:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 874              		.loc 1 296 0
+ 875 00d6 6370     		strb	r3, [r4, #1]
+ 298:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 876              		.loc 1 298 0
+ 877 00d8 FFF7FEFF 		bl	SR_EXP_WriteData
+ 878              	.LVL42:
+ 300:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 879              		.loc 1 300 0
+ 880 00dc 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 881 00de 6FF30413 		bfc	r3, #4, #1
+ 882 00e2 6370     		strb	r3, [r4, #1]
+ 302:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 883              		.loc 1 302 0
+ 884 00e4 FFF7FEFF 		bl	SR_EXP_WriteData
+ 885              	.LVL43:
+ 304:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 886              		.loc 1 304 0
+ 887 00e8 0123     		movs	r3, #1
+ 888 00ea DCE7     		b	.L59
+ 889              	.L61:
+ 890              		.align	2
+ 891              	.L60:
+ 892 00ec 00000000 		.word	debug_code
+ 893 00f0 00000000 		.word	sr_exp_data
+ 894 00f4 00000000 		.word	usb_host_port
+ 895 00f8 00000000 		.word	usb_extra_state
+ 896 00fc 00000000 		.word	v_con_2
+ 897 0100 00000000 		.word	v_con_1_boot
+ 898 0104 00000000 		.word	v_con_2_boot
+ 899 0108 00000000 		.word	v_5v
+ 900 010c 00000000 		.word	v_con_1
+ 901              		.cfi_endproc
+ 902              	.LFE150:
+ 904              		.global	__aeabi_uldivmod
+ 905              		.section	.text.USB2422_Port_Detect_Init,"ax",%progbits
+ 906              		.align	1
+ 907              		.global	USB2422_Port_Detect_Init
+ 908              		.syntax unified
+ 909              		.thumb
+ 910              		.thumb_func
+ 911              		.fpu fpv4-sp-d16
+ 913              	USB2422_Port_Detect_Init:
+ 914              	.LFB151:
+ 316:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 317:tmk_core/protocol/arm_atsam/usb/usb2422.c **** uint8_t USB2422_Port_Detect_Init(void) {
+ 915              		.loc 1 317 0
+ 916              		.cfi_startproc
+ 917              		@ args = 0, pretend = 0, frame = 0
+ 918              		@ frame_needed = 0, uses_anonymous_args = 0
+ 919 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 920              		.cfi_def_cfa_offset 24
+ 921              		.cfi_offset 4, -24
+ 922              		.cfi_offset 5, -20
+ 923              		.cfi_offset 6, -16
+ 924              		.cfi_offset 7, -12
+ 925              		.cfi_offset 8, -8
+ 926              		.cfi_offset 14, -4
+ 318:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint32_t port_detect_retry_ms;
+ 319:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint32_t tmod;
+ 320:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 321:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_PORT_DETECT_INIT_BEGIN);
+ 927              		.loc 1 321 0
+ 928 0004 204C     		ldr	r4, .L75
+ 322:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 323:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     USB_set_host_by_voltage();
+ 324:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 325:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     port_detect_retry_ms = timer_read64() + PORT_DETECT_RETRY_INTERVAL;
+ 326:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 327:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     while (!USB_active()) {
+ 328:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         tmod = timer_read64() % PORT_DETECT_RETRY_INTERVAL;
+ 329:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 330:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (v_con_1 > v_con_2)  // Values updated from USB_set_host_by_voltage();
+ 929              		.loc 1 330 0
+ 930 0006 214F     		ldr	r7, .L75+4
+ 931 0008 DFF88880 		ldr	r8, .L75+12
+ 932 000c 204D     		ldr	r5, .L75+8
+ 321:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 933              		.loc 1 321 0
+ 934 000e 4123     		movs	r3, #65
+ 935 0010 2360     		str	r3, [r4]
+ 323:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 936              		.loc 1 323 0
+ 937 0012 FFF7FEFF 		bl	USB_set_host_by_voltage
+ 938              	.LVL44:
+ 325:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 939              		.loc 1 325 0
+ 940 0016 FFF7FEFF 		bl	timer_read64
+ 941              	.LVL45:
+ 942 001a 00F5FA66 		add	r6, r0, #2000
+ 943              	.LVL46:
+ 944              	.L63:
+ 327:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         tmod = timer_read64() % PORT_DETECT_RETRY_INTERVAL;
+ 945              		.loc 1 327 0
+ 946 001e FFF7FEFF 		bl	USB_active
+ 947              	.LVL47:
+ 948 0022 18B1     		cbz	r0, .L70
+ 331:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         {
+ 332:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             // 1 flash for port 1 detected
+ 333:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             if (tmod > 500 && tmod < 600) {
+ 334:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 335:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             } else {
+ 336:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_OFF;
+ 337:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             }
+ 338:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         } else if (v_con_2 > v_con_1)  // Values updated from USB_set_host_by_voltage();
+ 339:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         {
+ 340:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             // 2 flash for port 2 detected
+ 341:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             if (tmod > 500 && tmod < 600) {
+ 342:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 343:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             } else if (tmod > 700 && tmod < 800) {
+ 344:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 345:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             } else {
+ 346:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_OFF;
+ 347:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             }
+ 348:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+ 349:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 350:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (timer_read64() > port_detect_retry_ms) {
+ 351:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             DBGC(DC_PORT_DETECT_INIT_FAILED);
+ 352:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             return 0;
+ 353:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+ 354:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 355:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 356:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     DBGC(DC_PORT_DETECT_INIT_COMPLETE);
+ 949              		.loc 1 356 0
+ 950 0024 4323     		movs	r3, #67
+ 951 0026 2360     		str	r3, [r4]
+ 357:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 358:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     return 1;
+ 952              		.loc 1 358 0
+ 953 0028 0120     		movs	r0, #1
+ 954 002a 27E0     		b	.L69
+ 955              	.L70:
+ 328:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 956              		.loc 1 328 0
+ 957 002c FFF7FEFF 		bl	timer_read64
+ 958              	.LVL48:
+ 959 0030 4FF4FA62 		mov	r2, #2000
+ 960 0034 0023     		movs	r3, #0
+ 961 0036 FFF7FEFF 		bl	__aeabi_uldivmod
+ 962              	.LVL49:
+ 330:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         {
+ 963              		.loc 1 330 0
+ 964 003a 3988     		ldrh	r1, [r7]
+ 965 003c B8F80030 		ldrh	r3, [r8]
+ 966 0040 9942     		cmp	r1, r3
+ 967 0042 08D9     		bls	.L64
+ 333:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 968              		.loc 1 333 0
+ 969 0044 6FF4FA70 		mvn	r0, #500
+ 970 0048 0244     		add	r2, r2, r0
+ 971              	.LVL50:
+ 972              	.L74:
+ 343:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 973              		.loc 1 343 0
+ 974 004a 622A     		cmp	r2, #98
+ 975 004c 4FF00063 		mov	r3, #134217728
+ 976 0050 09D9     		bls	.L72
+ 346:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             }
+ 977              		.loc 1 346 0
+ 978 0052 6B61     		str	r3, [r5, #20]
+ 979 0054 08E0     		b	.L66
+ 980              	.LVL51:
+ 981              	.L64:
+ 338:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         {
+ 982              		.loc 1 338 0
+ 983 0056 07D2     		bcs	.L66
+ 341:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 984              		.loc 1 341 0
+ 985 0058 6FF4FA71 		mvn	r1, #500
+ 986 005c 5318     		adds	r3, r2, r1
+ 987 005e 622B     		cmp	r3, #98
+ 988 0060 0ED8     		bhi	.L67
+ 342:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             } else if (tmod > 700 && tmod < 800) {
+ 989              		.loc 1 342 0
+ 990 0062 4FF00063 		mov	r3, #134217728
+ 991              	.LVL52:
+ 992              	.L72:
+ 993 0066 AB61     		str	r3, [r5, #24]
+ 994              	.L66:
+ 350:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             DBGC(DC_PORT_DETECT_INIT_FAILED);
+ 995              		.loc 1 350 0
+ 996 0068 FFF7FEFF 		bl	timer_read64
+ 997              	.LVL53:
+ 998 006c 0023     		movs	r3, #0
+ 999 006e 8B42     		cmp	r3, r1
+ 1000 0070 08BF     		it	eq
+ 1001 0072 8642     		cmpeq	r6, r0
+ 1002 0074 D3D2     		bcs	.L63
+ 351:tmk_core/protocol/arm_atsam/usb/usb2422.c ****             return 0;
+ 1003              		.loc 1 351 0
+ 1004 0076 4223     		movs	r3, #66
+ 1005 0078 2360     		str	r3, [r4]
+ 352:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         }
+ 1006              		.loc 1 352 0
+ 1007 007a 0020     		movs	r0, #0
+ 1008              	.L69:
+ 359:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1009              		.loc 1 359 0
+ 1010 007c BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 1011              	.LVL54:
+ 1012              	.L67:
+ 343:tmk_core/protocol/arm_atsam/usb/usb2422.c ****                 DBG_LED_ON;
+ 1013              		.loc 1 343 0
+ 1014 0080 6FF42F73 		mvn	r3, #700
+ 1015 0084 1A44     		add	r2, r2, r3
+ 1016              	.LVL55:
+ 1017 0086 E0E7     		b	.L74
+ 1018              	.L76:
+ 1019              		.align	2
+ 1020              	.L75:
+ 1021 0088 00000000 		.word	debug_code
+ 1022 008c 00000000 		.word	v_con_1
+ 1023 0090 00800041 		.word	1090551808
+ 1024 0094 00000000 		.word	v_con_2
+ 1025              		.cfi_endproc
+ 1026              	.LFE151:
+ 1028              		.section	.text.USB_ExtraSetState,"ax",%progbits
+ 1029              		.align	1
+ 1030              		.global	USB_ExtraSetState
+ 1031              		.syntax unified
+ 1032              		.thumb
+ 1033              		.thumb_func
+ 1034              		.fpu fpv4-sp-d16
+ 1036              	USB_ExtraSetState:
+ 1037              	.LFB152:
+ 360:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 361:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #ifndef MD_BOOTLOADER
+ 362:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 363:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_ExtraSetState(uint8_t state) {
+ 1038              		.loc 1 363 0
+ 1039              		.cfi_startproc
+ 1040              		@ args = 0, pretend = 0, frame = 0
+ 1041              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1042              	.LVL56:
+ 1043 0000 10B5     		push	{r4, lr}
+ 1044              		.cfi_def_cfa_offset 8
+ 1045              		.cfi_offset 4, -8
+ 1046              		.cfi_offset 14, -4
+ 364:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint8_t state_save = state;
+ 365:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 366:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (state == USB_EXTRA_STATE_DISABLED_UNTIL_REPLUG) state = USB_EXTRA_STATE_DISABLED;
+ 367:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 368:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_host_port == USB_HOST_PORT_1)
+ 1047              		.loc 1 368 0
+ 1048 0002 1C4A     		ldr	r2, .L93
+ 1049 0004 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 366:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1050              		.loc 1 366 0
+ 1051 0006 0328     		cmp	r0, #3
+ 363:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint8_t state_save = state;
+ 1052              		.loc 1 363 0
+ 1053 0008 0446     		mov	r4, r0
+ 366:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1054              		.loc 1 366 0
+ 1055 000a 14BF     		ite	ne
+ 1056 000c 0346     		movne	r3, r0
+ 1057 000e 0023     		moveq	r3, #0
+ 1058              	.LVL57:
+ 1059              		.loc 1 368 0
+ 1060 0010 BAB9     		cbnz	r2, .L79
+ 369:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_2 = state;
+ 1061              		.loc 1 369 0
+ 1062 0012 194A     		ldr	r2, .L93+4
+ 1063 0014 5178     		ldrb	r1, [r2, #1]	@ zero_extendqisi2
+ 1064 0016 63F30001 		bfi	r1, r3, #0, #1
+ 1065              	.L91:
+ 370:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else if (usb_host_port == USB_HOST_PORT_2)
+ 371:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_1 = state;
+ 1066              		.loc 1 371 0
+ 1067 001a 5170     		strb	r1, [r2, #1]
+ 372:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 373:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         return;
+ 374:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 375:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     sr_exp_data.bit.E_DN1_N = !state;
+ 1068              		.loc 1 375 0
+ 1069 001c 164A     		ldr	r2, .L93+4
+ 1070 001e B3FA83F3 		clz	r3, r3
+ 1071              	.LVL58:
+ 1072 0022 5178     		ldrb	r1, [r2, #1]	@ zero_extendqisi2
+ 1073 0024 5B09     		lsrs	r3, r3, #5
+ 1074 0026 63F38201 		bfi	r1, r3, #2, #1
+ 1075 002a 5170     		strb	r1, [r2, #1]
+ 376:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     SR_EXP_WriteData();
+ 1076              		.loc 1 376 0
+ 1077 002c FFF7FEFF 		bl	SR_EXP_WriteData
+ 1078              	.LVL59:
+ 377:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 378:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     usb_extra_state = state_save;
+ 1079              		.loc 1 378 0
+ 1080 0030 124B     		ldr	r3, .L93+8
+ 379:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 380:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_extra_state == USB_EXTRA_STATE_ENABLED)
+ 1081              		.loc 1 380 0
+ 1082 0032 012C     		cmp	r4, #1
+ 378:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1083              		.loc 1 378 0
+ 1084 0034 1C70     		strb	r4, [r3]
+ 1085              		.loc 1 380 0
+ 1086 0036 0BD1     		bne	.L83
+ 381:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra enabled\r\n");
+ 1087              		.loc 1 381 0
+ 1088 0038 1148     		ldr	r0, .L93+12
+ 1089              	.L92:
+ 382:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else if (usb_extra_state == USB_EXTRA_STATE_DISABLED) {
+ 383:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra disabled\r\n");
+ 384:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #    ifdef USE_MASSDROP_CONFIGURATOR
+ 385:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (led_animation_breathing) gcr_breathe = gcr_desired;
+ 386:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #    endif
+ 387:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     } else if (usb_extra_state == USB_EXTRA_STATE_DISABLED_UNTIL_REPLUG)
+ 388:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra disabled until replug\r\n");
+ 389:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 390:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra state unknown\r\n");
+ 391:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1090              		.loc 1 391 0
+ 1091 003a BDE81040 		pop	{r4, lr}
+ 1092              		.cfi_remember_state
+ 1093              		.cfi_restore 14
+ 1094              		.cfi_restore 4
+ 1095              		.cfi_def_cfa_offset 0
+ 390:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1096              		.loc 1 390 0
+ 1097 003e FFF7FEBF 		b	CDC_print
+ 1098              	.LVL60:
+ 1099              	.L79:
+ 1100              		.cfi_restore_state
+ 370:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         sr_exp_data.bit.E_VBUS_1 = state;
+ 1101              		.loc 1 370 0
+ 1102 0042 012A     		cmp	r2, #1
+ 1103 0044 0FD1     		bne	.L77
+ 371:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 1104              		.loc 1 371 0
+ 1105 0046 0C4A     		ldr	r2, .L93+4
+ 1106 0048 5178     		ldrb	r1, [r2, #1]	@ zero_extendqisi2
+ 1107 004a 63F34101 		bfi	r1, r3, #1, #1
+ 1108 004e E4E7     		b	.L91
+ 1109              	.LVL61:
+ 1110              	.L83:
+ 382:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra disabled\r\n");
+ 1111              		.loc 1 382 0
+ 1112 0050 54B9     		cbnz	r4, .L84
+ 383:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #    ifdef USE_MASSDROP_CONFIGURATOR
+ 1113              		.loc 1 383 0
+ 1114 0052 0C48     		ldr	r0, .L93+16
+ 1115 0054 FFF7FEFF 		bl	CDC_print
+ 1116              	.LVL62:
+ 385:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #    endif
+ 1117              		.loc 1 385 0
+ 1118 0058 0B4B     		ldr	r3, .L93+20
+ 1119 005a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1120 005c 1BB1     		cbz	r3, .L77
+ 385:tmk_core/protocol/arm_atsam/usb/usb2422.c **** #    endif
+ 1121              		.loc 1 385 0 is_stmt 0 discriminator 1
+ 1122 005e 0B4B     		ldr	r3, .L93+24
+ 1123 0060 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 1124 0062 0B4B     		ldr	r3, .L93+28
+ 1125 0064 1A70     		strb	r2, [r3]
+ 1126              	.L77:
+ 1127              		.loc 1 391 0 is_stmt 1
+ 1128 0066 10BD     		pop	{r4, pc}
+ 1129              	.L84:
+ 387:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         CDC_print("USB: Extra disabled until replug\r\n");
+ 1130              		.loc 1 387 0
+ 1131 0068 032C     		cmp	r4, #3
+ 388:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 1132              		.loc 1 388 0
+ 1133 006a 0CBF     		ite	eq
+ 1134 006c 0948     		ldreq	r0, .L93+32
+ 390:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1135              		.loc 1 390 0
+ 1136 006e 0A48     		ldrne	r0, .L93+36
+ 1137 0070 E3E7     		b	.L92
+ 1138              	.L94:
+ 1139 0072 00BF     		.align	2
+ 1140              	.L93:
+ 1141 0074 00000000 		.word	usb_host_port
+ 1142 0078 00000000 		.word	sr_exp_data
+ 1143 007c 00000000 		.word	usb_extra_state
+ 1144 0080 00000000 		.word	.LC0
+ 1145 0084 15000000 		.word	.LC1
+ 1146 0088 00000000 		.word	led_animation_breathing
+ 1147 008c 00000000 		.word	gcr_desired
+ 1148 0090 00000000 		.word	gcr_breathe
+ 1149 0094 2B000000 		.word	.LC2
+ 1150 0098 4E000000 		.word	.LC3
+ 1151              		.cfi_endproc
+ 1152              	.LFE152:
+ 1154              		.global	__aeabi_i2d
+ 1155              		.global	__aeabi_dmul
+ 1156              		.global	__aeabi_dadd
+ 1157              		.global	__aeabi_d2uiz
+ 1158              		.section	.text.USB_HandleExtraDevice,"ax",%progbits
+ 1159              		.align	1
+ 1160              		.global	USB_HandleExtraDevice
+ 1161              		.syntax unified
+ 1162              		.thumb
+ 1163              		.thumb_func
+ 1164              		.fpu fpv4-sp-d16
+ 1166              	USB_HandleExtraDevice:
+ 1167              	.LFB153:
+ 392:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 393:tmk_core/protocol/arm_atsam/usb/usb2422.c **** void USB_HandleExtraDevice(void) {
+ 1168              		.loc 1 393 0
+ 1169              		.cfi_startproc
+ 1170              		@ args = 0, pretend = 0, frame = 0
+ 1171              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1172 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1173              		.cfi_def_cfa_offset 24
+ 1174              		.cfi_offset 3, -24
+ 1175              		.cfi_offset 4, -20
+ 1176              		.cfi_offset 5, -16
+ 1177              		.cfi_offset 6, -12
+ 1178              		.cfi_offset 7, -8
+ 1179              		.cfi_offset 14, -4
+ 394:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     uint16_t adcval;
+ 395:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 396:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_host_port == USB_HOST_PORT_1)
+ 1180              		.loc 1 396 0
+ 1181 0002 274B     		ldr	r3, .L107+16
+ 1182 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1183 0006 53BB     		cbnz	r3, .L96
+ 397:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         adcval = adc_get(ADC_CON2);
+ 1184              		.loc 1 397 0
+ 1185 0008 0D20     		movs	r0, #13
+ 1186              	.L105:
+ 398:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else if (usb_host_port == USB_HOST_PORT_2)
+ 399:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         adcval = adc_get(ADC_CON1);
+ 1187              		.loc 1 399 0
+ 1188 000a FFF7FEFF 		bl	adc_get
+ 1189              	.LVL63:
+ 400:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 401:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         return;
+ 402:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 403:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     adc_extra = adc_extra * 0.9 + adcval * 0.1;
+ 1190              		.loc 1 403 0
+ 1191 000e 254C     		ldr	r4, .L107+20
+ 399:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 1192              		.loc 1 399 0
+ 1193 0010 0546     		mov	r5, r0
+ 1194              	.LVL64:
+ 1195              		.loc 1 403 0
+ 1196 0012 2088     		ldrh	r0, [r4]
+ 1197 0014 FFF7FEFF 		bl	__aeabi_i2d
+ 1198              	.LVL65:
+ 1199 0018 1DA3     		adr	r3, .L107
+ 1200 001a D3E90023 		ldrd	r2, [r3]
+ 1201 001e FFF7FEFF 		bl	__aeabi_dmul
+ 1202              	.LVL66:
+ 1203 0022 0646     		mov	r6, r0
+ 1204 0024 2846     		mov	r0, r5
+ 1205 0026 0F46     		mov	r7, r1
+ 1206 0028 FFF7FEFF 		bl	__aeabi_i2d
+ 1207              	.LVL67:
+ 1208 002c 1AA3     		adr	r3, .L107+8
+ 1209 002e D3E90023 		ldrd	r2, [r3]
+ 1210 0032 FFF7FEFF 		bl	__aeabi_dmul
+ 1211              	.LVL68:
+ 1212 0036 0246     		mov	r2, r0
+ 1213 0038 0B46     		mov	r3, r1
+ 1214 003a 3046     		mov	r0, r6
+ 1215 003c 3946     		mov	r1, r7
+ 1216 003e FFF7FEFF 		bl	__aeabi_dadd
+ 1217              	.LVL69:
+ 1218 0042 FFF7FEFF 		bl	__aeabi_d2uiz
+ 1219              	.LVL70:
+ 404:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 405:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // Check for a forced disable state (such as overload prevention)
+ 406:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_extra_state == USB_EXTRA_STATE_DISABLED_UNTIL_REPLUG) {
+ 1220              		.loc 1 406 0
+ 1221 0046 1849     		ldr	r1, .L107+24
+ 1222 0048 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 403:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1223              		.loc 1 403 0
+ 1224 004a 83B2     		uxth	r3, r0
+ 1225              		.loc 1 406 0
+ 1226 004c 032A     		cmp	r2, #3
+ 403:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1227              		.loc 1 403 0
+ 1228 004e 2380     		strh	r3, [r4]	@ movhi
+ 1229              		.loc 1 406 0
+ 1230 0050 09D1     		bne	.L100
+ 407:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         // Detect unplug and reset state to disabled
+ 408:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (adc_extra > USB_EXTRA_ADC_THRESHOLD) usb_extra_state = USB_EXTRA_STATE_DISABLED;
+ 1231              		.loc 1 408 0
+ 1232 0052 B3F5617F 		cmp	r3, #900
+ 1233 0056 01D9     		bls	.L95
+ 1234              		.loc 1 408 0 is_stmt 0 discriminator 1
+ 1235 0058 0023     		movs	r3, #0
+ 1236 005a 0B70     		strb	r3, [r1]
+ 1237              	.LVL71:
+ 1238              	.L95:
+ 409:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 410:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         return;  // Return even if unplug detected
+ 411:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 412:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 413:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_extra_manual) {
+ 414:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (usb_extra_state == USB_EXTRA_STATE_DISABLED) USB_ExtraSetState(USB_EXTRA_STATE_ENABLED)
+ 415:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 416:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         return;
+ 417:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     }
+ 418:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 419:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     // dpf("a %i %i\r\n",adcval, adc_extra);
+ 420:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     if (usb_extra_state == USB_EXTRA_STATE_DISABLED && adc_extra < USB_EXTRA_ADC_THRESHOLD)
+ 421:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_ENABLED);
+ 422:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else if (usb_extra_state == USB_EXTRA_STATE_ENABLED && adc_extra > USB_EXTRA_ADC_THRESHOLD)
+ 423:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_DISABLED);
+ 424:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1239              		.loc 1 424 0 is_stmt 1
+ 1240 005c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1241              	.L96:
+ 398:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         adcval = adc_get(ADC_CON1);
+ 1242              		.loc 1 398 0
+ 1243 005e 012B     		cmp	r3, #1
+ 1244 0060 FCD1     		bne	.L95
+ 399:tmk_core/protocol/arm_atsam/usb/usb2422.c ****     else
+ 1245              		.loc 1 399 0
+ 1246 0062 0E20     		movs	r0, #14
+ 1247 0064 D1E7     		b	.L105
+ 1248              	.LVL72:
+ 1249              	.L100:
+ 413:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         if (usb_extra_state == USB_EXTRA_STATE_DISABLED) USB_ExtraSetState(USB_EXTRA_STATE_ENABLED)
+ 1250              		.loc 1 413 0
+ 1251 0066 1149     		ldr	r1, .L107+28
+ 1252 0068 0878     		ldrb	r0, [r1]	@ zero_extendqisi2
+ 1253 006a 30B1     		cbz	r0, .L102
+ 414:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1254              		.loc 1 414 0
+ 1255 006c 002A     		cmp	r2, #0
+ 1256 006e F5D1     		bne	.L95
+ 1257              	.L104:
+ 414:tmk_core/protocol/arm_atsam/usb/usb2422.c **** 
+ 1258              		.loc 1 414 0 is_stmt 0 discriminator 1
+ 1259 0070 0120     		movs	r0, #1
+ 1260              	.L106:
+ 1261              		.loc 1 424 0 is_stmt 1
+ 1262 0072 BDE8F840 		pop	{r3, r4, r5, r6, r7, lr}
+ 1263              		.cfi_remember_state
+ 1264              		.cfi_restore 14
+ 1265              		.cfi_restore 7
+ 1266              		.cfi_restore 6
+ 1267              		.cfi_restore 5
+ 1268              		.cfi_restore 4
+ 1269              		.cfi_restore 3
+ 1270              		.cfi_def_cfa_offset 0
+ 1271              	.LVL73:
+ 423:tmk_core/protocol/arm_atsam/usb/usb2422.c **** }
+ 1272              		.loc 1 423 0
+ 1273 0076 FFF7FEBF 		b	USB_ExtraSetState
+ 1274              	.LVL74:
+ 1275              	.L102:
+ 1276              		.cfi_restore_state
+ 420:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_ENABLED);
+ 1277              		.loc 1 420 0
+ 1278 007a 1AB9     		cbnz	r2, .L103
+ 420:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_ENABLED);
+ 1279              		.loc 1 420 0 is_stmt 0 discriminator 1
+ 1280 007c B3F5617F 		cmp	r3, #900
+ 1281 0080 ECD2     		bcs	.L95
+ 1282 0082 F5E7     		b	.L104
+ 1283              	.L103:
+ 422:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_DISABLED);
+ 1284              		.loc 1 422 0 is_stmt 1
+ 1285 0084 012A     		cmp	r2, #1
+ 1286 0086 E9D1     		bne	.L95
+ 422:tmk_core/protocol/arm_atsam/usb/usb2422.c ****         USB_ExtraSetState(USB_EXTRA_STATE_DISABLED);
+ 1287              		.loc 1 422 0 is_stmt 0 discriminator 1
+ 1288 0088 B3F5617F 		cmp	r3, #900
+ 1289 008c E6D9     		bls	.L95
+ 1290 008e F0E7     		b	.L106
+ 1291              	.L108:
+ 1292              		.align	3
+ 1293              	.L107:
+ 1294 0090 CDCCCCCC 		.word	3435973837
+ 1295 0094 CCCCEC3F 		.word	1072483532
+ 1296 0098 9A999999 		.word	2576980378
+ 1297 009c 9999B93F 		.word	1069128089
+ 1298 00a0 00000000 		.word	usb_host_port
+ 1299 00a4 00000000 		.word	adc_extra
+ 1300 00a8 00000000 		.word	usb_extra_state
+ 1301 00ac 00000000 		.word	usb_extra_manual
+ 1302              		.cfi_endproc
+ 1303              	.LFE153:
+ 1305              		.comm	adc_extra,2,2
+ 1306              		.comm	usb_gcr_auto,1,1
+ 1307              		.comm	usb_extra_manual,1,1
+ 1308              		.comm	usb_extra_state,1,1
+ 1309              		.comm	usb_host_port,1,1
+ 1310              		.global	SERNAME
+ 1311              		.global	PRDNAME
+ 1312              		.global	MFRNAME
+ 1313              		.comm	i2c0_buf,34,1
+ 1314              		.comm	USB2422_shadow,256,2
+ 1315              		.comm	dmac_desc_wb,16,16
+ 1316              		.comm	dmac_desc,16,16
+ 1317              		.section	.rodata
+ 1318              		.align	1
+ 1319              		.set	.LANCHOR0,. + 0
+ 1322              	SERNAME:
+ 1323 0000 5500     		.short	85
+ 1324 0002 6E00     		.short	110
+ 1325 0004 6100     		.short	97
+ 1326 0006 7600     		.short	118
+ 1327 0008 6100     		.short	97
+ 1328 000a 6900     		.short	105
+ 1329 000c 6C00     		.short	108
+ 1330 000e 6100     		.short	97
+ 1331 0010 6200     		.short	98
+ 1332 0012 6C00     		.short	108
+ 1333 0014 6500     		.short	101
+ 1336              	MFRNAME:
+ 1337 0016 4D00     		.short	77
+ 1338 0018 6100     		.short	97
+ 1339 001a 7300     		.short	115
+ 1340 001c 7300     		.short	115
+ 1341 001e 6400     		.short	100
+ 1342 0020 7200     		.short	114
+ 1343 0022 6F00     		.short	111
+ 1344 0024 7000     		.short	112
+ 1345 0026 2000     		.short	32
+ 1346 0028 4900     		.short	73
+ 1347 002a 6E00     		.short	110
+ 1348 002c 6300     		.short	99
+ 1349 002e 2E00     		.short	46
+ 1352              	PRDNAME:
+ 1353 0030 4D00     		.short	77
+ 1354 0032 6100     		.short	97
+ 1355 0034 7300     		.short	115
+ 1356 0036 7300     		.short	115
+ 1357 0038 6400     		.short	100
+ 1358 003a 7200     		.short	114
+ 1359 003c 6F00     		.short	111
+ 1360 003e 7000     		.short	112
+ 1361 0040 2000     		.short	32
+ 1362 0042 4800     		.short	72
+ 1363 0044 7500     		.short	117
+ 1364 0046 6200     		.short	98
+ 1365              		.section	.rodata.str1.1,"aMS",%progbits,1
+ 1366              	.LC0:
+ 1367 0000 5553423A 		.ascii	"USB: Extra enabled\015\012\000"
+ 1367      20457874 
+ 1367      72612065 
+ 1367      6E61626C 
+ 1367      65640D0A 
+ 1368              	.LC1:
+ 1369 0015 5553423A 		.ascii	"USB: Extra disabled\015\012\000"
+ 1369      20457874 
+ 1369      72612064 
+ 1369      69736162 
+ 1369      6C65640D 
+ 1370              	.LC2:
+ 1371 002b 5553423A 		.ascii	"USB: Extra disabled until replug\015\012\000"
+ 1371      20457874 
+ 1371      72612064 
+ 1371      69736162 
+ 1371      6C656420 
+ 1372              	.LC3:
+ 1373 004e 5553423A 		.ascii	"USB: Extra state unknown\015\012\000"
+ 1373      20457874 
+ 1373      72612073 
+ 1373      74617465 
+ 1373      20756E6B 
+ 1374              		.text
+ 1375              	.Letext0:
+ 1376              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 1377              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 1378              		.file 4 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/samd51j18a.h"
+ 1379              		.file 5 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 1380              		.file 6 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 1381              		.file 7 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 1382              		.file 8 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/gclk.h"
+ 1383              		.file 9 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/mclk.h"
+ 1384              		.file 10 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/oscctrl.h"
+ 1385              		.file 11 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/port.h"
+ 1386              		.file 12 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/sercom.h"
+ 1387              		.file 13 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/usb.h"
+ 1388              		.file 14 "tmk_core/protocol/arm_atsam/md_bootloader.h"
+ 1389              		.file 15 "tmk_core/common/timer.h"
+ 1390              		.file 16 "tmk_core/protocol/arm_atsam/d51_util.h"
+ 1391              		.file 17 "tmk_core/protocol/arm_atsam/clks.h"
+ 1392              		.file 18 "tmk_core/protocol/arm_atsam/adc.h"
+ 1393              		.file 19 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 1394              		.file 20 "tmk_core/protocol/arm_atsam/spi.h"
+ 1395              		.file 21 "tmk_core/protocol/arm_atsam/./usb/usb2422.h"
+ 1396              		.file 22 "tmk_core/common/action.h"
+ 1397              		.file 23 "tmk_core/common/report.h"
+ 1398              		.file 24 "tmk_core/common/host.h"
+ 1399              		.file 25 "tmk_core/common/debug.h"
+ 1400              		.file 26 "quantum/keycode_config.h"
+ 1401              		.file 27 "quantum/keymap.h"
+ 1402              		.file 28 "quantum/color.h"
+ 1403              		.file 29 "quantum/rgb_matrix_types.h"
+ 1404              		.file 30 "quantum/rgb_matrix.h"
+ 1405              		.file 31 "tmk_core/common/action_layer.h"
+ 1406              		.file 32 "tmk_core/common/action_util.h"
+ 1407              		.file 33 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 1408              		.file 34 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 1409              		.file 35 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 1410              		.file 36 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 1411              		.file 37 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 1412              		.file 38 "quantum/quantum.h"
+ 1413              		.file 39 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 1414              		.file 40 "tmk_core/protocol/arm_atsam/./usb/compiler.h"
+ 1415              		.file 41 "tmk_core/protocol/arm_atsam/./usb/usb_protocol.h"
+ 1416              		.file 42 "tmk_core/protocol/arm_atsam/./usb/udi_device_conf.h"
+ 1417              		.file 43 "tmk_core/protocol/arm_atsam/./usb/udi.h"
+ 1418              		.file 44 "tmk_core/protocol/arm_atsam/./usb/udc_desc.h"
+ 1419              		.file 45 "tmk_core/protocol/arm_atsam/./usb/udi_hid_kbd.h"
+ 1420              		.file 46 "tmk_core/protocol/arm_atsam/./usb/usb_main.h"
+ 1421              		.file 47 "tmk_core/protocol/arm_atsam/./usb/udd.h"
+ 1422              		.file 48 "tmk_core/protocol/arm_atsam/./usb/udi_cdc.h"
+ 1423              		.file 49 "<built-in>"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 usb2422.c
+/var/tmp//ccqVPPZw.s:18     .text.USB_write2422_block:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:25     .text.USB_write2422_block:0000000000000000 USB_write2422_block
+/var/tmp//ccqVPPZw.s:115    .text.USB_write2422_block:0000000000000068 $d
+                            *COM*:0000000000000022 i2c0_buf
+                            *COM*:0000000000000100 USB2422_shadow
+/var/tmp//ccqVPPZw.s:124    .text.USB2422_init:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:131    .text.USB2422_init:0000000000000000 USB2422_init
+/var/tmp//ccqVPPZw.s:441    .text.USB2422_init:0000000000000208 $d
+                            *COM*:0000000000000001 usb_extra_manual
+                            *COM*:0000000000000001 usb_gcr_auto
+/var/tmp//ccqVPPZw.s:453    .text.USB_reset:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:460    .text.USB_reset:0000000000000000 USB_reset
+/var/tmp//ccqVPPZw.s:504    .text.USB_reset:0000000000000030 $d
+/var/tmp//ccqVPPZw.s:510    .text.USB_configure:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:517    .text.USB_configure:0000000000000000 USB_configure
+/var/tmp//ccqVPPZw.s:673    .text.USB_configure:00000000000000d4 $d
+                            *COM*:0000000000000002 adc_extra
+/var/tmp//ccqVPPZw.s:686    .text.USB_active:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:693    .text.USB_active:0000000000000000 USB_active
+/var/tmp//ccqVPPZw.s:708    .text.USB_active:000000000000000c $d
+/var/tmp//ccqVPPZw.s:713    .text.USB_set_host_by_voltage:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:720    .text.USB_set_host_by_voltage:0000000000000000 USB_set_host_by_voltage
+/var/tmp//ccqVPPZw.s:892    .text.USB_set_host_by_voltage:00000000000000ec $d
+                            *COM*:0000000000000001 usb_host_port
+                            *COM*:0000000000000001 usb_extra_state
+/var/tmp//ccqVPPZw.s:906    .text.USB2422_Port_Detect_Init:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:913    .text.USB2422_Port_Detect_Init:0000000000000000 USB2422_Port_Detect_Init
+/var/tmp//ccqVPPZw.s:1021   .text.USB2422_Port_Detect_Init:0000000000000088 $d
+/var/tmp//ccqVPPZw.s:1029   .text.USB_ExtraSetState:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:1036   .text.USB_ExtraSetState:0000000000000000 USB_ExtraSetState
+/var/tmp//ccqVPPZw.s:1141   .text.USB_ExtraSetState:0000000000000074 $d
+/var/tmp//ccqVPPZw.s:1159   .text.USB_HandleExtraDevice:0000000000000000 $t
+/var/tmp//ccqVPPZw.s:1166   .text.USB_HandleExtraDevice:0000000000000000 USB_HandleExtraDevice
+/var/tmp//ccqVPPZw.s:1294   .text.USB_HandleExtraDevice:0000000000000090 $d
+/var/tmp//ccqVPPZw.s:1322   .rodata:0000000000000000 SERNAME
+/var/tmp//ccqVPPZw.s:1352   .rodata:0000000000000030 PRDNAME
+/var/tmp//ccqVPPZw.s:1336   .rodata:0000000000000016 MFRNAME
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+/var/tmp//ccqVPPZw.s:1318   .rodata:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+i2c0_transmit
+CLK_delay_us
+debug_code
+adc_get
+i2c0_init
+SR_EXP_WriteData
+v_5v
+sr_exp_data
+memset
+memcpy
+_srom
+CLK_delay_ms
+v_con_2
+v_con_1_boot
+v_con_2_boot
+v_con_1
+__aeabi_uldivmod
+timer_read64
+CDC_print
+led_animation_breathing
+gcr_desired
+gcr_breathe
+__aeabi_i2d
+__aeabi_dmul
+__aeabi_dadd
+__aeabi_d2uiz

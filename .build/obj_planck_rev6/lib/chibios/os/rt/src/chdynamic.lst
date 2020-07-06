@@ -1,0 +1,733 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"chdynamic.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.chThdCreateFromHeap,"ax",%progbits
+  16              		.align	1
+  17              		.global	chThdCreateFromHeap
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	chThdCreateFromHeap:
+  24              	.LFB248:
+  25              		.file 1 "lib/chibios/os/rt/src/chdynamic.c"
+   1:lib/chibios/os/rt/src/chdynamic.c **** /*
+   2:lib/chibios/os/rt/src/chdynamic.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:lib/chibios/os/rt/src/chdynamic.c **** 
+   4:lib/chibios/os/rt/src/chdynamic.c ****     This file is part of ChibiOS.
+   5:lib/chibios/os/rt/src/chdynamic.c **** 
+   6:lib/chibios/os/rt/src/chdynamic.c ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:lib/chibios/os/rt/src/chdynamic.c ****     it under the terms of the GNU General Public License as published by
+   8:lib/chibios/os/rt/src/chdynamic.c ****     the Free Software Foundation; either version 3 of the License, or
+   9:lib/chibios/os/rt/src/chdynamic.c ****     (at your option) any later version.
+  10:lib/chibios/os/rt/src/chdynamic.c **** 
+  11:lib/chibios/os/rt/src/chdynamic.c ****     ChibiOS is distributed in the hope that it will be useful,
+  12:lib/chibios/os/rt/src/chdynamic.c ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:lib/chibios/os/rt/src/chdynamic.c ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:lib/chibios/os/rt/src/chdynamic.c ****     GNU General Public License for more details.
+  15:lib/chibios/os/rt/src/chdynamic.c **** 
+  16:lib/chibios/os/rt/src/chdynamic.c ****     You should have received a copy of the GNU General Public License
+  17:lib/chibios/os/rt/src/chdynamic.c ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:lib/chibios/os/rt/src/chdynamic.c **** */
+  19:lib/chibios/os/rt/src/chdynamic.c **** 
+  20:lib/chibios/os/rt/src/chdynamic.c **** /**
+  21:lib/chibios/os/rt/src/chdynamic.c ****  * @file    chdynamic.c
+  22:lib/chibios/os/rt/src/chdynamic.c ****  * @brief   Dynamic threads code.
+  23:lib/chibios/os/rt/src/chdynamic.c ****  *
+  24:lib/chibios/os/rt/src/chdynamic.c ****  * @addtogroup dynamic_threads
+  25:lib/chibios/os/rt/src/chdynamic.c ****  * @details Dynamic threads related APIs and services.
+  26:lib/chibios/os/rt/src/chdynamic.c ****  * @{
+  27:lib/chibios/os/rt/src/chdynamic.c ****  */
+  28:lib/chibios/os/rt/src/chdynamic.c **** 
+  29:lib/chibios/os/rt/src/chdynamic.c **** #include "ch.h"
+  30:lib/chibios/os/rt/src/chdynamic.c **** 
+  31:lib/chibios/os/rt/src/chdynamic.c **** #if (CH_CFG_USE_DYNAMIC == TRUE) || defined(__DOXYGEN__)
+  32:lib/chibios/os/rt/src/chdynamic.c **** 
+  33:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  34:lib/chibios/os/rt/src/chdynamic.c **** /* Module local definitions.                                                 */
+  35:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  36:lib/chibios/os/rt/src/chdynamic.c **** 
+  37:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  38:lib/chibios/os/rt/src/chdynamic.c **** /* Module exported variables.                                                */
+  39:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  40:lib/chibios/os/rt/src/chdynamic.c **** 
+  41:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  42:lib/chibios/os/rt/src/chdynamic.c **** /* Module local types.                                                       */
+  43:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  44:lib/chibios/os/rt/src/chdynamic.c **** 
+  45:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  46:lib/chibios/os/rt/src/chdynamic.c **** /* Module local variables.                                                   */
+  47:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  48:lib/chibios/os/rt/src/chdynamic.c **** 
+  49:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  50:lib/chibios/os/rt/src/chdynamic.c **** /* Module local functions.                                                   */
+  51:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  52:lib/chibios/os/rt/src/chdynamic.c **** 
+  53:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  54:lib/chibios/os/rt/src/chdynamic.c **** /* Module exported functions.                                                */
+  55:lib/chibios/os/rt/src/chdynamic.c **** /*===========================================================================*/
+  56:lib/chibios/os/rt/src/chdynamic.c **** 
+  57:lib/chibios/os/rt/src/chdynamic.c **** #if (CH_CFG_USE_HEAP == TRUE) || defined(__DOXYGEN__)
+  58:lib/chibios/os/rt/src/chdynamic.c **** /**
+  59:lib/chibios/os/rt/src/chdynamic.c ****  * @brief   Creates a new thread allocating the memory from the heap.
+  60:lib/chibios/os/rt/src/chdynamic.c ****  * @pre     The configuration options @p CH_CFG_USE_DYNAMIC and
+  61:lib/chibios/os/rt/src/chdynamic.c ****  *          @p CH_CFG_USE_HEAP must be enabled in order to use this function.
+  62:lib/chibios/os/rt/src/chdynamic.c ****  * @note    A thread can terminate by calling @p chThdExit() or by simply
+  63:lib/chibios/os/rt/src/chdynamic.c ****  *          returning from its main function.
+  64:lib/chibios/os/rt/src/chdynamic.c ****  * @note    The memory allocated for the thread is not released automatically,
+  65:lib/chibios/os/rt/src/chdynamic.c ****  *          it is responsibility of the creator thread to call @p chThdWait()
+  66:lib/chibios/os/rt/src/chdynamic.c ****  *          and then release the allocated memory.
+  67:lib/chibios/os/rt/src/chdynamic.c ****  *
+  68:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] heapp     heap from which allocate the memory or @p NULL for the
+  69:lib/chibios/os/rt/src/chdynamic.c ****  *                      default heap
+  70:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] size      size of the working area to be allocated
+  71:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] name      thread name
+  72:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] prio      the priority level for the new thread
+  73:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] pf        the thread function
+  74:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] arg       an argument passed to the thread function. It can be
+  75:lib/chibios/os/rt/src/chdynamic.c ****  *                      @p NULL.
+  76:lib/chibios/os/rt/src/chdynamic.c ****  * @return              The pointer to the @p thread_t structure allocated for
+  77:lib/chibios/os/rt/src/chdynamic.c ****  *                      the thread into the working space area.
+  78:lib/chibios/os/rt/src/chdynamic.c ****  * @retval NULL         if the memory cannot be allocated.
+  79:lib/chibios/os/rt/src/chdynamic.c ****  *
+  80:lib/chibios/os/rt/src/chdynamic.c ****  * @api
+  81:lib/chibios/os/rt/src/chdynamic.c ****  */
+  82:lib/chibios/os/rt/src/chdynamic.c **** thread_t *chThdCreateFromHeap(memory_heap_t *heapp, size_t size,
+  83:lib/chibios/os/rt/src/chdynamic.c ****                               const char *name, tprio_t prio,
+  84:lib/chibios/os/rt/src/chdynamic.c ****                               tfunc_t pf, void *arg) {
+  26              		.loc 1 84 0
+  27              		.cfi_startproc
+  28              		@ args = 8, pretend = 0, frame = 24
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 70B5     		push	{r4, r5, r6, lr}
+  32              		.cfi_def_cfa_offset 16
+  33              		.cfi_offset 4, -16
+  34              		.cfi_offset 5, -12
+  35              		.cfi_offset 6, -8
+  36              		.cfi_offset 14, -4
+  37 0002 1646     		mov	r6, r2
+  38 0004 86B0     		sub	sp, sp, #24
+  39              		.cfi_def_cfa_offset 40
+  85:lib/chibios/os/rt/src/chdynamic.c ****   thread_t *tp;
+  86:lib/chibios/os/rt/src/chdynamic.c ****   void *wsp;
+  87:lib/chibios/os/rt/src/chdynamic.c **** 
+  88:lib/chibios/os/rt/src/chdynamic.c ****   wsp = chHeapAllocAligned(heapp, size, PORT_WORKING_AREA_ALIGN);
+  40              		.loc 1 88 0
+  41 0006 0822     		movs	r2, #8
+  42              	.LVL1:
+  84:lib/chibios/os/rt/src/chdynamic.c ****   thread_t *tp;
+  43              		.loc 1 84 0
+  44 0008 0D46     		mov	r5, r1
+  45 000a 1C46     		mov	r4, r3
+  46              		.loc 1 88 0
+  47 000c FFF7FEFF 		bl	chHeapAllocAligned
+  48              	.LVL2:
+  89:lib/chibios/os/rt/src/chdynamic.c ****   if (wsp == NULL) {
+  49              		.loc 1 89 0
+  50 0010 D8B1     		cbz	r0, .L3
+  90:lib/chibios/os/rt/src/chdynamic.c ****     return NULL;
+  91:lib/chibios/os/rt/src/chdynamic.c ****   }
+  92:lib/chibios/os/rt/src/chdynamic.c **** 
+  93:lib/chibios/os/rt/src/chdynamic.c ****   thread_descriptor_t td = {
+  51              		.loc 1 93 0
+  52 0012 0A9B     		ldr	r3, [sp, #40]
+  53 0014 0493     		str	r3, [sp, #16]
+  54 0016 CDE90060 		strd	r6, r0, [sp]
+  55 001a 0B9B     		ldr	r3, [sp, #44]
+  56 001c 0593     		str	r3, [sp, #20]
+  57              	.LVL3:
+  94:lib/chibios/os/rt/src/chdynamic.c ****     name,
+  95:lib/chibios/os/rt/src/chdynamic.c ****     wsp,
+  96:lib/chibios/os/rt/src/chdynamic.c ****     (stkalign_t *)((uint8_t *)wsp + size),
+  58              		.loc 1 96 0
+  59 001e 2844     		add	r0, r0, r5
+  60              	.LVL4:
+  93:lib/chibios/os/rt/src/chdynamic.c ****     name,
+  61              		.loc 1 93 0
+  62 0020 CDE90204 		strd	r0, r4, [sp, #8]
+  63              	.LBB34:
+  64              	.LBB35:
+  65              	.LBB36:
+  66              	.LBB37:
+  67              		.file 2 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h"
+   1:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**************************************************************************//**
+   2:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @version  V4.30
+   5:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  ******************************************************************************/
+   7:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+   9:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    All rights reserved.
+  10:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****      specific prior written permission.
+  20:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    *
+  21:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  34:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  35:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  38:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #endif
+  45:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  46:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  47:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   @{
+  51:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  52:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  53:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  54:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  58:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  60:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  62:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  63:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  64:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  65:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  69:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  71:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+  72:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  73:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  74:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  75:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  76:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Control Register
+  77:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the Control Register.
+  78:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Control Register value
+  79:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  80:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_CONTROL(void)
+  81:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  82:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+  83:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  84:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, control" : "=r" (result) );
+  85:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+  86:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  87:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  88:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  89:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+  90:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Control Register
+  91:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Writes the given value to the Control Register.
+  92:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    control  Control Register value to set
+  93:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+  94:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_CONTROL(uint32_t control)
+  95:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+  96:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR control, %0" : : "r" (control) : "memory");
+  97:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+  98:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+  99:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 100:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 101:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get IPSR Register
+ 102:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the IPSR Register.
+ 103:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               IPSR Register value
+ 104:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 105:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_IPSR(void)
+ 106:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 107:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 108:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 109:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, ipsr" : "=r" (result) );
+ 110:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 111:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 112:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 113:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 114:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 115:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get APSR Register
+ 116:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the APSR Register.
+ 117:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               APSR Register value
+ 118:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 119:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_APSR(void)
+ 120:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 121:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 122:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 123:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, apsr" : "=r" (result) );
+ 124:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 125:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 126:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 127:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 128:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 129:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get xPSR Register
+ 130:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the content of the xPSR Register.
+ 131:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 132:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \return               xPSR Register value
+ 133:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 134:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_xPSR(void)
+ 135:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 136:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 137:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 138:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, xpsr" : "=r" (result) );
+ 139:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 140:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 141:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 142:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 143:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 144:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Process Stack Pointer
+ 145:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Process Stack Pointer (PSP).
+ 146:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               PSP Register value
+ 147:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 148:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PSP(void)
+ 149:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 150:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 151:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 152:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, psp\n"  : "=r" (result) );
+ 153:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 154:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 155:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 156:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 157:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 158:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Process Stack Pointer
+ 159:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Process Stack Pointer (PSP).
+ 160:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    topOfProcStack  Process Stack Pointer value to set
+ 161:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 162:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PSP(uint32_t topOfProcStack)
+ 163:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 164:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR psp, %0\n" : : "r" (topOfProcStack) : "sp");
+ 165:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 166:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 167:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 168:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 169:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Main Stack Pointer
+ 170:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Main Stack Pointer (MSP).
+ 171:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               MSP Register value
+ 172:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 173:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_MSP(void)
+ 174:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 175:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   register uint32_t result;
+ 176:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 177:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, msp\n" : "=r" (result) );
+ 178:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 179:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 180:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 181:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 182:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 183:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Main Stack Pointer
+ 184:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Main Stack Pointer (MSP).
+ 185:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 186:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****     \param [in]    topOfMainStack  Main Stack Pointer value to set
+ 187:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 188:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+ 189:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 190:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR msp, %0\n" : : "r" (topOfMainStack) : "sp");
+ 191:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 192:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 193:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 194:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 195:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Priority Mask
+ 196:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current state of the priority mask bit from the Priority Mask Register.
+ 197:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Priority Mask value
+ 198:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 199:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_PRIMASK(void)
+ 200:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 201:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 202:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 203:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, primask" : "=r" (result) );
+ 204:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 205:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 206:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 207:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 208:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 209:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Priority Mask
+ 210:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Priority Mask Register.
+ 211:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    priMask  Priority Mask
+ 212:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 213:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_PRIMASK(uint32_t priMask)
+ 214:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 215:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+ 216:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 217:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 218:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 219:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** #if       (__CORTEX_M >= 0x03U)
+ 220:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 221:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 222:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Enable FIQ
+ 223:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Enables FIQ interrupts by clearing the F-bit in the CPSR.
+ 224:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 225:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 226:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_fault_irq(void)
+ 227:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 228:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsie f" : : : "memory");
+ 229:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 230:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 231:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 232:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 233:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Disable FIQ
+ 234:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Disables FIQ interrupts by setting the F-bit in the CPSR.
+ 235:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 236:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 237:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_fault_irq(void)
+ 238:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 239:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("cpsid f" : : : "memory");
+ 240:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 241:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 242:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 243:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 244:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Get Base Priority
+ 245:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Returns the current value of the Base Priority register.
+ 246:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \return               Base Priority register value
+ 247:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 248:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __get_BASEPRI(void)
+ 249:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 250:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   uint32_t result;
+ 251:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 252:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MRS %0, basepri" : "=r" (result) );
+ 253:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   return(result);
+ 254:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** }
+ 255:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 256:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** 
+ 257:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** /**
+ 258:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \brief   Set Base Priority
+ 259:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \details Assigns the given value to the Base Priority register.
+ 260:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   \param [in]    basePri  Base Priority value to set
+ 261:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****  */
+ 262:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __set_BASEPRI(uint32_t value)
+ 263:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h **** {
+ 264:./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h ****   __ASM volatile ("MSR basepri, %0" : : "r" (value) : "memory");
+  68              		.loc 2 264 0
+  69 0024 2023     		movs	r3, #32
+  70              		.syntax unified
+  71              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+  72 0026 83F31188 		MSR basepri, r3
+  73              	@ 0 "" 2
+  74              	.LVL5:
+  75              		.thumb
+  76              		.syntax unified
+  77              	.LBE37:
+  78              	.LBE36:
+  79              	.LBE35:
+  80              	.LBE34:
+  97:lib/chibios/os/rt/src/chdynamic.c ****     prio,
+  98:lib/chibios/os/rt/src/chdynamic.c ****     pf,
+  99:lib/chibios/os/rt/src/chdynamic.c ****     arg
+ 100:lib/chibios/os/rt/src/chdynamic.c ****   };
+ 101:lib/chibios/os/rt/src/chdynamic.c **** 
+ 102:lib/chibios/os/rt/src/chdynamic.c **** #if CH_DBG_FILL_THREADS == TRUE
+ 103:lib/chibios/os/rt/src/chdynamic.c ****   _thread_memfill((uint8_t *)wsp,
+ 104:lib/chibios/os/rt/src/chdynamic.c ****                   (uint8_t *)wsp + size,
+ 105:lib/chibios/os/rt/src/chdynamic.c ****                   CH_DBG_STACK_FILL_VALUE);
+ 106:lib/chibios/os/rt/src/chdynamic.c **** #endif
+ 107:lib/chibios/os/rt/src/chdynamic.c **** 
+ 108:lib/chibios/os/rt/src/chdynamic.c ****   chSysLock();
+ 109:lib/chibios/os/rt/src/chdynamic.c ****   tp = chThdCreateSuspendedI(&td);
+  81              		.loc 1 109 0
+  82 002a 6846     		mov	r0, sp
+  83 002c FFF7FEFF 		bl	chThdCreateSuspendedI
+  84              	.LVL6:
+ 110:lib/chibios/os/rt/src/chdynamic.c ****   tp->flags = CH_FLAG_MODE_HEAP;
+  85              		.loc 1 110 0
+  86 0030 0123     		movs	r3, #1
+  87 0032 80F82130 		strb	r3, [r0, #33]
+ 111:lib/chibios/os/rt/src/chdynamic.c ****   chSchWakeupS(tp, MSG_OK);
+  88              		.loc 1 111 0
+  89 0036 0021     		movs	r1, #0
+ 109:lib/chibios/os/rt/src/chdynamic.c ****   tp->flags = CH_FLAG_MODE_HEAP;
+  90              		.loc 1 109 0
+  91 0038 0446     		mov	r4, r0
+  92              	.LVL7:
+  93              		.loc 1 111 0
+  94 003a FFF7FEFF 		bl	chSchWakeupS
+  95              	.LVL8:
+  96              	.LBB38:
+  97              	.LBB39:
+  98              	.LBB40:
+  99              	.LBB41:
+ 100              	.LBB42:
+ 101              		.loc 2 264 0
+ 102 003e 0023     		movs	r3, #0
+ 103              		.syntax unified
+ 104              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 105 0040 83F31188 		MSR basepri, r3
+ 106              	@ 0 "" 2
+ 107              	.LVL9:
+ 108              		.thumb
+ 109              		.syntax unified
+ 110              	.L1:
+ 111              	.LBE42:
+ 112              	.LBE41:
+ 113              	.LBE40:
+ 114              	.LBE39:
+ 115              	.LBE38:
+ 112:lib/chibios/os/rt/src/chdynamic.c ****   chSysUnlock();
+ 113:lib/chibios/os/rt/src/chdynamic.c **** 
+ 114:lib/chibios/os/rt/src/chdynamic.c ****   return tp;
+ 115:lib/chibios/os/rt/src/chdynamic.c **** }
+ 116              		.loc 1 115 0
+ 117 0044 2046     		mov	r0, r4
+ 118 0046 06B0     		add	sp, sp, #24
+ 119              		.cfi_remember_state
+ 120              		.cfi_def_cfa_offset 16
+ 121              		@ sp needed
+ 122 0048 70BD     		pop	{r4, r5, r6, pc}
+ 123              	.LVL10:
+ 124              	.L3:
+ 125              		.cfi_restore_state
+  90:lib/chibios/os/rt/src/chdynamic.c ****   }
+ 126              		.loc 1 90 0
+ 127 004a 0446     		mov	r4, r0
+ 128              	.LVL11:
+ 129 004c FAE7     		b	.L1
+ 130              		.cfi_endproc
+ 131              	.LFE248:
+ 133              		.section	.text.chThdCreateFromMemoryPool,"ax",%progbits
+ 134              		.align	1
+ 135              		.global	chThdCreateFromMemoryPool
+ 136              		.syntax unified
+ 137              		.thumb
+ 138              		.thumb_func
+ 139              		.fpu softvfp
+ 141              	chThdCreateFromMemoryPool:
+ 142              	.LFB249:
+ 116:lib/chibios/os/rt/src/chdynamic.c **** #endif /* CH_CFG_USE_HEAP == TRUE */
+ 117:lib/chibios/os/rt/src/chdynamic.c **** 
+ 118:lib/chibios/os/rt/src/chdynamic.c **** #if (CH_CFG_USE_MEMPOOLS == TRUE) || defined(__DOXYGEN__)
+ 119:lib/chibios/os/rt/src/chdynamic.c **** /**
+ 120:lib/chibios/os/rt/src/chdynamic.c ****  * @brief   Creates a new thread allocating the memory from the specified
+ 121:lib/chibios/os/rt/src/chdynamic.c ****  *          memory pool.
+ 122:lib/chibios/os/rt/src/chdynamic.c ****  * @pre     The configuration options @p CH_CFG_USE_DYNAMIC and
+ 123:lib/chibios/os/rt/src/chdynamic.c ****  *          @p CH_CFG_USE_MEMPOOLS must be enabled in order to use this
+ 124:lib/chibios/os/rt/src/chdynamic.c ****  *          function.
+ 125:lib/chibios/os/rt/src/chdynamic.c ****  * @pre     The pool must be initialized to contain only objects with
+ 126:lib/chibios/os/rt/src/chdynamic.c ****  *          alignment @p PORT_WORKING_AREA_ALIGN.
+ 127:lib/chibios/os/rt/src/chdynamic.c ****  * @note    A thread can terminate by calling @p chThdExit() or by simply
+ 128:lib/chibios/os/rt/src/chdynamic.c ****  *          returning from its main function.
+ 129:lib/chibios/os/rt/src/chdynamic.c ****  * @note    The memory allocated for the thread is not released automatically,
+ 130:lib/chibios/os/rt/src/chdynamic.c ****  *          it is responsibility of the creator thread to call @p chThdWait()
+ 131:lib/chibios/os/rt/src/chdynamic.c ****  *          and then release the allocated memory.
+ 132:lib/chibios/os/rt/src/chdynamic.c ****  *
+ 133:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] mp        pointer to the memory pool object
+ 134:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] name      thread name
+ 135:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] prio      the priority level for the new thread
+ 136:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] pf        the thread function
+ 137:lib/chibios/os/rt/src/chdynamic.c ****  * @param[in] arg       an argument passed to the thread function. It can be
+ 138:lib/chibios/os/rt/src/chdynamic.c ****  *                      @p NULL.
+ 139:lib/chibios/os/rt/src/chdynamic.c ****  * @return              The pointer to the @p thread_t structure allocated for
+ 140:lib/chibios/os/rt/src/chdynamic.c ****  *                      the thread into the working space area.
+ 141:lib/chibios/os/rt/src/chdynamic.c ****  * @retval  NULL        if the memory pool is empty.
+ 142:lib/chibios/os/rt/src/chdynamic.c ****  *
+ 143:lib/chibios/os/rt/src/chdynamic.c ****  * @api
+ 144:lib/chibios/os/rt/src/chdynamic.c ****  */
+ 145:lib/chibios/os/rt/src/chdynamic.c **** thread_t *chThdCreateFromMemoryPool(memory_pool_t *mp, const char *name,
+ 146:lib/chibios/os/rt/src/chdynamic.c ****                                     tprio_t prio, tfunc_t pf, void *arg) {
+ 143              		.loc 1 146 0
+ 144              		.cfi_startproc
+ 145              		@ args = 4, pretend = 0, frame = 24
+ 146              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147              	.LVL12:
+ 148 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 149              		.cfi_def_cfa_offset 20
+ 150              		.cfi_offset 4, -20
+ 151              		.cfi_offset 5, -16
+ 152              		.cfi_offset 6, -12
+ 153              		.cfi_offset 7, -8
+ 154              		.cfi_offset 14, -4
+ 155 0002 87B0     		sub	sp, sp, #28
+ 156              		.cfi_def_cfa_offset 48
+ 157              		.loc 1 146 0
+ 158 0004 0546     		mov	r5, r0
+ 159 0006 0C46     		mov	r4, r1
+ 160 0008 1746     		mov	r7, r2
+ 161 000a 1E46     		mov	r6, r3
+ 147:lib/chibios/os/rt/src/chdynamic.c ****   thread_t *tp;
+ 148:lib/chibios/os/rt/src/chdynamic.c ****   void *wsp;
+ 149:lib/chibios/os/rt/src/chdynamic.c **** 
+ 150:lib/chibios/os/rt/src/chdynamic.c ****   chDbgCheck(mp != NULL);
+ 151:lib/chibios/os/rt/src/chdynamic.c **** 
+ 152:lib/chibios/os/rt/src/chdynamic.c ****   wsp = chPoolAlloc(mp);
+ 162              		.loc 1 152 0
+ 163 000c FFF7FEFF 		bl	chPoolAlloc
+ 164              	.LVL13:
+ 153:lib/chibios/os/rt/src/chdynamic.c ****   if (wsp == NULL) {
+ 165              		.loc 1 153 0
+ 166 0010 E0B1     		cbz	r0, .L6
+ 154:lib/chibios/os/rt/src/chdynamic.c ****     return NULL;
+ 155:lib/chibios/os/rt/src/chdynamic.c ****   }
+ 156:lib/chibios/os/rt/src/chdynamic.c **** 
+ 157:lib/chibios/os/rt/src/chdynamic.c ****   thread_descriptor_t td = {
+ 167              		.loc 1 157 0
+ 168 0012 CDE90040 		strd	r4, r0, [sp]
+ 158:lib/chibios/os/rt/src/chdynamic.c ****     name,
+ 159:lib/chibios/os/rt/src/chdynamic.c ****     wsp,
+ 160:lib/chibios/os/rt/src/chdynamic.c ****     (stkalign_t *)((uint8_t *)wsp + mp->object_size),
+ 169              		.loc 1 160 0
+ 170 0016 6C68     		ldr	r4, [r5, #4]
+ 171              	.LVL14:
+ 157:lib/chibios/os/rt/src/chdynamic.c ****     name,
+ 172              		.loc 1 157 0
+ 173 0018 0C9B     		ldr	r3, [sp, #48]
+ 174 001a 0593     		str	r3, [sp, #20]
+ 175              	.LVL15:
+ 176              		.loc 1 160 0
+ 177 001c 2044     		add	r0, r0, r4
+ 178              	.LVL16:
+ 157:lib/chibios/os/rt/src/chdynamic.c ****     name,
+ 179              		.loc 1 157 0
+ 180 001e CDE90207 		strd	r0, r7, [sp, #8]
+ 181 0022 0496     		str	r6, [sp, #16]
+ 182              	.LBB43:
+ 183              	.LBB44:
+ 184              	.LBB45:
+ 185              	.LBB46:
+ 186              		.loc 2 264 0
+ 187 0024 2023     		movs	r3, #32
+ 188              		.syntax unified
+ 189              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 190 0026 83F31188 		MSR basepri, r3
+ 191              	@ 0 "" 2
+ 192              	.LVL17:
+ 193              		.thumb
+ 194              		.syntax unified
+ 195              	.LBE46:
+ 196              	.LBE45:
+ 197              	.LBE44:
+ 198              	.LBE43:
+ 161:lib/chibios/os/rt/src/chdynamic.c ****     prio,
+ 162:lib/chibios/os/rt/src/chdynamic.c ****     pf,
+ 163:lib/chibios/os/rt/src/chdynamic.c ****     arg
+ 164:lib/chibios/os/rt/src/chdynamic.c ****   };
+ 165:lib/chibios/os/rt/src/chdynamic.c **** 
+ 166:lib/chibios/os/rt/src/chdynamic.c **** #if CH_DBG_FILL_THREADS == TRUE
+ 167:lib/chibios/os/rt/src/chdynamic.c ****   _thread_memfill((uint8_t *)wsp,
+ 168:lib/chibios/os/rt/src/chdynamic.c ****                   (uint8_t *)wsp + mp->object_size,
+ 169:lib/chibios/os/rt/src/chdynamic.c ****                   CH_DBG_STACK_FILL_VALUE);
+ 170:lib/chibios/os/rt/src/chdynamic.c **** #endif
+ 171:lib/chibios/os/rt/src/chdynamic.c **** 
+ 172:lib/chibios/os/rt/src/chdynamic.c ****   chSysLock();
+ 173:lib/chibios/os/rt/src/chdynamic.c ****   tp = chThdCreateSuspendedI(&td);
+ 199              		.loc 1 173 0
+ 200 002a 6846     		mov	r0, sp
+ 201 002c FFF7FEFF 		bl	chThdCreateSuspendedI
+ 202              	.LVL18:
+ 174:lib/chibios/os/rt/src/chdynamic.c ****   tp->flags = CH_FLAG_MODE_MPOOL;
+ 203              		.loc 1 174 0
+ 204 0030 0223     		movs	r3, #2
+ 205 0032 80F82130 		strb	r3, [r0, #33]
+ 175:lib/chibios/os/rt/src/chdynamic.c ****   tp->mpool = mp;
+ 206              		.loc 1 175 0
+ 207 0036 0564     		str	r5, [r0, #64]
+ 176:lib/chibios/os/rt/src/chdynamic.c ****   chSchWakeupS(tp, MSG_OK);
+ 208              		.loc 1 176 0
+ 209 0038 0021     		movs	r1, #0
+ 173:lib/chibios/os/rt/src/chdynamic.c ****   tp->flags = CH_FLAG_MODE_MPOOL;
+ 210              		.loc 1 173 0
+ 211 003a 0446     		mov	r4, r0
+ 212              	.LVL19:
+ 213              		.loc 1 176 0
+ 214 003c FFF7FEFF 		bl	chSchWakeupS
+ 215              	.LVL20:
+ 216              	.LBB47:
+ 217              	.LBB48:
+ 218              	.LBB49:
+ 219              	.LBB50:
+ 220              	.LBB51:
+ 221              		.loc 2 264 0
+ 222 0040 0023     		movs	r3, #0
+ 223              		.syntax unified
+ 224              	@ 264 "./lib/chibios/os/common/ext/CMSIS/include/cmsis_gcc.h" 1
+ 225 0042 83F31188 		MSR basepri, r3
+ 226              	@ 0 "" 2
+ 227              	.LVL21:
+ 228              		.thumb
+ 229              		.syntax unified
+ 230              	.L4:
+ 231              	.LBE51:
+ 232              	.LBE50:
+ 233              	.LBE49:
+ 234              	.LBE48:
+ 235              	.LBE47:
+ 177:lib/chibios/os/rt/src/chdynamic.c ****   chSysUnlock();
+ 178:lib/chibios/os/rt/src/chdynamic.c **** 
+ 179:lib/chibios/os/rt/src/chdynamic.c ****   return tp;
+ 180:lib/chibios/os/rt/src/chdynamic.c **** }
+ 236              		.loc 1 180 0
+ 237 0046 2046     		mov	r0, r4
+ 238 0048 07B0     		add	sp, sp, #28
+ 239              		.cfi_remember_state
+ 240              		.cfi_def_cfa_offset 20
+ 241              		@ sp needed
+ 242 004a F0BD     		pop	{r4, r5, r6, r7, pc}
+ 243              	.LVL22:
+ 244              	.L6:
+ 245              		.cfi_restore_state
+ 154:lib/chibios/os/rt/src/chdynamic.c ****   }
+ 246              		.loc 1 154 0
+ 247 004c 0446     		mov	r4, r0
+ 248              	.LVL23:
+ 249 004e FAE7     		b	.L4
+ 250              		.cfi_endproc
+ 251              	.LFE249:
+ 253              		.text
+ 254              	.Letext0:
+ 255              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 256              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 257              		.file 5 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 258              		.file 6 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 259              		.file 7 "./lib/chibios/os/rt/include/chsystypes.h"
+ 260              		.file 8 "./lib/chibios/os/rt/include/chschd.h"
+ 261              		.file 9 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 262              		.file 10 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 263              		.file 11 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 264              		.file 12 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+ 265              		.file 13 "./lib/chibios/os/rt/include/chtm.h"
+ 266              		.file 14 "./lib/chibios/os/rt/include/chsem.h"
+ 267              		.file 15 "./lib/chibios/os/rt/include/chmtx.h"
+ 268              		.file 16 "./lib/chibios/os/rt/include/chsys.h"
+ 269              		.file 17 "./lib/chibios/os/rt/include/chthreads.h"
+ 270              		.file 18 "./lib/chibios/os/rt/include/chregistry.h"
+ 271              		.file 19 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+ 272              		.file 20 "./lib/chibios/os/common/oslib/include/chheap.h"
+ 273              		.file 21 "./lib/chibios/os/common/oslib/include/chmempools.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 chdynamic.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccRZFSdU.s:16     .text.chThdCreateFromHeap:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccRZFSdU.s:23     .text.chThdCreateFromHeap:0000000000000000 chThdCreateFromHeap
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccRZFSdU.s:134    .text.chThdCreateFromMemoryPool:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//ccRZFSdU.s:141    .text.chThdCreateFromMemoryPool:0000000000000000 chThdCreateFromMemoryPool
+
+UNDEFINED SYMBOLS
+chHeapAllocAligned
+chThdCreateSuspendedI
+chSchWakeupS
+chPoolAlloc

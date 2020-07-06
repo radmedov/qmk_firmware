@@ -1,0 +1,418 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"spi.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.SR_EXP_WriteData,"ax",%progbits
+  18              		.align	1
+  19              		.global	SR_EXP_WriteData
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	SR_EXP_WriteData:
+  26              	.LFB145:
+  27              		.file 1 "tmk_core/protocol/arm_atsam/spi.c"
+   1:tmk_core/protocol/arm_atsam/spi.c **** /*
+   2:tmk_core/protocol/arm_atsam/spi.c **** Copyright 2018 Massdrop Inc.
+   3:tmk_core/protocol/arm_atsam/spi.c **** 
+   4:tmk_core/protocol/arm_atsam/spi.c **** This program is free software: you can redistribute it and/or modify
+   5:tmk_core/protocol/arm_atsam/spi.c **** it under the terms of the GNU General Public License as published by
+   6:tmk_core/protocol/arm_atsam/spi.c **** the Free Software Foundation, either version 2 of the License, or
+   7:tmk_core/protocol/arm_atsam/spi.c **** (at your option) any later version.
+   8:tmk_core/protocol/arm_atsam/spi.c **** 
+   9:tmk_core/protocol/arm_atsam/spi.c **** This program is distributed in the hope that it will be useful,
+  10:tmk_core/protocol/arm_atsam/spi.c **** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11:tmk_core/protocol/arm_atsam/spi.c **** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12:tmk_core/protocol/arm_atsam/spi.c **** GNU General Public License for more details.
+  13:tmk_core/protocol/arm_atsam/spi.c **** 
+  14:tmk_core/protocol/arm_atsam/spi.c **** You should have received a copy of the GNU General Public License
+  15:tmk_core/protocol/arm_atsam/spi.c **** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16:tmk_core/protocol/arm_atsam/spi.c **** */
+  17:tmk_core/protocol/arm_atsam/spi.c **** 
+  18:tmk_core/protocol/arm_atsam/spi.c **** #include "arm_atsam_protocol.h"
+  19:tmk_core/protocol/arm_atsam/spi.c **** 
+  20:tmk_core/protocol/arm_atsam/spi.c **** sr_exp_t sr_exp_data;
+  21:tmk_core/protocol/arm_atsam/spi.c **** 
+  22:tmk_core/protocol/arm_atsam/spi.c **** void SR_EXP_WriteData(void) {
+  28              		.loc 1 22 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  23:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_LO;
+  32              		.loc 1 23 0
+  33 0000 144B     		ldr	r3, .L8
+  24:tmk_core/protocol/arm_atsam/spi.c **** 
+  25:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.DRE)) {
+  26:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_WRITE_DRE);
+  34              		.loc 1 26 0
+  35 0002 1549     		ldr	r1, .L8+4
+  23:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_LO;
+  36              		.loc 1 23 0
+  37 0004 4FF48042 		mov	r2, #16384
+  22:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_LO;
+  38              		.loc 1 22 0
+  39 0008 10B5     		push	{r4, lr}
+  40              		.cfi_def_cfa_offset 8
+  41              		.cfi_offset 4, -8
+  42              		.cfi_offset 14, -4
+  23:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_LO;
+  43              		.loc 1 23 0
+  44 000a C3F89420 		str	r2, [r3, #148]
+  25:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_WRITE_DRE);
+  45              		.loc 1 25 0
+  46 000e 134A     		ldr	r2, .L8+8
+  47              		.loc 1 26 0
+  48 0010 3C20     		movs	r0, #60
+  49              	.L2:
+  25:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_WRITE_DRE);
+  50              		.loc 1 25 0
+  51 0012 137E     		ldrb	r3, [r2, #24]	@ zero_extendqisi2
+  52 0014 DC07     		lsls	r4, r3, #31
+  53 0016 17D5     		bpl	.L3
+  27:tmk_core/protocol/arm_atsam/spi.c ****     }
+  28:tmk_core/protocol/arm_atsam/spi.c **** 
+  29:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.DATA.bit.DATA = sr_exp_data.reg & 0xFF;  // Shift in bits 7-0
+  54              		.loc 1 29 0
+  55 0018 114B     		ldr	r3, .L8+12
+  30:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  31:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_WRITE_TXC_1);
+  56              		.loc 1 31 0
+  57 001a 0F48     		ldr	r0, .L8+4
+  29:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  58              		.loc 1 29 0
+  59 001c 1B88     		ldrh	r3, [r3]
+  60 001e D9B2     		uxtb	r1, r3
+  61 0020 9162     		str	r1, [r2, #40]
+  30:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  62              		.loc 1 30 0
+  63 0022 0E4A     		ldr	r2, .L8+8
+  64              		.loc 1 31 0
+  65 0024 3D24     		movs	r4, #61
+  66              	.L4:
+  30:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  67              		.loc 1 30 0
+  68 0026 117E     		ldrb	r1, [r2, #24]	@ zero_extendqisi2
+  69 0028 8907     		lsls	r1, r1, #30
+  70 002a 0FD5     		bpl	.L5
+  32:tmk_core/protocol/arm_atsam/spi.c ****     }
+  33:tmk_core/protocol/arm_atsam/spi.c **** 
+  34:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.DATA.bit.DATA = (sr_exp_data.reg >> 8) & 0xFF;  // Shift in bits 15-8
+  71              		.loc 1 34 0
+  72 002c 1B0A     		lsrs	r3, r3, #8
+  73 002e 9362     		str	r3, [r2, #40]
+  35:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  36:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_WRITE_TXC_2);
+  74              		.loc 1 36 0
+  75 0030 0949     		ldr	r1, .L8+4
+  35:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  76              		.loc 1 35 0
+  77 0032 0A4A     		ldr	r2, .L8+8
+  78              		.loc 1 36 0
+  79 0034 3E20     		movs	r0, #62
+  80              	.L6:
+  35:tmk_core/protocol/arm_atsam/spi.c ****     while (!(SR_EXP_SERCOM->SPI.INTFLAG.bit.TXC)) {
+  81              		.loc 1 35 0
+  82 0036 137E     		ldrb	r3, [r2, #24]	@ zero_extendqisi2
+  83 0038 9B07     		lsls	r3, r3, #30
+  84 003a 09D5     		bpl	.L7
+  37:tmk_core/protocol/arm_atsam/spi.c ****     }
+  38:tmk_core/protocol/arm_atsam/spi.c **** 
+  39:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_HI;
+  85              		.loc 1 39 0
+  86 003c 054B     		ldr	r3, .L8
+  87 003e 4FF48042 		mov	r2, #16384
+  88 0042 C3F89820 		str	r2, [r3, #152]
+  40:tmk_core/protocol/arm_atsam/spi.c **** }
+  89              		.loc 1 40 0
+  90 0046 10BD     		pop	{r4, pc}
+  91              	.L3:
+  26:tmk_core/protocol/arm_atsam/spi.c ****     }
+  92              		.loc 1 26 0
+  93 0048 0860     		str	r0, [r1]
+  94 004a E2E7     		b	.L2
+  95              	.L5:
+  31:tmk_core/protocol/arm_atsam/spi.c ****     }
+  96              		.loc 1 31 0
+  97 004c 0460     		str	r4, [r0]
+  98 004e EAE7     		b	.L4
+  99              	.L7:
+  36:tmk_core/protocol/arm_atsam/spi.c ****     }
+ 100              		.loc 1 36 0
+ 101 0050 0860     		str	r0, [r1]
+ 102 0052 F0E7     		b	.L6
+ 103              	.L9:
+ 104              		.align	2
+ 105              	.L8:
+ 106 0054 00800041 		.word	1090551808
+ 107 0058 00000000 		.word	debug_code
+ 108 005c 00200141 		.word	1090592768
+ 109 0060 00000000 		.word	sr_exp_data
+ 110              		.cfi_endproc
+ 111              	.LFE145:
+ 113              		.section	.text.SR_EXP_Init,"ax",%progbits
+ 114              		.align	1
+ 115              		.global	SR_EXP_Init
+ 116              		.syntax unified
+ 117              		.thumb
+ 118              		.thumb_func
+ 119              		.fpu fpv4-sp-d16
+ 121              	SR_EXP_Init:
+ 122              	.LFB146:
+  41:tmk_core/protocol/arm_atsam/spi.c **** 
+  42:tmk_core/protocol/arm_atsam/spi.c **** void SR_EXP_Init(void) {
+ 123              		.loc 1 42 0
+ 124              		.cfi_startproc
+ 125              		@ args = 0, pretend = 0, frame = 0
+ 126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 127 0000 38B5     		push	{r3, r4, r5, lr}
+ 128              		.cfi_def_cfa_offset 16
+ 129              		.cfi_offset 3, -16
+ 130              		.cfi_offset 4, -12
+ 131              		.cfi_offset 5, -8
+ 132              		.cfi_offset 14, -4
+  43:tmk_core/protocol/arm_atsam/spi.c ****     DBGC(DC_SPI_INIT_BEGIN);
+ 133              		.loc 1 43 0
+ 134 0002 2F4C     		ldr	r4, .L13
+  44:tmk_core/protocol/arm_atsam/spi.c **** 
+  45:tmk_core/protocol/arm_atsam/spi.c ****     CLK_set_spi_freq(CHAN_SERCOM_SPI, FREQ_SPI_DEFAULT);
+ 135              		.loc 1 45 0
+ 136 0004 2F49     		ldr	r1, .L13+4
+  43:tmk_core/protocol/arm_atsam/spi.c ****     DBGC(DC_SPI_INIT_BEGIN);
+ 137              		.loc 1 43 0
+ 138 0006 3B23     		movs	r3, #59
+ 139              		.loc 1 45 0
+ 140 0008 0220     		movs	r0, #2
+  43:tmk_core/protocol/arm_atsam/spi.c ****     DBGC(DC_SPI_INIT_BEGIN);
+ 141              		.loc 1 43 0
+ 142 000a 2360     		str	r3, [r4]
+ 143              		.loc 1 45 0
+ 144 000c FFF7FEFF 		bl	CLK_set_spi_freq
+ 145              	.LVL0:
+  46:tmk_core/protocol/arm_atsam/spi.c **** 
+  47:tmk_core/protocol/arm_atsam/spi.c ****     // Set up MCU Shift Register pins
+  48:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_RCLK_PORT].DIRSET.reg = (1 << SR_EXP_RCLK_PIN);
+ 146              		.loc 1 48 0
+ 147 0010 2D4B     		ldr	r3, .L13+8
+ 148 0012 4FF48041 		mov	r1, #16384
+  49:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_OE_N_PORT].DIRSET.reg = (1 << SR_EXP_OE_N_PIN);
+ 149              		.loc 1 49 0
+ 150 0016 4FF40040 		mov	r0, #32768
+  48:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_OE_N_PORT].DIRSET.reg = (1 << SR_EXP_OE_N_PIN);
+ 151              		.loc 1 48 0
+ 152 001a C3F88810 		str	r1, [r3, #136]
+ 153              		.loc 1 49 0
+ 154 001e C3F88800 		str	r0, [r3, #136]
+  50:tmk_core/protocol/arm_atsam/spi.c **** 
+  51:tmk_core/protocol/arm_atsam/spi.c ****     // Set up MCU SPI pins
+  52:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_DATAOUT_PORT].PMUX[SR_EXP_DATAOUT_PIN / 2].bit.SR_EXP_DATAOUT_MUX_SEL = SR_E
+ 155              		.loc 1 52 0
+ 156 0022 93F83620 		ldrb	r2, [r3, #54]	@ zero_extendqisi2
+ 157 0026 0225     		movs	r5, #2
+ 158 0028 65F30302 		bfi	r2, r5, #0, #4
+ 159 002c 83F83620 		strb	r2, [r3, #54]
+  53:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_SCLK_PORT].PMUX[SR_EXP_SCLK_PIN / 2].bit.SR_EXP_SCLK_MUX_SEL          = SR_E
+ 160              		.loc 1 53 0
+ 161 0030 93F83620 		ldrb	r2, [r3, #54]	@ zero_extendqisi2
+ 162 0034 65F30712 		bfi	r2, r5, #4, #4
+ 163 0038 83F83620 		strb	r2, [r3, #54]
+  54:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_DATAOUT_PORT].PINCFG[SR_EXP_DATAOUT_PIN].bit.PMUXEN                   = 1;  
+ 164              		.loc 1 54 0
+ 165 003c 93F84C20 		ldrb	r2, [r3, #76]	@ zero_extendqisi2
+ 166 0040 42F00102 		orr	r2, r2, #1
+ 167 0044 83F84C20 		strb	r2, [r3, #76]
+  55:tmk_core/protocol/arm_atsam/spi.c ****     PORT->Group[SR_EXP_SCLK_PORT].PINCFG[SR_EXP_SCLK_PIN].bit.PMUXEN                         = 1;  
+ 168              		.loc 1 55 0
+ 169 0048 93F84D20 		ldrb	r2, [r3, #77]	@ zero_extendqisi2
+ 170 004c 42F00102 		orr	r2, r2, #1
+ 171 0050 83F84D20 		strb	r2, [r3, #77]
+  56:tmk_core/protocol/arm_atsam/spi.c **** 
+  57:tmk_core/protocol/arm_atsam/spi.c ****     // Initialize Shift Register
+  58:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_OE_N_DIS;
+ 172              		.loc 1 58 0
+ 173 0054 C3F89800 		str	r0, [r3, #152]
+  59:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_RCLK_HI;
+ 174              		.loc 1 59 0
+ 175 0058 C3F89810 		str	r1, [r3, #152]
+  60:tmk_core/protocol/arm_atsam/spi.c **** 
+  61:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.DORD = 1;  // Data Order - LSB is transferred first
+ 176              		.loc 1 61 0
+ 177 005c 03F52043 		add	r3, r3, #40960
+  62:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.CPOL = 1;  // Clock Polarity - SCK high when idle. Leading edge of
+  63:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.CPHA = 1;  // Clock Phase - Leading Edge Falling, change, Trailing
+  64:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.DIPO = 3;  // Data In Pinout - SERCOM PAD[3] is used as data input
+  65:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.DOPO = 0;  // Data Output PAD[0], Serial Clock PAD[1]
+  66:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.MODE = 3;  // Operating Mode - Master operation
+ 178              		.loc 1 66 0
+ 179 0060 0321     		movs	r1, #3
+  61:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.CPOL = 1;  // Clock Polarity - SCK high when idle. Leading edge of
+ 180              		.loc 1 61 0
+ 181 0062 1A68     		ldr	r2, [r3]
+ 182 0064 42F08042 		orr	r2, r2, #1073741824
+ 183 0068 1A60     		str	r2, [r3]
+  62:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.CPOL = 1;  // Clock Polarity - SCK high when idle. Leading edge of
+ 184              		.loc 1 62 0
+ 185 006a 1A68     		ldr	r2, [r3]
+ 186 006c 42F00052 		orr	r2, r2, #536870912
+ 187 0070 1A60     		str	r2, [r3]
+  63:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.DIPO = 3;  // Data In Pinout - SERCOM PAD[3] is used as data input
+ 188              		.loc 1 63 0
+ 189 0072 1A68     		ldr	r2, [r3]
+ 190 0074 42F08052 		orr	r2, r2, #268435456
+ 191 0078 1A60     		str	r2, [r3]
+  64:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.DOPO = 0;  // Data Output PAD[0], Serial Clock PAD[1]
+ 192              		.loc 1 64 0
+ 193 007a 1A68     		ldr	r2, [r3]
+ 194 007c 42F44012 		orr	r2, r2, #3145728
+ 195 0080 1A60     		str	r2, [r3]
+  65:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.MODE = 3;  // Operating Mode - Master operation
+ 196              		.loc 1 65 0
+ 197 0082 1A68     		ldr	r2, [r3]
+ 198 0084 6FF31142 		bfc	r2, #16, #2
+ 199 0088 1A60     		str	r2, [r3]
+ 200              		.loc 1 66 0
+ 201 008a 1A68     		ldr	r2, [r3]
+ 202 008c 61F38402 		bfi	r2, r1, #2, #3
+ 203 0090 1A60     		str	r2, [r3]
+  67:tmk_core/protocol/arm_atsam/spi.c **** 
+  68:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_SERCOM->SPI.CTRLA.bit.ENABLE = 1;  // Enable - Peripheral is enabled or being enabled
+ 204              		.loc 1 68 0
+ 205 0092 1A68     		ldr	r2, [r3]
+ 206 0094 2A43     		orrs	r2, r2, r5
+ 207 0096 1A60     		str	r2, [r3]
+  69:tmk_core/protocol/arm_atsam/spi.c ****     while (SR_EXP_SERCOM->SPI.SYNCBUSY.bit.ENABLE) {
+  70:tmk_core/protocol/arm_atsam/spi.c ****         DBGC(DC_SPI_SYNC_ENABLING);
+ 208              		.loc 1 70 0
+ 209 0098 3F21     		movs	r1, #63
+ 210              	.L11:
+  69:tmk_core/protocol/arm_atsam/spi.c ****     while (SR_EXP_SERCOM->SPI.SYNCBUSY.bit.ENABLE) {
+ 211              		.loc 1 69 0
+ 212 009a DA69     		ldr	r2, [r3, #28]
+ 213 009c 9207     		lsls	r2, r2, #30
+ 214 009e 0DD4     		bmi	.L12
+  71:tmk_core/protocol/arm_atsam/spi.c ****     }
+  72:tmk_core/protocol/arm_atsam/spi.c **** 
+  73:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.reg             = 0;
+ 215              		.loc 1 73 0
+ 216 00a0 0A4B     		ldr	r3, .L13+12
+ 217 00a2 4FF4E752 		mov	r2, #7392
+ 218 00a6 1A80     		strh	r2, [r3]	@ movhi
+  74:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.HUB_CONNECT = 0;
+  75:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.HUB_RESET_N = 0;
+  76:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.S_UP        = 0;
+  77:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.E_UP_N      = 1;
+  78:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.S_DN1       = 1;
+  79:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.E_DN1_N     = 1;
+  80:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.E_VBUS_1    = 0;
+  81:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.E_VBUS_2    = 0;
+  82:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.SRC_1       = 1;
+  83:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.SRC_2       = 1;
+  84:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.IRST        = 1;
+  85:tmk_core/protocol/arm_atsam/spi.c ****     sr_exp_data.bit.SDB_N       = 0;
+  86:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_WriteData();
+ 219              		.loc 1 86 0
+ 220 00a8 FFF7FEFF 		bl	SR_EXP_WriteData
+ 221              	.LVL1:
+  87:tmk_core/protocol/arm_atsam/spi.c **** 
+  88:tmk_core/protocol/arm_atsam/spi.c ****     // Enable Shift Register output
+  89:tmk_core/protocol/arm_atsam/spi.c ****     SR_EXP_OE_N_ENA;
+ 222              		.loc 1 89 0
+ 223 00ac 064B     		ldr	r3, .L13+8
+ 224 00ae 4FF40042 		mov	r2, #32768
+ 225 00b2 C3F89420 		str	r2, [r3, #148]
+  90:tmk_core/protocol/arm_atsam/spi.c **** 
+  91:tmk_core/protocol/arm_atsam/spi.c ****     DBGC(DC_SPI_INIT_COMPLETE);
+ 226              		.loc 1 91 0
+ 227 00b6 4023     		movs	r3, #64
+ 228 00b8 2360     		str	r3, [r4]
+  92:tmk_core/protocol/arm_atsam/spi.c **** }
+ 229              		.loc 1 92 0
+ 230 00ba 38BD     		pop	{r3, r4, r5, pc}
+ 231              	.L12:
+  70:tmk_core/protocol/arm_atsam/spi.c ****     }
+ 232              		.loc 1 70 0
+ 233 00bc 2160     		str	r1, [r4]
+ 234 00be ECE7     		b	.L11
+ 235              	.L14:
+ 236              		.align	2
+ 237              	.L13:
+ 238 00c0 00000000 		.word	debug_code
+ 239 00c4 40420F00 		.word	1000000
+ 240 00c8 00800041 		.word	1090551808
+ 241 00cc 00000000 		.word	sr_exp_data
+ 242              		.cfi_endproc
+ 243              	.LFE146:
+ 245              		.comm	sr_exp_data,2,2
+ 246              		.comm	dmac_desc_wb,16,16
+ 247              		.comm	dmac_desc,16,16
+ 248              		.text
+ 249              	.Letext0:
+ 250              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 251              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 252              		.file 4 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/samd51j18a.h"
+ 253              		.file 5 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 254              		.file 6 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 255              		.file 7 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/dmac.h"
+ 256              		.file 8 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/port.h"
+ 257              		.file 9 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/component/sercom.h"
+ 258              		.file 10 "tmk_core/protocol/arm_atsam/md_bootloader.h"
+ 259              		.file 11 "tmk_core/common/timer.h"
+ 260              		.file 12 "tmk_core/protocol/arm_atsam/d51_util.h"
+ 261              		.file 13 "tmk_core/protocol/arm_atsam/clks.h"
+ 262              		.file 14 "tmk_core/protocol/arm_atsam/adc.h"
+ 263              		.file 15 "tmk_core/protocol/arm_atsam/i2c_master.h"
+ 264              		.file 16 "tmk_core/protocol/arm_atsam/spi.h"
+ 265              		.file 17 "tmk_core/protocol/arm_atsam/./usb/usb2422.h"
+ 266              		.file 18 "tmk_core/common/action.h"
+ 267              		.file 19 "tmk_core/common/report.h"
+ 268              		.file 20 "tmk_core/common/host.h"
+ 269              		.file 21 "tmk_core/common/debug.h"
+ 270              		.file 22 "quantum/keycode_config.h"
+ 271              		.file 23 "quantum/keymap.h"
+ 272              		.file 24 "quantum/color.h"
+ 273              		.file 25 "quantum/rgb_matrix_types.h"
+ 274              		.file 26 "quantum/rgb_matrix.h"
+ 275              		.file 27 "tmk_core/common/action_layer.h"
+ 276              		.file 28 "tmk_core/common/action_util.h"
+ 277              		.file 29 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 278              		.file 30 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 279              		.file 31 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.
+ 280              		.file 32 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 281              		.file 33 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 282              		.file 34 "quantum/quantum.h"
+ 283              		.file 35 "tmk_core/protocol/arm_atsam/led_matrix.h"
+ 284              		.file 36 "tmk_core/protocol/arm_atsam/./usb/compiler.h"
+ 285              		.file 37 "tmk_core/protocol/arm_atsam/./usb/usb_protocol.h"
+ 286              		.file 38 "tmk_core/protocol/arm_atsam/./usb/udi_device_conf.h"
+ 287              		.file 39 "tmk_core/protocol/arm_atsam/./usb/udi.h"
+ 288              		.file 40 "tmk_core/protocol/arm_atsam/./usb/udc_desc.h"
+ 289              		.file 41 "tmk_core/protocol/arm_atsam/./usb/udi_hid_kbd.h"
+ 290              		.file 42 "tmk_core/protocol/arm_atsam/./usb/usb_main.h"
+ 291              		.file 43 "tmk_core/protocol/arm_atsam/./usb/udd.h"
+ 292              		.file 44 "tmk_core/protocol/arm_atsam/./usb/udi_cdc.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 spi.c
+/var/tmp//cc4FoyCB.s:18     .text.SR_EXP_WriteData:0000000000000000 $t
+/var/tmp//cc4FoyCB.s:25     .text.SR_EXP_WriteData:0000000000000000 SR_EXP_WriteData
+/var/tmp//cc4FoyCB.s:106    .text.SR_EXP_WriteData:0000000000000054 $d
+                            *COM*:0000000000000002 sr_exp_data
+/var/tmp//cc4FoyCB.s:114    .text.SR_EXP_Init:0000000000000000 $t
+/var/tmp//cc4FoyCB.s:121    .text.SR_EXP_Init:0000000000000000 SR_EXP_Init
+/var/tmp//cc4FoyCB.s:238    .text.SR_EXP_Init:00000000000000c0 $d
+                            *COM*:0000000000000010 dmac_desc_wb
+                            *COM*:0000000000000010 dmac_desc
+
+UNDEFINED SYMBOLS
+debug_code
+CLK_set_spi_freq

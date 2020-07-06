@@ -1,0 +1,1247 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 2
+  11              		.file	"chtm.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.chTMObjectInit,"ax",%progbits
+  16              		.align	1
+  17              		.global	chTMObjectInit
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	chTMObjectInit:
+  24              	.LFB250:
+  25              		.file 1 "lib/chibios/os/rt/src/chtm.c"
+   1:lib/chibios/os/rt/src/chtm.c **** /*
+   2:lib/chibios/os/rt/src/chtm.c ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:lib/chibios/os/rt/src/chtm.c **** 
+   4:lib/chibios/os/rt/src/chtm.c ****     This file is part of ChibiOS.
+   5:lib/chibios/os/rt/src/chtm.c **** 
+   6:lib/chibios/os/rt/src/chtm.c ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:lib/chibios/os/rt/src/chtm.c ****     it under the terms of the GNU General Public License as published by
+   8:lib/chibios/os/rt/src/chtm.c ****     the Free Software Foundation; either version 3 of the License, or
+   9:lib/chibios/os/rt/src/chtm.c ****     (at your option) any later version.
+  10:lib/chibios/os/rt/src/chtm.c **** 
+  11:lib/chibios/os/rt/src/chtm.c ****     ChibiOS is distributed in the hope that it will be useful,
+  12:lib/chibios/os/rt/src/chtm.c ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:lib/chibios/os/rt/src/chtm.c ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:lib/chibios/os/rt/src/chtm.c ****     GNU General Public License for more details.
+  15:lib/chibios/os/rt/src/chtm.c **** 
+  16:lib/chibios/os/rt/src/chtm.c ****     You should have received a copy of the GNU General Public License
+  17:lib/chibios/os/rt/src/chtm.c ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:lib/chibios/os/rt/src/chtm.c **** */
+  19:lib/chibios/os/rt/src/chtm.c **** 
+  20:lib/chibios/os/rt/src/chtm.c **** /**
+  21:lib/chibios/os/rt/src/chtm.c ****  * @file    chtm.c
+  22:lib/chibios/os/rt/src/chtm.c ****  * @brief   Time Measurement module code.
+  23:lib/chibios/os/rt/src/chtm.c ****  *
+  24:lib/chibios/os/rt/src/chtm.c ****  * @addtogroup time_measurement
+  25:lib/chibios/os/rt/src/chtm.c ****  * @details Time Measurement APIs and services.
+  26:lib/chibios/os/rt/src/chtm.c ****  * @{
+  27:lib/chibios/os/rt/src/chtm.c ****  */
+  28:lib/chibios/os/rt/src/chtm.c **** 
+  29:lib/chibios/os/rt/src/chtm.c **** #include "ch.h"
+  30:lib/chibios/os/rt/src/chtm.c **** 
+  31:lib/chibios/os/rt/src/chtm.c **** #if (CH_CFG_USE_TM == TRUE) || defined(__DOXYGEN__)
+  32:lib/chibios/os/rt/src/chtm.c **** 
+  33:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  34:lib/chibios/os/rt/src/chtm.c **** /* Module local definitions.                                                 */
+  35:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  36:lib/chibios/os/rt/src/chtm.c **** 
+  37:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  38:lib/chibios/os/rt/src/chtm.c **** /* Module exported variables.                                                */
+  39:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  40:lib/chibios/os/rt/src/chtm.c **** 
+  41:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  42:lib/chibios/os/rt/src/chtm.c **** /* Module local types.                                                       */
+  43:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  44:lib/chibios/os/rt/src/chtm.c **** 
+  45:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  46:lib/chibios/os/rt/src/chtm.c **** /* Module local variables.                                                   */
+  47:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  48:lib/chibios/os/rt/src/chtm.c **** 
+  49:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  50:lib/chibios/os/rt/src/chtm.c **** /* Module local functions.                                                   */
+  51:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  52:lib/chibios/os/rt/src/chtm.c **** 
+  53:lib/chibios/os/rt/src/chtm.c **** static inline void tm_stop(time_measurement_t *tmp,
+  54:lib/chibios/os/rt/src/chtm.c ****                            rtcnt_t now,
+  55:lib/chibios/os/rt/src/chtm.c ****                            rtcnt_t offset) {
+  56:lib/chibios/os/rt/src/chtm.c **** 
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->n++;
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+  59:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+  60:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last > tmp->worst) {
+  61:lib/chibios/os/rt/src/chtm.c ****     tmp->worst = tmp->last;
+  62:lib/chibios/os/rt/src/chtm.c ****   }
+  63:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last < tmp->best) {
+  64:lib/chibios/os/rt/src/chtm.c ****     tmp->best = tmp->last;
+  65:lib/chibios/os/rt/src/chtm.c ****   }
+  66:lib/chibios/os/rt/src/chtm.c **** }
+  67:lib/chibios/os/rt/src/chtm.c **** 
+  68:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  69:lib/chibios/os/rt/src/chtm.c **** /* Module exported functions.                                                */
+  70:lib/chibios/os/rt/src/chtm.c **** /*===========================================================================*/
+  71:lib/chibios/os/rt/src/chtm.c **** 
+  72:lib/chibios/os/rt/src/chtm.c **** /**
+  73:lib/chibios/os/rt/src/chtm.c ****  * @brief   Initializes the time measurement unit.
+  74:lib/chibios/os/rt/src/chtm.c ****  *
+  75:lib/chibios/os/rt/src/chtm.c ****  * @init
+  76:lib/chibios/os/rt/src/chtm.c ****  */
+  77:lib/chibios/os/rt/src/chtm.c **** void _tm_init(void) {
+  78:lib/chibios/os/rt/src/chtm.c ****   time_measurement_t tm;
+  79:lib/chibios/os/rt/src/chtm.c **** 
+  80:lib/chibios/os/rt/src/chtm.c ****   /* Time Measurement subsystem calibration, it does a null measurement
+  81:lib/chibios/os/rt/src/chtm.c ****      and calculates the call overhead which is subtracted to real
+  82:lib/chibios/os/rt/src/chtm.c ****      measurements.*/
+  83:lib/chibios/os/rt/src/chtm.c ****   ch.tm.offset = (rtcnt_t)0;
+  84:lib/chibios/os/rt/src/chtm.c ****   chTMObjectInit(&tm);
+  85:lib/chibios/os/rt/src/chtm.c ****   chTMStartMeasurementX(&tm);
+  86:lib/chibios/os/rt/src/chtm.c ****   chTMStopMeasurementX(&tm);
+  87:lib/chibios/os/rt/src/chtm.c ****   ch.tm.offset = tm.last;
+  88:lib/chibios/os/rt/src/chtm.c **** }
+  89:lib/chibios/os/rt/src/chtm.c **** 
+  90:lib/chibios/os/rt/src/chtm.c **** /**
+  91:lib/chibios/os/rt/src/chtm.c ****  * @brief   Initializes a @p TimeMeasurement object.
+  92:lib/chibios/os/rt/src/chtm.c ****  *
+  93:lib/chibios/os/rt/src/chtm.c ****  * @param[out] tmp      pointer to a @p TimeMeasurement structure
+  94:lib/chibios/os/rt/src/chtm.c ****  *
+  95:lib/chibios/os/rt/src/chtm.c ****  * @init
+  96:lib/chibios/os/rt/src/chtm.c ****  */
+  97:lib/chibios/os/rt/src/chtm.c **** void chTMObjectInit(time_measurement_t *tmp) {
+  26              		.loc 1 97 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  98:lib/chibios/os/rt/src/chtm.c **** 
+  99:lib/chibios/os/rt/src/chtm.c ****   tmp->best       = (rtcnt_t)-1;
+ 100:lib/chibios/os/rt/src/chtm.c ****   tmp->worst      = (rtcnt_t)0;
+  32              		.loc 1 100 0
+  33 0000 0023     		movs	r3, #0
+  34 0002 4FF0FF32 		mov	r2, #-1
+  35 0006 C0E90023 		strd	r2, r3, [r0]
+ 101:lib/chibios/os/rt/src/chtm.c ****   tmp->last       = (rtcnt_t)0;
+ 102:lib/chibios/os/rt/src/chtm.c ****   tmp->n          = (ucnt_t)0;
+  36              		.loc 1 102 0
+  37 000a C0E90233 		strd	r3, r3, [r0, #8]
+ 103:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative = (rttime_t)0;
+  38              		.loc 1 103 0
+  39 000e 0022     		movs	r2, #0
+  40 0010 0023     		movs	r3, #0
+  41 0012 C0E90423 		strd	r2, [r0, #16]
+ 104:lib/chibios/os/rt/src/chtm.c **** }
+  42              		.loc 1 104 0
+  43 0016 7047     		bx	lr
+  44              		.cfi_endproc
+  45              	.LFE250:
+  47              		.section	.text.chTMStartMeasurementX,"ax",%progbits
+  48              		.align	1
+  49              		.global	chTMStartMeasurementX
+  50              		.syntax unified
+  51              		.thumb
+  52              		.thumb_func
+  53              		.fpu softvfp
+  55              	chTMStartMeasurementX:
+  56              	.LFB251:
+ 105:lib/chibios/os/rt/src/chtm.c **** 
+ 106:lib/chibios/os/rt/src/chtm.c **** /**
+ 107:lib/chibios/os/rt/src/chtm.c ****  * @brief   Starts a measurement.
+ 108:lib/chibios/os/rt/src/chtm.c ****  * @pre     The @p time_measurement_t structure must be initialized.
+ 109:lib/chibios/os/rt/src/chtm.c ****  *
+ 110:lib/chibios/os/rt/src/chtm.c ****  * @param[in,out] tmp   pointer to a @p TimeMeasurement structure
+ 111:lib/chibios/os/rt/src/chtm.c ****  *
+ 112:lib/chibios/os/rt/src/chtm.c ****  * @xclass
+ 113:lib/chibios/os/rt/src/chtm.c ****  */
+ 114:lib/chibios/os/rt/src/chtm.c **** NOINLINE void chTMStartMeasurementX(time_measurement_t *tmp) {
+  57              		.loc 1 114 0
+  58              		.cfi_startproc
+  59              		@ args = 0, pretend = 0, frame = 0
+  60              		@ frame_needed = 0, uses_anonymous_args = 0
+  61              		@ link register save eliminated.
+  62              	.LVL1:
+  63              	.LBB8:
+  64              	.LBB9:
+  65              		.file 2 "./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h"
+   1:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*
+   2:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio.
+   3:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+   4:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     This file is part of ChibiOS.
+   5:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+   6:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     ChibiOS is free software; you can redistribute it and/or modify
+   7:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     it under the terms of the GNU General Public License as published by
+   8:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     the Free Software Foundation; either version 3 of the License, or
+   9:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     (at your option) any later version.
+  10:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  11:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     ChibiOS is distributed in the hope that it will be useful,
+  12:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  13:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  14:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     GNU General Public License for more details.
+  15:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  16:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     You should have received a copy of the GNU General Public License
+  17:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  18:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** */
+  19:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  20:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  21:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @file    chcore_v7m.h
+  22:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   ARMv7-M architecture port macros and structures.
+  23:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+  24:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @addtogroup ARMCMx_V7M_CORE
+  25:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @{
+  26:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  27:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  28:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #ifndef CHCORE_V7M_H
+  29:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CHCORE_V7M_H
+  30:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  31:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+  32:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Module constants.                                                         */
+  33:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+  34:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  35:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  36:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @name    Port Capabilities and Constants
+  37:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @{
+  38:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  39:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  40:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   This port supports a realtime counter.
+  41:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  42:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_SUPPORTS_RT                TRUE
+  43:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  44:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  45:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Natural alignment constant.
+  46:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    It is the minimum alignment for pointer-size variables.
+  47:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  48:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_NATURAL_ALIGN              sizeof (void *)
+  49:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  50:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  51:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Stack alignment constant.
+  52:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    It is the alignement required for the stack pointer.
+  53:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  54:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_STACK_ALIGN                sizeof (stkalign_t)
+  55:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  56:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  57:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Working Areas alignment constant.
+  58:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    It is the alignment to be enforced for thread working areas.
+  59:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  60:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_WORKING_AREA_ALIGN         (PORT_ENABLE_GUARD_PAGES == TRUE ?  \
+  61:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                                          32U : PORT_STACK_ALIGN)
+  62:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /** @} */
+  63:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  64:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  65:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Disabled value for BASEPRI register.
+  66:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  67:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_BASEPRI_DISABLED         0U
+  68:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  69:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+  70:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Module pre-compile time settings.                                         */
+  71:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+  72:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  73:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  74:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Enables stack overflow guard pages using MPU.
+  75:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    This option can only be enabled if also option
+  76:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          @p CH_DBG_ENABLE_STACK_CHECK is enabled.
+  77:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    The use of this option has an overhead of 32 bytes for each
+  78:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          thread.
+  79:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  80:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(PORT_ENABLE_GUARD_PAGES) || defined(__DOXYGEN__)
+  81:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_ENABLE_GUARD_PAGES         FALSE
+  82:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+  83:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  84:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  85:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Stack size for the system idle thread.
+  86:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This size depends on the idle thread implementation, usually
+  87:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          the idle thread should take no more space than those reserved
+  88:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          by @p PORT_INT_REQUIRED_STACK.
+  89:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    In this port it is set to 16 because the idle thread does have
+  90:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          a stack frame when compiling without optimizations. You may
+  91:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          reduce this value to zero when compiling with optimizations.
+  92:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+  93:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(PORT_IDLE_THREAD_STACK_SIZE) || defined(__DOXYGEN__)
+  94:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_IDLE_THREAD_STACK_SIZE     16
+  95:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+  96:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+  97:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+  98:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Per-thread stack overhead for interrupts servicing.
+  99:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This constant is used in the calculation of the correct working
+ 100:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          area size.
+ 101:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    In this port this value is conservatively set to 64 because the
+ 102:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          function @p chSchDoReschedule() can have a stack frame, especially
+ 103:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          with compiler optimizations disabled. The value can be reduced
+ 104:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          when compiler optimizations are enabled.
+ 105:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 106:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(PORT_INT_REQUIRED_STACK) || defined(__DOXYGEN__)
+ 107:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_INT_REQUIRED_STACK         64
+ 108:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 109:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 110:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 111:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Enables the use of the WFI instruction in the idle thread loop.
+ 112:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 113:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(CORTEX_ENABLE_WFI_IDLE)
+ 114:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_ENABLE_WFI_IDLE          FALSE
+ 115:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 116:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 117:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 118:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   FPU support in context switch.
+ 119:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details Activating this option activates the FPU support in the kernel.
+ 120:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 121:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(CORTEX_USE_FPU)
+ 122:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_USE_FPU                  CORTEX_HAS_FPU
+ 123:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #elif (CORTEX_USE_FPU == TRUE) && (CORTEX_HAS_FPU == FALSE)
+ 124:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* This setting requires an FPU presence check in case it is externally
+ 125:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****    redefined.*/
+ 126:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #error "the selected core does not have an FPU"
+ 127:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 128:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 129:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 130:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Simplified priority handling flag.
+ 131:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details Activating this option makes the Kernel work in compact mode.
+ 132:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          In compact mode interrupts are disabled globally instead of
+ 133:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          raising the priority mask to some intermediate level.
+ 134:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 135:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(CORTEX_SIMPLIFIED_PRIORITY)
+ 136:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_SIMPLIFIED_PRIORITY      FALSE
+ 137:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 138:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 139:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 140:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   SVCALL handler priority.
+ 141:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    The default SVCALL handler priority is defaulted to
+ 142:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          @p CORTEX_MAXIMUM_PRIORITY+1, this reserves the
+ 143:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          @p CORTEX_MAXIMUM_PRIORITY priority level as fast interrupts
+ 144:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          priority level.
+ 145:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 146:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(CORTEX_PRIORITY_SVCALL)
+ 147:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_PRIORITY_SVCALL          (CORTEX_MAXIMUM_PRIORITY + 1U)
+ 148:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #elif !PORT_IRQ_IS_VALID_PRIORITY(CORTEX_PRIORITY_SVCALL)
+ 149:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* If it is externally redefined then better perform a validity check on it.*/
+ 150:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #error "invalid priority level specified for CORTEX_PRIORITY_SVCALL"
+ 151:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 152:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 153:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 154:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   NVIC PRIGROUP initialization expression.
+ 155:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details The default assigns all available priority bits as preemption
+ 156:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          priority with no sub-priority.
+ 157:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 158:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(CORTEX_PRIGROUP_INIT) || defined(__DOXYGEN__)
+ 159:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_PRIGROUP_INIT            (7 - CORTEX_PRIORITY_BITS)
+ 160:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 161:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 162:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 163:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Derived constants and error checks.                                       */
+ 164:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 165:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 166:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(_FROM_ASM_)
+ 167:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 168:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   MPU guard page size.
+ 169:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 170:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (PORT_ENABLE_GUARD_PAGES == TRUE) || defined(__DOXYGEN__)
+ 171:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CH_DBG_ENABLE_STACK_CHECK == FALSE
+ 172:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "PORT_ENABLE_GUARD_PAGES requires CH_DBG_ENABLE_STACK_CHECK"
+ 173:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 174:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if __MPU_PRESENT == 0
+ 175:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "MPU not present in current device"
+ 176:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 177:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_GUARD_PAGE_SIZE          32U
+ 178:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 179:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_GUARD_PAGE_SIZE          0U
+ 180:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 181:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* !defined(_FROM_ASM_) */
+ 182:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 183:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 184:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @name    Architecture and Compiler
+ 185:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @{
+ 186:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 187:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CORTEX_MODEL == 3) || defined(__DOXYGEN__)
+ 188:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 189:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if !defined(CH_CUSTOMER_LIC_PORT_CM3)
+ 190:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "CH_CUSTOMER_LIC_PORT_CM3 not defined"
+ 191:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 192:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 193:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CH_CUSTOMER_LIC_PORT_CM3 == FALSE
+ 194:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "ChibiOS Cortex-M3 port not licensed"
+ 195:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 196:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 197:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 198:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Macro defining the specific ARM architecture.
+ 199:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 200:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_ARCHITECTURE_ARM_v7M
+ 201:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 202:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 203:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Name of the implemented architecture.
+ 204:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 205:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_ARCHITECTURE_NAME          "ARMv7-M"
+ 206:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 207:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 208:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Name of the architecture variant.
+ 209:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 210:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (PORT_ENABLE_GUARD_PAGES == FALSE) || defined(__DOXYGEN__)
+ 211:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_CORE_VARIANT_NAME        "Cortex-M3"
+ 212:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 213:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_CORE_VARIANT_NAME        "Cortex-M3 (MPU)"
+ 214:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 215:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 216:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #elif (CORTEX_MODEL == 4)
+ 217:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 218:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if !defined(CH_CUSTOMER_LIC_PORT_CM4)
+ 219:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "CH_CUSTOMER_LIC_PORT_CM4 not defined"
+ 220:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 221:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 222:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CH_CUSTOMER_LIC_PORT_CM4 == FALSE
+ 223:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #error "ChibiOS Cortex-M4 port not licensed"
+ 224:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 225:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 226:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_ARCHITECTURE_ARM_v7ME
+ 227:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_ARCHITECTURE_NAME        "ARMv7E-M"
+ 228:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CORTEX_USE_FPU
+ 229:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #if PORT_ENABLE_GUARD_PAGES == FALSE
+ 230:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M4F"
+ 231:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #else
+ 232:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M4F (MPU)"
+ 233:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #endif
+ 234:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #else
+ 235:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #if PORT_ENABLE_GUARD_PAGES == FALSE
+ 236:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M4"
+ 237:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #else
+ 238:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M4 (MPU)"
+ 239:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #endif
+ 240:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 241:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 242:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #elif (CORTEX_MODEL == 7)
+ 243:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 244:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if !defined(CH_CUSTOMER_LIC_PORT_CM7)
+ 245:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "CH_CUSTOMER_LIC_PORT_CM7 not defined"
+ 246:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 247:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 248:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CH_CUSTOMER_LIC_PORT_CM7 == FALSE
+ 249:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #error "ChibiOS Cortex-M7 port not licensed"
+ 250:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 251:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 252:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_ARCHITECTURE_ARM_v7ME
+ 253:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #define PORT_ARCHITECTURE_NAME        "ARMv7E-M"
+ 254:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #if CORTEX_USE_FPU
+ 255:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #if PORT_ENABLE_GUARD_PAGES == FALSE
+ 256:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M7F"
+ 257:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #else
+ 258:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M7F (MPU)"
+ 259:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #endif
+ 260:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #else
+ 261:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #if PORT_ENABLE_GUARD_PAGES == FALSE
+ 262:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M7"
+ 263:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #else
+ 264:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****       #define PORT_CORE_VARIANT_NAME    "Cortex-M7 (MPU)"
+ 265:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     #endif
+ 266:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   #endif
+ 267:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 268:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 269:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 270:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Port-specific information string.
+ 271:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 272:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CORTEX_SIMPLIFIED_PRIORITY == FALSE) || defined(__DOXYGEN__)
+ 273:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_INFO                       "Advanced kernel mode"
+ 274:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 275:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_INFO                       "Compact kernel mode"
+ 276:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 277:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /** @} */
+ 278:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 279:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CORTEX_SIMPLIFIED_PRIORITY == FALSE) || defined(__DOXYGEN__)
+ 280:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 281:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Maximum usable priority for normal ISRs.
+ 282:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 283:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_MAX_KERNEL_PRIORITY      (CORTEX_PRIORITY_SVCALL + 1U)
+ 284:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 285:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 286:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   BASEPRI level within kernel lock.
+ 287:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 288:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_BASEPRI_KERNEL                                               \
+ 289:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   CORTEX_PRIO_MASK(CORTEX_MAX_KERNEL_PRIORITY)
+ 290:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 291:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 292:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_MAX_KERNEL_PRIORITY      0U
+ 293:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 294:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 295:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 296:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   PendSV priority level.
+ 297:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    This priority is enforced to be equal to
+ 298:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          @p CORTEX_MAX_KERNEL_PRIORITY, this handler always have the
+ 299:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          highest priority that cannot preempt the kernel.
+ 300:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 301:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define CORTEX_PRIORITY_PENDSV          CORTEX_MAX_KERNEL_PRIORITY
+ 302:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 303:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 304:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Module data structures and types.                                         */
+ 305:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 306:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 307:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* The following code is not processed when the file is included from an
+ 308:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****    asm module.*/
+ 309:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(_FROM_ASM_)
+ 310:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 311:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* The documentation of the following declarations is in chconf.h in order
+ 312:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****    to not have duplicated structure names into the documentation.*/
+ 313:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if !defined(__DOXYGEN__)
+ 314:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** struct port_extctx {
+ 315:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r0;
+ 316:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r1;
+ 317:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r2;
+ 318:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r3;
+ 319:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r12;
+ 320:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      lr_thd;
+ 321:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      pc;
+ 322:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      xpsr;
+ 323:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_USE_FPU
+ 324:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s0;
+ 325:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s1;
+ 326:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s2;
+ 327:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s3;
+ 328:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s4;
+ 329:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s5;
+ 330:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s6;
+ 331:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s7;
+ 332:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s8;
+ 333:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s9;
+ 334:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s10;
+ 335:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s11;
+ 336:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s12;
+ 337:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s13;
+ 338:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s14;
+ 339:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s15;
+ 340:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      fpscr;
+ 341:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      reserved;
+ 342:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_USE_FPU */
+ 343:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** };
+ 344:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 345:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** struct port_intctx {
+ 346:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_USE_FPU
+ 347:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s16;
+ 348:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s17;
+ 349:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s18;
+ 350:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s19;
+ 351:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s20;
+ 352:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s21;
+ 353:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s22;
+ 354:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s23;
+ 355:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s24;
+ 356:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s25;
+ 357:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s26;
+ 358:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s27;
+ 359:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s28;
+ 360:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s29;
+ 361:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s30;
+ 362:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      s31;
+ 363:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_USE_FPU */
+ 364:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r4;
+ 365:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r5;
+ 366:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r6;
+ 367:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r7;
+ 368:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r8;
+ 369:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r9;
+ 370:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r10;
+ 371:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      r11;
+ 372:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   regarm_t      lr;
+ 373:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** };
+ 374:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* !defined(__DOXYGEN__) */
+ 375:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 376:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 377:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Module macros.                                                            */
+ 378:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 379:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 380:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 381:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Platform dependent part of the @p chThdCreateI() API.
+ 382:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This code usually setup the context switching frame represented
+ 383:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          by an @p port_intctx structure.
+ 384:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 385:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_SETUP_CONTEXT(tp, wbase, wtop, pf, arg) {                      \
+ 386:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   (tp)->ctx.sp = (struct port_intctx *)((uint8_t *)(wtop) -                 \
+ 387:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                                         sizeof (struct port_intctx));       \
+ 388:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   (tp)->ctx.sp->r4 = (regarm_t)(pf);                                        \
+ 389:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   (tp)->ctx.sp->r5 = (regarm_t)(arg);                                       \
+ 390:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   (tp)->ctx.sp->lr = (regarm_t)_port_thread_start;                          \
+ 391:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 392:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 393:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 394:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Computes the thread working area global size.
+ 395:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    There is no need to perform alignments in this macro.
+ 396:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 397:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_WA_SIZE(n) ((size_t)PORT_GUARD_PAGE_SIZE +                     \
+ 398:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                          sizeof (struct port_intctx) +                      \
+ 399:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                          sizeof (struct port_extctx) +                      \
+ 400:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                          (size_t)(n) +                                      \
+ 401:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                          (size_t)PORT_INT_REQUIRED_STACK)
+ 402:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 403:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 404:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Static working area allocation.
+ 405:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This macro is used to allocate a static thread working area
+ 406:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          aligned as both position and size.
+ 407:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 408:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @param[in] s         the name to be assigned to the stack array
+ 409:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @param[in] n         the stack size to be assigned to the thread
+ 410:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 411:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (PORT_ENABLE_GUARD_PAGES == FALSE) || defined(__DOXYGEN__)
+ 412:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_WORKING_AREA(s, n)                                             \
+ 413:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   stkalign_t s[THD_WORKING_AREA_SIZE(n) / sizeof (stkalign_t)]
+ 414:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 415:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_WORKING_AREA(s, n)                                             \
+ 416:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   ALIGNED_VAR(32) stkalign_t s[THD_WORKING_AREA_SIZE(n) / sizeof (stkalign_t)]
+ 417:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 418:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 419:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 420:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   IRQ prologue code.
+ 421:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This macro must be inserted at the start of all IRQ handlers
+ 422:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          enabled to invoke system APIs.
+ 423:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 424:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_IRQ_PROLOGUE()
+ 425:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 426:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 427:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   IRQ epilogue code.
+ 428:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This macro must be inserted at the end of all IRQ handlers
+ 429:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          enabled to invoke system APIs.
+ 430:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 431:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_IRQ_EPILOGUE() _port_irq_epilogue()
+ 432:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 433:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 434:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   IRQ handler function declaration.
+ 435:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    @p id can be a function name or a vector number depending on the
+ 436:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          port implementation.
+ 437:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 438:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_IRQ_HANDLER(id) void id(void)
+ 439:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 440:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 441:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Fast IRQ handler function declaration.
+ 442:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    @p id can be a function name or a vector number depending on the
+ 443:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          port implementation.
+ 444:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 445:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define PORT_FAST_IRQ_HANDLER(id) void id(void)
+ 446:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 447:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 448:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Performs a context switch between two threads.
+ 449:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details This is the most critical code in any port, this function
+ 450:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          is responsible for the context switch between 2 threads.
+ 451:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    The implementation of this code affects <b>directly</b> the context
+ 452:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          switch performance so optimize here as much as you can.
+ 453:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 454:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @param[in] ntp       the thread to be switched in
+ 455:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @param[in] otp       the thread to be switched out
+ 456:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 457:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CH_DBG_ENABLE_STACK_CHECK == FALSE) || defined(__DOXYGEN__)
+ 458:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define port_switch(ntp, otp) _port_switch(ntp, otp)
+ 459:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 460:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if PORT_ENABLE_GUARD_PAGES == FALSE
+ 461:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define port_switch(ntp, otp) {                                             \
+ 462:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   struct port_intctx *r13 = (struct port_intctx *)__get_PSP();              \
+ 463:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   if ((stkalign_t *)(r13 - 1) < (otp)->wabase) {                            \
+ 464:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     chSysHalt("stack overflow");                                            \
+ 465:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   }                                                                         \
+ 466:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   _port_switch(ntp, otp);                                                   \
+ 467:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 468:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 469:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #define port_switch(ntp, otp) {                                             \
+ 470:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   _port_switch(ntp, otp);                                                   \
+ 471:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                                                                             \
+ 472:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   /* Setting up the guard page for the switched-in thread.*/                \
+ 473:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   mpuConfigureRegion(MPU_REGION_0,                                          \
+ 474:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                      chThdGetSelfX()->wabase,                               \
+ 475:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                      MPU_RASR_ATTR_AP_NA_NA |                               \
+ 476:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                      MPU_RASR_ATTR_NON_CACHEABLE |                          \
+ 477:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                      MPU_RASR_SIZE_32 |                                     \
+ 478:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                      MPU_RASR_ENABLE);                                      \
+ 479:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 480:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 481:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 482:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 483:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 484:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* External declarations.                                                    */
+ 485:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 486:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 487:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #ifdef __cplusplus
+ 488:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** extern "C" {
+ 489:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 490:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   void _port_irq_epilogue(void);
+ 491:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   void _port_switch(thread_t *ntp, thread_t *otp);
+ 492:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   void _port_thread_start(void);
+ 493:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   void _port_switch_from_isr(void);
+ 494:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   void _port_exit_from_isr(void);
+ 495:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #ifdef __cplusplus
+ 496:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 497:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 498:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 499:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 500:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /* Module inline functions.                                                  */
+ 501:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /*===========================================================================*/
+ 502:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 503:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 504:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Port-related initialization code.
+ 505:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 506:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_init(void) {
+ 507:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 508:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   /* Initializing priority grouping.*/
+ 509:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   NVIC_SetPriorityGrouping(CORTEX_PRIGROUP_INIT);
+ 510:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 511:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   /* DWT cycle counter enable, note, the M7 requires DWT unlocking.*/
+ 512:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+ 513:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_MODEL == 7
+ 514:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   DWT->LAR = 0xC5ACCE55U;
+ 515:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 516:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+ 517:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 518:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   /* Initialization of the system vectors used by the port.*/
+ 519:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_SIMPLIFIED_PRIORITY == FALSE
+ 520:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   NVIC_SetPriority(SVCall_IRQn, CORTEX_PRIORITY_SVCALL);
+ 521:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 522:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   NVIC_SetPriority(PendSV_IRQn, CORTEX_PRIORITY_PENDSV);
+ 523:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 524:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if PORT_ENABLE_GUARD_PAGES == TRUE
+ 525:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   {
+ 526:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     extern stkalign_t __main_thread_stack_base__;
+ 527:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 528:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     /* Setting up the guard page on the main() function stack base
+ 529:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****        initially.*/
+ 530:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     mpuConfigureRegion(MPU_REGION_0,
+ 531:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                        &__main_thread_stack_base__,
+ 532:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                        MPU_RASR_ATTR_AP_NA_NA |
+ 533:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                        MPU_RASR_ATTR_NON_CACHEABLE |
+ 534:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                        MPU_RASR_SIZE_32 |
+ 535:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****                        MPU_RASR_ENABLE);
+ 536:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 537:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     /* MPU is enabled.*/
+ 538:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****     mpuEnable(MPU_CTRL_PRIVDEFENA);
+ 539:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   }
+ 540:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 541:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 542:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 543:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 544:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Returns a word encoding the current interrupts status.
+ 545:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 546:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @return              The interrupts status.
+ 547:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 548:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline syssts_t port_get_irq_status(void) {
+ 549:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   syssts_t sts;
+ 550:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 551:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_SIMPLIFIED_PRIORITY == FALSE
+ 552:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   sts = (syssts_t)__get_BASEPRI();
+ 553:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else /* CORTEX_SIMPLIFIED_PRIORITY */
+ 554:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   sts = (syssts_t)__get_PRIMASK();
+ 555:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_SIMPLIFIED_PRIORITY */
+ 556:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   return sts;
+ 557:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 558:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 559:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 560:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Checks the interrupt status.
+ 561:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 562:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @param[in] sts       the interrupt status word
+ 563:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 564:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @return              The interrupt status.
+ 565:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @retval false        the word specified a disabled interrupts status.
+ 566:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @retval true         the word specified an enabled interrupts status.
+ 567:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 568:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline bool port_irq_enabled(syssts_t sts) {
+ 569:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 570:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_SIMPLIFIED_PRIORITY == FALSE
+ 571:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   return sts == (syssts_t)CORTEX_BASEPRI_DISABLED;
+ 572:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else /* CORTEX_SIMPLIFIED_PRIORITY */
+ 573:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   return (sts & (syssts_t)1) == (syssts_t)0;
+ 574:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_SIMPLIFIED_PRIORITY */
+ 575:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 576:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 577:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 578:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Determines the current execution context.
+ 579:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 580:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @return              The execution context.
+ 581:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @retval false        not running in ISR mode.
+ 582:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @retval true         running in ISR mode.
+ 583:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 584:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline bool port_is_isr_context(void) {
+ 585:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 586:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   return (bool)((__get_IPSR() & 0x1FFU) != 0U);
+ 587:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 588:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 589:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 590:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Kernel-lock action.
+ 591:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details In this port this function raises the base priority to kernel
+ 592:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          level.
+ 593:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 594:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_lock(void) {
+ 595:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 596:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_SIMPLIFIED_PRIORITY == FALSE
+ 597:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if defined(__CM7_REV)
+ 598:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if __CM7_REV <= 1
+ 599:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __disable_irq();
+ 600:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 601:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 602:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __set_BASEPRI(CORTEX_BASEPRI_KERNEL);
+ 603:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if defined(__CM7_REV)
+ 604:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if __CM7_REV <= 1
+ 605:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __enable_irq();
+ 606:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 607:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 608:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else /* CORTEX_SIMPLIFIED_PRIORITY */
+ 609:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __disable_irq();
+ 610:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_SIMPLIFIED_PRIORITY */
+ 611:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 612:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 613:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 614:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Kernel-unlock action.
+ 615:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details In this port this function lowers the base priority to user
+ 616:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          level.
+ 617:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 618:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_unlock(void) {
+ 619:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 620:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_SIMPLIFIED_PRIORITY == FALSE
+ 621:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __set_BASEPRI(CORTEX_BASEPRI_DISABLED);
+ 622:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else /* CORTEX_SIMPLIFIED_PRIORITY */
+ 623:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __enable_irq();
+ 624:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif /* CORTEX_SIMPLIFIED_PRIORITY */
+ 625:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 626:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 627:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 628:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Kernel-lock action from an interrupt handler.
+ 629:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details In this port this function raises the base priority to kernel
+ 630:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          level.
+ 631:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    Same as @p port_lock() in this port.
+ 632:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 633:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_lock_from_isr(void) {
+ 634:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 635:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   port_lock();
+ 636:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 637:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 638:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 639:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Kernel-unlock action from an interrupt handler.
+ 640:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details In this port this function lowers the base priority to user
+ 641:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          level.
+ 642:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    Same as @p port_unlock() in this port.
+ 643:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 644:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_unlock_from_isr(void) {
+ 645:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 646:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   port_unlock();
+ 647:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 648:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 649:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 650:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Disables all the interrupt sources.
+ 651:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    In this port it disables all the interrupt sources by raising
+ 652:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          the priority mask to level 0.
+ 653:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 654:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_disable(void) {
+ 655:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 656:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __disable_irq();
+ 657:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 658:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 659:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 660:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Disables the interrupt sources below kernel-level priority.
+ 661:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    Interrupt sources above kernel level remains enabled.
+ 662:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    In this port it raises/lowers the base priority to kernel level.
+ 663:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 664:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_suspend(void) {
+ 665:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 666:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CORTEX_SIMPLIFIED_PRIORITY == FALSE) || defined(__DOXYGEN__)
+ 667:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __set_BASEPRI(CORTEX_BASEPRI_KERNEL);
+ 668:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __enable_irq();
+ 669:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #else
+ 670:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __disable_irq();
+ 671:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 672:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 673:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 674:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 675:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Enables all the interrupt sources.
+ 676:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    In this port it lowers the base priority to user level.
+ 677:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 678:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_enable(void) {
+ 679:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 680:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if (CORTEX_SIMPLIFIED_PRIORITY == FALSE) || defined(__DOXYGEN__)
+ 681:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __set_BASEPRI(CORTEX_BASEPRI_DISABLED);
+ 682:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 683:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __enable_irq();
+ 684:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 685:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 686:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 687:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Enters an architecture-dependent IRQ-waiting mode.
+ 688:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @details The function is meant to return when an interrupt becomes pending.
+ 689:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          The simplest implementation is an empty function or macro but this
+ 690:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          would not take advantage of architecture-specific power saving
+ 691:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *          modes.
+ 692:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @note    Implemented as an inlined @p WFI instruction.
+ 693:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 694:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline void port_wait_for_interrupt(void) {
+ 695:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 696:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #if CORTEX_ENABLE_WFI_IDLE == TRUE
+ 697:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   __WFI();
+ 698:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** #endif
+ 699:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** }
+ 700:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 701:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** /**
+ 702:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @brief   Returns the current value of the realtime counter.
+ 703:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  *
+ 704:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  * @return              The realtime counter value.
+ 705:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****  */
+ 706:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** static inline rtcnt_t port_rt_get_counter_value(void) {
+ 707:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h **** 
+ 708:./lib/chibios/os/common/ports/ARMCMx/chcore_v7m.h ****   return DWT->CYCCNT;
+  66              		.loc 2 708 0
+  67 0000 014B     		ldr	r3, .L3
+  68 0002 5B68     		ldr	r3, [r3, #4]
+  69              	.LBE9:
+  70              	.LBE8:
+ 115:lib/chibios/os/rt/src/chtm.c **** 
+ 116:lib/chibios/os/rt/src/chtm.c ****   tmp->last = chSysGetRealtimeCounterX();
+  71              		.loc 1 116 0
+  72 0004 8360     		str	r3, [r0, #8]
+ 117:lib/chibios/os/rt/src/chtm.c **** }
+  73              		.loc 1 117 0
+  74 0006 7047     		bx	lr
+  75              	.L4:
+  76              		.align	2
+  77              	.L3:
+  78 0008 001000E0 		.word	-536866816
+  79              		.cfi_endproc
+  80              	.LFE251:
+  82              		.section	.text.chTMStopMeasurementX,"ax",%progbits
+  83              		.align	1
+  84              		.global	chTMStopMeasurementX
+  85              		.syntax unified
+  86              		.thumb
+  87              		.thumb_func
+  88              		.fpu softvfp
+  90              	chTMStopMeasurementX:
+  91              	.LFB252:
+ 118:lib/chibios/os/rt/src/chtm.c **** 
+ 119:lib/chibios/os/rt/src/chtm.c **** /**
+ 120:lib/chibios/os/rt/src/chtm.c ****  * @brief   Stops a measurement.
+ 121:lib/chibios/os/rt/src/chtm.c ****  * @pre     The @p time_measurement_t structure must be initialized.
+ 122:lib/chibios/os/rt/src/chtm.c ****  *
+ 123:lib/chibios/os/rt/src/chtm.c ****  * @param[in,out] tmp   pointer to a @p time_measurement_t structure
+ 124:lib/chibios/os/rt/src/chtm.c ****  *
+ 125:lib/chibios/os/rt/src/chtm.c ****  * @xclass
+ 126:lib/chibios/os/rt/src/chtm.c ****  */
+ 127:lib/chibios/os/rt/src/chtm.c **** NOINLINE void chTMStopMeasurementX(time_measurement_t *tmp) {
+  92              		.loc 1 127 0
+  93              		.cfi_startproc
+  94              		@ args = 0, pretend = 0, frame = 0
+  95              		@ frame_needed = 0, uses_anonymous_args = 0
+  96              	.LVL2:
+ 128:lib/chibios/os/rt/src/chtm.c **** 
+ 129:lib/chibios/os/rt/src/chtm.c ****   tm_stop(tmp, chSysGetRealtimeCounterX(), ch.tm.offset);
+  97              		.loc 1 129 0
+  98 0000 0D4A     		ldr	r2, .L8
+  99              	.LBB14:
+ 100              	.LBB15:
+ 101              		.loc 2 708 0
+ 102 0002 0E4B     		ldr	r3, .L8+4
+ 103              	.LBE15:
+ 104              	.LBE14:
+ 105              		.loc 1 129 0
+ 106 0004 516F     		ldr	r1, [r2, #116]
+ 107              	.LVL3:
+ 108              	.LBB17:
+ 109              	.LBB18:
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+ 110              		.loc 1 57 0
+ 111 0006 C268     		ldr	r2, [r0, #12]
+ 112              	.LBE18:
+ 113              	.LBE17:
+ 114              	.LBB21:
+ 115              	.LBB16:
+ 116              		.loc 2 708 0
+ 117 0008 5B68     		ldr	r3, [r3, #4]
+ 118              	.LVL4:
+ 119              	.LBE16:
+ 120              	.LBE21:
+ 121              	.LBB22:
+ 122              	.LBB19:
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+ 123              		.loc 1 57 0
+ 124 000a 0132     		adds	r2, r2, #1
+ 125 000c C260     		str	r2, [r0, #12]
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+ 126              		.loc 1 58 0
+ 127 000e 8268     		ldr	r2, [r0, #8]
+ 128              	.LBE19:
+ 129              	.LBE22:
+ 127:lib/chibios/os/rt/src/chtm.c **** 
+ 130              		.loc 1 127 0
+ 131 0010 30B5     		push	{r4, r5, lr}
+ 132              		.cfi_def_cfa_offset 12
+ 133              		.cfi_offset 4, -12
+ 134              		.cfi_offset 5, -8
+ 135              		.cfi_offset 14, -4
+ 136              	.LBB23:
+ 137              	.LBB20:
+  59:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last > tmp->worst) {
+ 138              		.loc 1 59 0
+ 139 0012 D0E90445 		ldrd	r4, [r0, #16]
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+ 140              		.loc 1 58 0
+ 141 0016 9B1A     		subs	r3, r3, r2
+ 142              	.LVL5:
+ 143 0018 5B1A     		subs	r3, r3, r1
+  59:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last > tmp->worst) {
+ 144              		.loc 1 59 0
+ 145 001a E118     		adds	r1, r4, r3
+ 146              	.LVL6:
+ 147 001c 45F10002 		adc	r2, r5, #0
+ 148 0020 C0E90412 		strd	r1, [r0, #16]
+  60:lib/chibios/os/rt/src/chtm.c ****     tmp->worst = tmp->last;
+ 149              		.loc 1 60 0
+ 150 0024 4268     		ldr	r2, [r0, #4]
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+ 151              		.loc 1 58 0
+ 152 0026 8360     		str	r3, [r0, #8]
+  60:lib/chibios/os/rt/src/chtm.c ****     tmp->worst = tmp->last;
+ 153              		.loc 1 60 0
+ 154 0028 9342     		cmp	r3, r2
+  63:lib/chibios/os/rt/src/chtm.c ****     tmp->best = tmp->last;
+ 155              		.loc 1 63 0
+ 156 002a 0268     		ldr	r2, [r0]
+  61:lib/chibios/os/rt/src/chtm.c ****   }
+ 157              		.loc 1 61 0
+ 158 002c 88BF     		it	hi
+ 159 002e 4360     		strhi	r3, [r0, #4]
+  63:lib/chibios/os/rt/src/chtm.c ****     tmp->best = tmp->last;
+ 160              		.loc 1 63 0
+ 161 0030 9342     		cmp	r3, r2
+  64:lib/chibios/os/rt/src/chtm.c ****   }
+ 162              		.loc 1 64 0
+ 163 0032 38BF     		it	cc
+ 164 0034 0360     		strcc	r3, [r0]
+ 165              	.LVL7:
+ 166              	.LBE20:
+ 167              	.LBE23:
+ 130:lib/chibios/os/rt/src/chtm.c **** }
+ 168              		.loc 1 130 0
+ 169 0036 30BD     		pop	{r4, r5, pc}
+ 170              	.L9:
+ 171              		.align	2
+ 172              	.L8:
+ 173 0038 00000000 		.word	ch
+ 174 003c 001000E0 		.word	-536866816
+ 175              		.cfi_endproc
+ 176              	.LFE252:
+ 178              		.section	.text._tm_init,"ax",%progbits
+ 179              		.align	1
+ 180              		.global	_tm_init
+ 181              		.syntax unified
+ 182              		.thumb
+ 183              		.thumb_func
+ 184              		.fpu softvfp
+ 186              	_tm_init:
+ 187              	.LFB249:
+  77:lib/chibios/os/rt/src/chtm.c ****   time_measurement_t tm;
+ 188              		.loc 1 77 0
+ 189              		.cfi_startproc
+ 190              		@ args = 0, pretend = 0, frame = 24
+ 191              		@ frame_needed = 0, uses_anonymous_args = 0
+ 192 0000 10B5     		push	{r4, lr}
+ 193              		.cfi_def_cfa_offset 8
+ 194              		.cfi_offset 4, -8
+ 195              		.cfi_offset 14, -4
+  83:lib/chibios/os/rt/src/chtm.c ****   chTMObjectInit(&tm);
+ 196              		.loc 1 83 0
+ 197 0002 084C     		ldr	r4, .L11
+  77:lib/chibios/os/rt/src/chtm.c ****   time_measurement_t tm;
+ 198              		.loc 1 77 0
+ 199 0004 86B0     		sub	sp, sp, #24
+ 200              		.cfi_def_cfa_offset 32
+  83:lib/chibios/os/rt/src/chtm.c ****   chTMObjectInit(&tm);
+ 201              		.loc 1 83 0
+ 202 0006 0023     		movs	r3, #0
+  84:lib/chibios/os/rt/src/chtm.c ****   chTMStartMeasurementX(&tm);
+ 203              		.loc 1 84 0
+ 204 0008 6846     		mov	r0, sp
+  83:lib/chibios/os/rt/src/chtm.c ****   chTMObjectInit(&tm);
+ 205              		.loc 1 83 0
+ 206 000a 6367     		str	r3, [r4, #116]
+  84:lib/chibios/os/rt/src/chtm.c ****   chTMStartMeasurementX(&tm);
+ 207              		.loc 1 84 0
+ 208 000c FFF7FEFF 		bl	chTMObjectInit
+ 209              	.LVL8:
+  85:lib/chibios/os/rt/src/chtm.c ****   chTMStopMeasurementX(&tm);
+ 210              		.loc 1 85 0
+ 211 0010 6846     		mov	r0, sp
+ 212 0012 FFF7FEFF 		bl	chTMStartMeasurementX
+ 213              	.LVL9:
+  86:lib/chibios/os/rt/src/chtm.c ****   ch.tm.offset = tm.last;
+ 214              		.loc 1 86 0
+ 215 0016 6846     		mov	r0, sp
+ 216 0018 FFF7FEFF 		bl	chTMStopMeasurementX
+ 217              	.LVL10:
+  87:lib/chibios/os/rt/src/chtm.c **** }
+ 218              		.loc 1 87 0
+ 219 001c 029B     		ldr	r3, [sp, #8]
+ 220 001e 6367     		str	r3, [r4, #116]
+  88:lib/chibios/os/rt/src/chtm.c **** 
+ 221              		.loc 1 88 0
+ 222 0020 06B0     		add	sp, sp, #24
+ 223              		.cfi_def_cfa_offset 8
+ 224              		@ sp needed
+ 225 0022 10BD     		pop	{r4, pc}
+ 226              	.L12:
+ 227              		.align	2
+ 228              	.L11:
+ 229 0024 00000000 		.word	ch
+ 230              		.cfi_endproc
+ 231              	.LFE249:
+ 233              		.section	.text.chTMChainMeasurementToX,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	chTMChainMeasurementToX
+ 236              		.syntax unified
+ 237              		.thumb
+ 238              		.thumb_func
+ 239              		.fpu softvfp
+ 241              	chTMChainMeasurementToX:
+ 242              	.LFB253:
+ 131:lib/chibios/os/rt/src/chtm.c **** 
+ 132:lib/chibios/os/rt/src/chtm.c **** /**
+ 133:lib/chibios/os/rt/src/chtm.c ****  * @brief   Stops a measurement and chains to the next one using the same time
+ 134:lib/chibios/os/rt/src/chtm.c ****  *          stamp.
+ 135:lib/chibios/os/rt/src/chtm.c ****  *
+ 136:lib/chibios/os/rt/src/chtm.c ****  * @param[in,out] tmp1  pointer to the @p time_measurement_t structure to be
+ 137:lib/chibios/os/rt/src/chtm.c ****  *                      stopped
+ 138:lib/chibios/os/rt/src/chtm.c ****  * @param[in,out] tmp2  pointer to the @p time_measurement_t structure to be
+ 139:lib/chibios/os/rt/src/chtm.c ****  *                      started
+ 140:lib/chibios/os/rt/src/chtm.c ****  *
+ 141:lib/chibios/os/rt/src/chtm.c ****  *
+ 142:lib/chibios/os/rt/src/chtm.c ****  * @xclass
+ 143:lib/chibios/os/rt/src/chtm.c ****  */
+ 144:lib/chibios/os/rt/src/chtm.c **** NOINLINE void chTMChainMeasurementToX(time_measurement_t *tmp1,
+ 145:lib/chibios/os/rt/src/chtm.c ****                                       time_measurement_t *tmp2) {
+ 243              		.loc 1 145 0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              	.LVL11:
+ 248              	.LBB28:
+ 249              	.LBB29:
+ 250              		.loc 2 708 0
+ 251 0000 0C4B     		ldr	r3, .L16
+ 252              	.LBE29:
+ 253              	.LBE28:
+ 254              	.LBB31:
+ 255              	.LBB32:
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+ 256              		.loc 1 57 0
+ 257 0002 C268     		ldr	r2, [r0, #12]
+ 258              	.LBE32:
+ 259              	.LBE31:
+ 260              	.LBB35:
+ 261              	.LBB30:
+ 262              		.loc 2 708 0
+ 263 0004 5B68     		ldr	r3, [r3, #4]
+ 264              	.LBE30:
+ 265              	.LBE35:
+ 266              		.loc 1 145 0
+ 267 0006 30B5     		push	{r4, r5, lr}
+ 268              		.cfi_def_cfa_offset 12
+ 269              		.cfi_offset 4, -12
+ 270              		.cfi_offset 5, -8
+ 271              		.cfi_offset 14, -4
+ 272              	.LBB36:
+ 273              	.LBB33:
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+ 274              		.loc 1 57 0
+ 275 0008 0132     		adds	r2, r2, #1
+ 276              	.LBE33:
+ 277              	.LBE36:
+ 146:lib/chibios/os/rt/src/chtm.c **** 
+ 147:lib/chibios/os/rt/src/chtm.c ****   /* Starts new measurement.*/
+ 148:lib/chibios/os/rt/src/chtm.c ****   tmp2->last = chSysGetRealtimeCounterX();
+ 278              		.loc 1 148 0
+ 279 000a 8B60     		str	r3, [r1, #8]
+ 280              	.LVL12:
+ 281              	.LBB37:
+ 282              	.LBB34:
+  59:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last > tmp->worst) {
+ 283              		.loc 1 59 0
+ 284 000c D0E90445 		ldrd	r4, [r0, #16]
+  57:lib/chibios/os/rt/src/chtm.c ****   tmp->last = (now - tmp->last) - offset;
+ 285              		.loc 1 57 0
+ 286 0010 C260     		str	r2, [r0, #12]
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+ 287              		.loc 1 58 0
+ 288 0012 8268     		ldr	r2, [r0, #8]
+ 289 0014 9B1A     		subs	r3, r3, r2
+ 290              	.LVL13:
+  59:lib/chibios/os/rt/src/chtm.c ****   if (tmp->last > tmp->worst) {
+ 291              		.loc 1 59 0
+ 292 0016 E118     		adds	r1, r4, r3
+ 293              	.LVL14:
+ 294 0018 45F10002 		adc	r2, r5, #0
+ 295 001c C0E90412 		strd	r1, [r0, #16]
+  60:lib/chibios/os/rt/src/chtm.c ****     tmp->worst = tmp->last;
+ 296              		.loc 1 60 0
+ 297 0020 4268     		ldr	r2, [r0, #4]
+  58:lib/chibios/os/rt/src/chtm.c ****   tmp->cumulative += (rttime_t)tmp->last;
+ 298              		.loc 1 58 0
+ 299 0022 8360     		str	r3, [r0, #8]
+ 300              	.LVL15:
+  60:lib/chibios/os/rt/src/chtm.c ****     tmp->worst = tmp->last;
+ 301              		.loc 1 60 0
+ 302 0024 9342     		cmp	r3, r2
+  63:lib/chibios/os/rt/src/chtm.c ****     tmp->best = tmp->last;
+ 303              		.loc 1 63 0
+ 304 0026 0268     		ldr	r2, [r0]
+  61:lib/chibios/os/rt/src/chtm.c ****   }
+ 305              		.loc 1 61 0
+ 306 0028 88BF     		it	hi
+ 307 002a 4360     		strhi	r3, [r0, #4]
+  63:lib/chibios/os/rt/src/chtm.c ****     tmp->best = tmp->last;
+ 308              		.loc 1 63 0
+ 309 002c 9342     		cmp	r3, r2
+  64:lib/chibios/os/rt/src/chtm.c ****   }
+ 310              		.loc 1 64 0
+ 311 002e 38BF     		it	cc
+ 312 0030 0360     		strcc	r3, [r0]
+ 313              	.LVL16:
+ 314              	.LBE34:
+ 315              	.LBE37:
+ 149:lib/chibios/os/rt/src/chtm.c **** 
+ 150:lib/chibios/os/rt/src/chtm.c ****   /* Stops previous measurement using the same time stamp.*/
+ 151:lib/chibios/os/rt/src/chtm.c ****   tm_stop(tmp1, tmp2->last, (rtcnt_t)0);
+ 152:lib/chibios/os/rt/src/chtm.c **** }
+ 316              		.loc 1 152 0
+ 317 0032 30BD     		pop	{r4, r5, pc}
+ 318              	.L17:
+ 319              		.align	2
+ 320              	.L16:
+ 321 0034 001000E0 		.word	-536866816
+ 322              		.cfi_endproc
+ 323              	.LFE253:
+ 325              		.text
+ 326              	.Letext0:
+ 327              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 328              		.file 4 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 329              		.file 5 "./lib/chibios/os/common/ports/ARMCMx/compilers/GCC/chtypes.h"
+ 330              		.file 6 "./lib/chibios/os/rt/include/chsystypes.h"
+ 331              		.file 7 "./lib/chibios/os/rt/include/chschd.h"
+ 332              		.file 8 "./lib/chibios/os/common/ext/CMSIS/include/core_cm4.h"
+ 333              		.file 9 "./lib/chibios/os/common/ext/CMSIS/ST/STM32F3xx/system_stm32f3xx.h"
+ 334              		.file 10 "./lib/chibios/os/common/ports/ARMCMx/chcore.h"
+ 335              		.file 11 "./lib/chibios/os/rt/include/chtm.h"
+ 336              		.file 12 "./lib/chibios/os/rt/include/chsem.h"
+ 337              		.file 13 "./lib/chibios/os/rt/include/chmtx.h"
+ 338              		.file 14 "./lib/chibios/os/rt/include/chsys.h"
+ 339              		.file 15 "./lib/chibios/os/rt/include/chregistry.h"
+ 340              		.file 16 "./lib/chibios/os/common/oslib/include/chmemcore.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 chtm.c
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:16     .text.chTMObjectInit:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:23     .text.chTMObjectInit:0000000000000000 chTMObjectInit
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:48     .text.chTMStartMeasurementX:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:55     .text.chTMStartMeasurementX:0000000000000000 chTMStartMeasurementX
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:78     .text.chTMStartMeasurementX:0000000000000008 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:83     .text.chTMStopMeasurementX:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:90     .text.chTMStopMeasurementX:0000000000000000 chTMStopMeasurementX
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:173    .text.chTMStopMeasurementX:0000000000000038 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:179    .text._tm_init:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:186    .text._tm_init:0000000000000000 _tm_init
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:229    .text._tm_init:0000000000000024 $d
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:234    .text.chTMChainMeasurementToX:0000000000000000 $t
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:241    .text.chTMChainMeasurementToX:0000000000000000 chTMChainMeasurementToX
+/var/folders/qs/3p__ddh573j_6k2216pg8mv40000gn/T//cc84n69o.s:321    .text.chTMChainMeasurementToX:0000000000000034 $d
+
+UNDEFINED SYMBOLS
+ch

@@ -1,0 +1,413 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"main_usb.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.main_suspend_action,"ax",%progbits
+  18              		.align	1
+  19              		.global	main_suspend_action
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	main_suspend_action:
+  26              	.LFB133:
+  27              		.file 1 "tmk_core/protocol/arm_atsam/usb/main_usb.c"
+   1:tmk_core/protocol/arm_atsam/usb/main_usb.c **** /*
+   2:tmk_core/protocol/arm_atsam/usb/main_usb.c **** Copyright 2018 Massdrop Inc.
+   3:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+   4:tmk_core/protocol/arm_atsam/usb/main_usb.c **** This program is free software: you can redistribute it and/or modify
+   5:tmk_core/protocol/arm_atsam/usb/main_usb.c **** it under the terms of the GNU General Public License as published by
+   6:tmk_core/protocol/arm_atsam/usb/main_usb.c **** the Free Software Foundation, either version 2 of the License, or
+   7:tmk_core/protocol/arm_atsam/usb/main_usb.c **** (at your option) any later version.
+   8:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+   9:tmk_core/protocol/arm_atsam/usb/main_usb.c **** This program is distributed in the hope that it will be useful,
+  10:tmk_core/protocol/arm_atsam/usb/main_usb.c **** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  11:tmk_core/protocol/arm_atsam/usb/main_usb.c **** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  12:tmk_core/protocol/arm_atsam/usb/main_usb.c **** GNU General Public License for more details.
+  13:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  14:tmk_core/protocol/arm_atsam/usb/main_usb.c **** You should have received a copy of the GNU General Public License
+  15:tmk_core/protocol/arm_atsam/usb/main_usb.c **** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  16:tmk_core/protocol/arm_atsam/usb/main_usb.c **** */
+  17:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  18:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #include "samd51j18a.h"
+  19:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #include "conf_usb.h"
+  20:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #include "udd.h"
+  21:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  22:tmk_core/protocol/arm_atsam/usb/main_usb.c **** uint8_t keyboard_protocol = 1;
+  23:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  24:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_suspend_action(void) { ui_powerdown(); }
+  28              		.loc 1 24 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              		.loc 1 24 0
+  34 0000 FFF7FEBF 		b	ui_powerdown
+  35              	.LVL0:
+  36              		.cfi_endproc
+  37              	.LFE133:
+  39              		.section	.text.main_resume_action,"ax",%progbits
+  40              		.align	1
+  41              		.global	main_resume_action
+  42              		.syntax unified
+  43              		.thumb
+  44              		.thumb_func
+  45              		.fpu fpv4-sp-d16
+  47              	main_resume_action:
+  48              	.LFB134:
+  25:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  26:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_resume_action(void) { ui_wakeup(); }
+  49              		.loc 1 26 0
+  50              		.cfi_startproc
+  51              		@ args = 0, pretend = 0, frame = 0
+  52              		@ frame_needed = 0, uses_anonymous_args = 0
+  53              		@ link register save eliminated.
+  54              		.loc 1 26 0
+  55 0000 FFF7FEBF 		b	ui_wakeup
+  56              	.LVL1:
+  57              		.cfi_endproc
+  58              	.LFE134:
+  60              		.section	.text.main_sof_action,"ax",%progbits
+  61              		.align	1
+  62              		.global	main_sof_action
+  63              		.syntax unified
+  64              		.thumb
+  65              		.thumb_func
+  66              		.fpu fpv4-sp-d16
+  68              	main_sof_action:
+  69              	.LFB135:
+  27:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  28:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_sof_action(void) { ui_process(udd_get_frame_number()); }
+  70              		.loc 1 28 0
+  71              		.cfi_startproc
+  72              		@ args = 0, pretend = 0, frame = 0
+  73              		@ frame_needed = 0, uses_anonymous_args = 0
+  74 0000 08B5     		push	{r3, lr}
+  75              		.cfi_def_cfa_offset 8
+  76              		.cfi_offset 3, -8
+  77              		.cfi_offset 14, -4
+  78              		.loc 1 28 0
+  79 0002 FFF7FEFF 		bl	udd_get_frame_number
+  80              	.LVL2:
+  81 0006 BDE80840 		pop	{r3, lr}
+  82              		.cfi_restore 14
+  83              		.cfi_restore 3
+  84              		.cfi_def_cfa_offset 0
+  85 000a FFF7FEBF 		b	ui_process
+  86              	.LVL3:
+  87              		.cfi_endproc
+  88              	.LFE135:
+  90              		.section	.text.main_remotewakeup_enable,"ax",%progbits
+  91              		.align	1
+  92              		.global	main_remotewakeup_enable
+  93              		.syntax unified
+  94              		.thumb
+  95              		.thumb_func
+  96              		.fpu fpv4-sp-d16
+  98              	main_remotewakeup_enable:
+  99              	.LFB136:
+  29:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  30:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_remotewakeup_enable(void) { ui_wakeup_enable(); }
+ 100              		.loc 1 30 0
+ 101              		.cfi_startproc
+ 102              		@ args = 0, pretend = 0, frame = 0
+ 103              		@ frame_needed = 0, uses_anonymous_args = 0
+ 104              		@ link register save eliminated.
+ 105              		.loc 1 30 0
+ 106 0000 FFF7FEBF 		b	ui_wakeup_enable
+ 107              	.LVL4:
+ 108              		.cfi_endproc
+ 109              	.LFE136:
+ 111              		.section	.text.main_remotewakeup_disable,"ax",%progbits
+ 112              		.align	1
+ 113              		.global	main_remotewakeup_disable
+ 114              		.syntax unified
+ 115              		.thumb
+ 116              		.thumb_func
+ 117              		.fpu fpv4-sp-d16
+ 119              	main_remotewakeup_disable:
+ 120              	.LFB137:
+  31:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  32:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_remotewakeup_disable(void) { ui_wakeup_disable(); }
+ 121              		.loc 1 32 0
+ 122              		.cfi_startproc
+ 123              		@ args = 0, pretend = 0, frame = 0
+ 124              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125              		@ link register save eliminated.
+ 126              		.loc 1 32 0
+ 127 0000 FFF7FEBF 		b	ui_wakeup_disable
+ 128              	.LVL5:
+ 129              		.cfi_endproc
+ 130              	.LFE137:
+ 132              		.section	.text.main_kbd_enable,"ax",%progbits
+ 133              		.align	1
+ 134              		.global	main_kbd_enable
+ 135              		.syntax unified
+ 136              		.thumb
+ 137              		.thumb_func
+ 138              		.fpu fpv4-sp-d16
+ 140              	main_kbd_enable:
+ 141              	.LFB138:
+  33:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  34:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #ifdef KBD
+  35:tmk_core/protocol/arm_atsam/usb/main_usb.c **** volatile bool main_b_kbd_enable = false;
+  36:tmk_core/protocol/arm_atsam/usb/main_usb.c **** bool          main_kbd_enable(void) {
+ 142              		.loc 1 36 0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146              		@ link register save eliminated.
+  37:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     main_b_kbd_enable = true;
+ 147              		.loc 1 37 0
+ 148 0000 014B     		ldr	r3, .L7
+ 149 0002 0120     		movs	r0, #1
+ 150 0004 1870     		strb	r0, [r3]
+  38:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     return true;
+  39:tmk_core/protocol/arm_atsam/usb/main_usb.c **** }
+ 151              		.loc 1 39 0
+ 152 0006 7047     		bx	lr
+ 153              	.L8:
+ 154              		.align	2
+ 155              	.L7:
+ 156 0008 00000000 		.word	.LANCHOR0
+ 157              		.cfi_endproc
+ 158              	.LFE138:
+ 160              		.section	.text.main_kbd_disable,"ax",%progbits
+ 161              		.align	1
+ 162              		.global	main_kbd_disable
+ 163              		.syntax unified
+ 164              		.thumb
+ 165              		.thumb_func
+ 166              		.fpu fpv4-sp-d16
+ 168              	main_kbd_disable:
+ 169              	.LFB139:
+  40:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  41:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_kbd_disable(void) { main_b_kbd_enable = false; }
+ 170              		.loc 1 41 0
+ 171              		.cfi_startproc
+ 172              		@ args = 0, pretend = 0, frame = 0
+ 173              		@ frame_needed = 0, uses_anonymous_args = 0
+ 174              		@ link register save eliminated.
+ 175              		.loc 1 41 0
+ 176 0000 014B     		ldr	r3, .L10
+ 177 0002 0022     		movs	r2, #0
+ 178 0004 1A70     		strb	r2, [r3]
+ 179 0006 7047     		bx	lr
+ 180              	.L11:
+ 181              		.align	2
+ 182              	.L10:
+ 183 0008 00000000 		.word	.LANCHOR0
+ 184              		.cfi_endproc
+ 185              	.LFE139:
+ 187              		.section	.text.main_nkro_enable,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	main_nkro_enable
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 193              		.fpu fpv4-sp-d16
+ 195              	main_nkro_enable:
+ 196              	.LFB140:
+  42:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #endif
+  43:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  44:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #ifdef NKRO
+  45:tmk_core/protocol/arm_atsam/usb/main_usb.c **** volatile bool main_b_nkro_enable = false;
+  46:tmk_core/protocol/arm_atsam/usb/main_usb.c **** bool          main_nkro_enable(void) {
+ 197              		.loc 1 46 0
+ 198              		.cfi_startproc
+ 199              		@ args = 0, pretend = 0, frame = 0
+ 200              		@ frame_needed = 0, uses_anonymous_args = 0
+ 201              		@ link register save eliminated.
+  47:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     main_b_nkro_enable = true;
+ 202              		.loc 1 47 0
+ 203 0000 014B     		ldr	r3, .L13
+ 204 0002 0120     		movs	r0, #1
+ 205 0004 5870     		strb	r0, [r3, #1]
+  48:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     return true;
+  49:tmk_core/protocol/arm_atsam/usb/main_usb.c **** }
+ 206              		.loc 1 49 0
+ 207 0006 7047     		bx	lr
+ 208              	.L14:
+ 209              		.align	2
+ 210              	.L13:
+ 211 0008 00000000 		.word	.LANCHOR0
+ 212              		.cfi_endproc
+ 213              	.LFE140:
+ 215              		.section	.text.main_nkro_disable,"ax",%progbits
+ 216              		.align	1
+ 217              		.global	main_nkro_disable
+ 218              		.syntax unified
+ 219              		.thumb
+ 220              		.thumb_func
+ 221              		.fpu fpv4-sp-d16
+ 223              	main_nkro_disable:
+ 224              	.LFB141:
+  50:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  51:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_nkro_disable(void) { main_b_nkro_enable = false; }
+ 225              		.loc 1 51 0
+ 226              		.cfi_startproc
+ 227              		@ args = 0, pretend = 0, frame = 0
+ 228              		@ frame_needed = 0, uses_anonymous_args = 0
+ 229              		@ link register save eliminated.
+ 230              		.loc 1 51 0
+ 231 0000 014B     		ldr	r3, .L16
+ 232 0002 0022     		movs	r2, #0
+ 233 0004 5A70     		strb	r2, [r3, #1]
+ 234 0006 7047     		bx	lr
+ 235              	.L17:
+ 236              		.align	2
+ 237              	.L16:
+ 238 0008 00000000 		.word	.LANCHOR0
+ 239              		.cfi_endproc
+ 240              	.LFE141:
+ 242              		.section	.text.main_exk_enable,"ax",%progbits
+ 243              		.align	1
+ 244              		.global	main_exk_enable
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 248              		.fpu fpv4-sp-d16
+ 250              	main_exk_enable:
+ 251              	.LFB142:
+  52:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #endif
+  53:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  54:tmk_core/protocol/arm_atsam/usb/main_usb.c **** #ifdef EXK
+  55:tmk_core/protocol/arm_atsam/usb/main_usb.c **** volatile bool main_b_exk_enable = false;
+  56:tmk_core/protocol/arm_atsam/usb/main_usb.c **** bool          main_exk_enable(void) {
+ 252              		.loc 1 56 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 0
+ 255              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256              		@ link register save eliminated.
+  57:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     main_b_exk_enable = true;
+ 257              		.loc 1 57 0
+ 258 0000 014B     		ldr	r3, .L19
+ 259 0002 0120     		movs	r0, #1
+ 260 0004 9870     		strb	r0, [r3, #2]
+  58:tmk_core/protocol/arm_atsam/usb/main_usb.c ****     return true;
+  59:tmk_core/protocol/arm_atsam/usb/main_usb.c **** }
+ 261              		.loc 1 59 0
+ 262 0006 7047     		bx	lr
+ 263              	.L20:
+ 264              		.align	2
+ 265              	.L19:
+ 266 0008 00000000 		.word	.LANCHOR0
+ 267              		.cfi_endproc
+ 268              	.LFE142:
+ 270              		.section	.text.main_exk_disable,"ax",%progbits
+ 271              		.align	1
+ 272              		.global	main_exk_disable
+ 273              		.syntax unified
+ 274              		.thumb
+ 275              		.thumb_func
+ 276              		.fpu fpv4-sp-d16
+ 278              	main_exk_disable:
+ 279              	.LFB143:
+  60:tmk_core/protocol/arm_atsam/usb/main_usb.c **** 
+  61:tmk_core/protocol/arm_atsam/usb/main_usb.c **** void main_exk_disable(void) { main_b_exk_enable = false; }
+ 280              		.loc 1 61 0
+ 281              		.cfi_startproc
+ 282              		@ args = 0, pretend = 0, frame = 0
+ 283              		@ frame_needed = 0, uses_anonymous_args = 0
+ 284              		@ link register save eliminated.
+ 285              		.loc 1 61 0
+ 286 0000 014B     		ldr	r3, .L22
+ 287 0002 0022     		movs	r2, #0
+ 288 0004 9A70     		strb	r2, [r3, #2]
+ 289 0006 7047     		bx	lr
+ 290              	.L23:
+ 291              		.align	2
+ 292              	.L22:
+ 293 0008 00000000 		.word	.LANCHOR0
+ 294              		.cfi_endproc
+ 295              	.LFE143:
+ 297              		.global	main_b_exk_enable
+ 298              		.global	main_b_nkro_enable
+ 299              		.global	main_b_kbd_enable
+ 300              		.global	keyboard_protocol
+ 301              		.data
+ 304              	keyboard_protocol:
+ 305 0000 01       		.byte	1
+ 306              		.bss
+ 307              		.set	.LANCHOR0,. + 0
+ 310              	main_b_kbd_enable:
+ 311 0000 00       		.space	1
+ 314              	main_b_nkro_enable:
+ 315 0001 00       		.space	1
+ 318              	main_b_exk_enable:
+ 319 0002 00       		.space	1
+ 320              		.text
+ 321              	.Letext0:
+ 322              		.file 2 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/machine/_default_types
+ 323              		.file 3 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_stdint.h"
+ 324              		.file 4 "lib/arm_atsam/packs/arm/cmsis/5.0.1/CMSIS/Include/core_cm4.h"
+ 325              		.file 5 "lib/arm_atsam/packs/atmel/SAMD51_DFP/1.0.70/include/system_samd51.h"
+ 326              		.file 6 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/lock.h"
+ 327              		.file 7 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/_types.h"
+ 328              		.file 8 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/lib/gcc/arm-none-eabi/7.3.1/include/stddef.h
+ 329              		.file 9 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/sys/reent.h"
+ 330              		.file 10 "/usr/local/Cellar/gcc-arm-none-eabi/20180627/arm-none-eabi/include/stdlib.h"
+ 331              		.file 11 "tmk_core/protocol/arm_atsam/usb/compiler.h"
+ 332              		.file 12 "tmk_core/protocol/arm_atsam/usb/usb_protocol.h"
+ 333              		.file 13 "tmk_core/protocol/arm_atsam/usb/udi_device_conf.h"
+ 334              		.file 14 "tmk_core/protocol/arm_atsam/usb/udi.h"
+ 335              		.file 15 "tmk_core/protocol/arm_atsam/usb/udc_desc.h"
+ 336              		.file 16 "tmk_core/protocol/arm_atsam/usb/udi_hid_kbd.h"
+ 337              		.file 17 "tmk_core/protocol/arm_atsam/usb/usb_main.h"
+ 338              		.file 18 "tmk_core/protocol/arm_atsam/usb/udd.h"
+ 339              		.file 19 "tmk_core/protocol/arm_atsam/usb/ui.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main_usb.c
+/var/tmp//ccJ1wmhh.s:18     .text.main_suspend_action:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:25     .text.main_suspend_action:0000000000000000 main_suspend_action
+/var/tmp//ccJ1wmhh.s:40     .text.main_resume_action:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:47     .text.main_resume_action:0000000000000000 main_resume_action
+/var/tmp//ccJ1wmhh.s:61     .text.main_sof_action:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:68     .text.main_sof_action:0000000000000000 main_sof_action
+/var/tmp//ccJ1wmhh.s:91     .text.main_remotewakeup_enable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:98     .text.main_remotewakeup_enable:0000000000000000 main_remotewakeup_enable
+/var/tmp//ccJ1wmhh.s:112    .text.main_remotewakeup_disable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:119    .text.main_remotewakeup_disable:0000000000000000 main_remotewakeup_disable
+/var/tmp//ccJ1wmhh.s:133    .text.main_kbd_enable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:140    .text.main_kbd_enable:0000000000000000 main_kbd_enable
+/var/tmp//ccJ1wmhh.s:156    .text.main_kbd_enable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:161    .text.main_kbd_disable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:168    .text.main_kbd_disable:0000000000000000 main_kbd_disable
+/var/tmp//ccJ1wmhh.s:183    .text.main_kbd_disable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:188    .text.main_nkro_enable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:195    .text.main_nkro_enable:0000000000000000 main_nkro_enable
+/var/tmp//ccJ1wmhh.s:211    .text.main_nkro_enable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:216    .text.main_nkro_disable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:223    .text.main_nkro_disable:0000000000000000 main_nkro_disable
+/var/tmp//ccJ1wmhh.s:238    .text.main_nkro_disable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:243    .text.main_exk_enable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:250    .text.main_exk_enable:0000000000000000 main_exk_enable
+/var/tmp//ccJ1wmhh.s:266    .text.main_exk_enable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:271    .text.main_exk_disable:0000000000000000 $t
+/var/tmp//ccJ1wmhh.s:278    .text.main_exk_disable:0000000000000000 main_exk_disable
+/var/tmp//ccJ1wmhh.s:293    .text.main_exk_disable:0000000000000008 $d
+/var/tmp//ccJ1wmhh.s:318    .bss:0000000000000002 main_b_exk_enable
+/var/tmp//ccJ1wmhh.s:314    .bss:0000000000000001 main_b_nkro_enable
+/var/tmp//ccJ1wmhh.s:310    .bss:0000000000000000 main_b_kbd_enable
+/var/tmp//ccJ1wmhh.s:304    .data:0000000000000000 keyboard_protocol
+/var/tmp//ccJ1wmhh.s:311    .bss:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+ui_powerdown
+ui_wakeup
+udd_get_frame_number
+ui_process
+ui_wakeup_enable
+ui_wakeup_disable

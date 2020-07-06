@@ -1,0 +1,65 @@
+   1               		.file	"rev1.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               		.section	.text.led_set_kb,"ax",@progbits
+  11               	.global	led_set_kb
+  13               	led_set_kb:
+  14               	.LFB112:
+  15               		.file 1 "keyboards/lily58/rev1/rev1.c"
+   1:keyboards/lily58/rev1/rev1.c **** #include "lily58.h"
+   2:keyboards/lily58/rev1/rev1.c **** 
+   3:keyboards/lily58/rev1/rev1.c **** #ifdef SSD1306OLED
+   4:keyboards/lily58/rev1/rev1.c **** void led_set_kb(uint8_t usb_led) {
+  16               		.loc 1 4 0
+  17               		.cfi_startproc
+  18               	.LVL0:
+  19               	/* prologue: function */
+  20               	/* frame size = 0 */
+  21               	/* stack size = 0 */
+  22               	.L__stack_usage = 0
+  23               	/* epilogue start */
+   5:keyboards/lily58/rev1/rev1.c ****     // put your keyboard LED indicator (ex: Caps Lock LED) toggling code here
+   6:keyboards/lily58/rev1/rev1.c ****     //led_set_user(usb_led);
+   7:keyboards/lily58/rev1/rev1.c **** }
+  24               		.loc 1 7 0
+  25 0000 0895      		ret
+  26               		.cfi_endproc
+  27               	.LFE112:
+  29               		.text
+  30               	.Letext0:
+  31               		.file 2 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdint.h"
+  32               		.file 3 "/usr/local/Cellar/avr-gcc@7/7.4.0/lib/avr-gcc/7/gcc/avr/7.4.0/include/stddef.h"
+  33               		.file 4 "lib/lufa/LUFA/Drivers/USB/Core/AVR8/../StdRequestType.h"
+  34               		.file 5 "tmk_core/common/action.h"
+  35               		.file 6 "lib/lufa/LUFA/Drivers/USB/Core/AVR8/../DeviceStandardReq.h"
+  36               		.file 7 "lib/lufa/LUFA/Drivers/USB/Core/USBTask.h"
+  37               		.file 8 "lib/lufa/LUFA/Drivers/USB/Core/HostStandardReq.h"
+  38               		.file 9 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdio.h"
+  39               		.file 10 "tmk_core/common/report.h"
+  40               		.file 11 "tmk_core/common/host.h"
+  41               		.file 12 "tmk_core/common/debug.h"
+  42               		.file 13 "quantum/keycode_config.h"
+  43               		.file 14 "quantum/keymap.h"
+  44               		.file 15 "./quantum/color.h"
+  45               		.file 16 "quantum/rgblight.h"
+  46               		.file 17 "tmk_core/common/action_layer.h"
+  47               		.file 18 "tmk_core/common/timer.h"
+  48               		.file 19 "tmk_core/common/action_util.h"
+  49               		.file 20 "/usr/local/Cellar/avr-gcc@7/7.4.0/avr/include/stdlib.h"
+  50               		.file 21 "quantum/quantum.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rev1.c
+/var/tmp//ccAc9xdo.s:2      *ABS*:000000000000003e __SP_H__
+/var/tmp//ccAc9xdo.s:3      *ABS*:000000000000003d __SP_L__
+/var/tmp//ccAc9xdo.s:4      *ABS*:000000000000003f __SREG__
+/var/tmp//ccAc9xdo.s:5      *ABS*:0000000000000000 __tmp_reg__
+/var/tmp//ccAc9xdo.s:6      *ABS*:0000000000000001 __zero_reg__
+/var/tmp//ccAc9xdo.s:13     .text.led_set_kb:0000000000000000 led_set_kb
+
+NO UNDEFINED SYMBOLS
