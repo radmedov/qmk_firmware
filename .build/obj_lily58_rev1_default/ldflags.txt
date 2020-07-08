@@ -1,1 +1,0 @@
--Wl,--gc-sections -Wl,-Map=.build/lily58_rev1_default.map,--cref     -lm 

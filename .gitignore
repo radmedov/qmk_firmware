@@ -1,0 +1,3 @@
+quantum/version.h
+*.bin
+.build
