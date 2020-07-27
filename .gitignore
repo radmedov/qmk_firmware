@@ -1,3 +1,4 @@
 quantum/version.h
 *.bin
 .build
+jnao_default.hex
